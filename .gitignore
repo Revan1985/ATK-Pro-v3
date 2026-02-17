@@ -47,12 +47,13 @@ outdir/
 works/
 
 # 📚 Cartelle di sviluppo obsolete (archiviate per release v2.0)
-# NOTA: Archivio/ manteniamo LOCALMENTE per reference (v1.4.1, v1.5, v1.6)
-#       ma lo escludiamo da GitHub per non ingrassare il repo
-Archivio/
+# NOTA: Backups/ e docs_generali/archivio/ manteniamo LOCALMENTE
+#       (backups tecnici e documentazione interna processo sviluppo)
+# ma esclusi da GitHub - non servono a utenti finali
+Backups/
+docs_generali/archivio/
 tests_storici/
 ms-playwright/
-scripts/
 _archive/
 
 # ⚙️ Configurazioni locali
@@ -116,6 +117,7 @@ coverage_html/
 .DS_Store
 Thumbs.db
 
-# 🎯 EXCEPTION: Include PyInstaller spec + Setup exe for release
+# 🎯 EXCEPTION: Include PyInstaller spec for release
+# NOTA: Gli EXE installer (>100 MB) vanno caricati come asset su GitHub Release,
+#       non nel repository Git (limite GitHub: 100 MB per file)
 !ATK-Pro.spec
-!ATK-Pro-Setup-v*.exe
