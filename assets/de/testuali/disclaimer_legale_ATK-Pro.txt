@@ -1,0 +1,23 @@
+📋 Rechtlicher Haftungsausschluss
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Rechtlicher Haftungsausschluss und ethische Nutzung
+
+Das ATK-Pro-Projekt ist für archivische, genealogische und beratende Zwecke konzipiert.
+Alle Inhalte, sofern nicht anders angegeben, werden unter der Creative Commons BY-NC-SA 4.0-Lizenz verteilt.
+Direkte kommerzielle Nutzung, Weiterverbreitung ohne Quellenangabe oder nicht nachvollziehbare Änderungen des Originalinhalts sind untersagt.
+ATK-Pro verbreitet keine Inhalte vom Antenati-Portal (antenati.cultura.gov.it) und beabsichtigt nicht, dessen Oberfläche, Struktur oder Organisation zu replizieren.
+Wer ATK-Pro installiert oder nutzt, verpflichtet sich, vollständig den rechtlichen Hinweisen und Nutzungsbedingungen des Kulturministeriums zu entsprechen, die unter folgender Adresse verfügbar sind:
+https://antenati.cultura.gov.it/note-legali/
+Die im Beratungsbereich enthaltenen Dokumente stellen keine offizielle Quelle dar und haben keinen zertifizierenden oder rechtlichen Wert.
+Die im Projekt entwickelten Schnittstellen und Werkzeuge sollen die eigenständige Beratung genealogischer Nutzer in lokalen Umgebungen erleichtern, ohne Verbindung oder Unterstützung durch externe Dienste.
+Verweise auf öffentliche Einrichtungen, Archive oder historische Dokumentationen dienen ausschließlich Studien-, Analyse- und Kontextzwecken.
+Jede Datei in der ATK-Pro-Struktur (im Format .txt, .md, .html oder .pdf) wurde mit deklarativem, archivischem oder demonstrativem Zweck erstellt.
+Verzeichnisstrukturen, Betriebsskripte und genealogische Notizen werden als Prototyp bereitgestellt, ohne jegliche Funktionsgarantie oder externe Validierung.
+Der Projektverantwortliche lehnt jegliche Haftung für missbräuchliche Nutzung, Fehlinterpretation oder nicht autorisierte Änderungen der enthaltenen Dokumente und Werkzeuge ab.
+Der Beratungsbereich ist als Archiv mit begrenztem Umlauf zu verstehen, das ausschließlich zu Studienzwecken und nicht zur öffentlichen oder systematischen Verbreitung bestimmt ist.
+Diese Erklärung ist integraler Bestandteil der Dokumentationsarchitektur des Projekts.
+
+© 2026 Antenati Toolkit Pro | Version 2.0
+antenati.toolkit.pro@gmail.com

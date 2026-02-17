@@ -1,0 +1,23 @@
+📋 Yasal Uyarı
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Yasal uyarı ve etik kullanım taahhüdü
+
+ATK-Pro projesi arşiv, soyağacı ve danışma amaçları için tasarlanmıştır.
+Tüm içerikler, aksi belirtilmedikçe, Creative Commons BY-NC-SA 4.0 lisansı altında dağıtılır.
+Doğrudan ticari kullanım, kaynak belirtmeden yeniden dağıtım veya orijinal içeriğin izlenmeyen değişikliği yasaktır.
+ATK-Pro, Antenati Portalı'ndan (antenati.cultura.gov.it) herhangi bir içerik yeniden dağıtmaz ve arayüzünü, yapısını veya organizasyonunu çoğaltmayı amaçlamaz.
+ATK-Pro'yu kuran veya kullanan herkes, Kültür Bakanlığı tarafından belirlenen yasal bildirimlere ve kullanım şartlarına tam olarak uymayı kabul eder; bunlar aşağıdaki adreste mevcuttur:
+https://antenati.cultura.gov.it/note-legali/
+Danışma düğümünde yer alan belgeler resmi bir kaynak değildir ve herhangi bir onaylayıcı veya yasal değere sahip değildir.
+Projede geliştirilen arayüz ve araçlar, soyağacı kullanıcılarının yerel ortamlarda bağımsız danışmasını kolaylaştırmak için tasarlanmıştır; harici hizmetlerle bağlantı veya destek olmadan.
+Kamu kurumlarına, arşivlere veya tarihi belgelere yapılan herhangi bir atıf yalnızca çalışma, analiz ve bağlam amaçlıdır.
+ATK-Pro yapısında bulunan her dosya (.txt, .md, .html veya .pdf formatında) beyan, arşiv veya gösterim amacıyla hazırlanmıştır.
+Dizin yapıları, operasyonel komut dosyaları ve soyağacı notları prototip olarak sunulmakta olup, işlevsellik veya harici doğrulama garantisi yoktur.
+Proje yazarı, dahil edilen belgelerin ve araçların yanlış kullanımı, yanlış yorumlanması veya izinsiz değiştirilmesinden sorumlu değildir.
+Danışma düğümü, yalnızca çalışma amaçlı ve kamuya açık veya sistematik dağıtım için değil, sınırlı dolaşıma sahip bir arşiv olarak anlaşılmalıdır.
+Bu bildirim, projenin dokümantasyon mimarisinin ayrılmaz bir parçasıdır.
+
+© 2026 Antenati Toolkit Pro | Sürüm 2.0
+antenati.toolkit.pro@gmail.com

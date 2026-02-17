@@ -1,0 +1,28 @@
+# ================================================================
+# 📜 ATK-Pro – input_link_base_v2.0.txt
+# Este arquivo contém uma lista de atos/registros para analisar.
+# FORMATO:
+# • Uma linha com "Modo - Descrição"
+# • Próxima linha com o link ARK (https://antenati.cultura.gov.it/ark:/...)
+# • Linhas vazias são ignoradas
+# 
+# Modos permitidos:
+# D = Documento único
+# d = Documento único (variante)
+# R = Registro
+# r = Registro (variante)
+# ================================================================
+
+D - Pigoli Angelo - Morte 1896 - Brescia
+https://antenati.cultura.gov.it/ark:/12657/an_ua19490642/wXepJeG
+
+d - Pesci Daniele Giovanni e Savoldi Angela Carolina - Casamento 1924 - Brescia
+https://antenati.cultura.gov.it/ark:/12657/an_ud19467689
+
+R - Registro - Óbitos - 1808 - Poncarale com Borgo Poncarale (hoje Poncarale)
+https://antenati.cultura.gov.it/ark:/12657/an_ua331306/0Z89vd3
+
+r - Registros - Casamentos - 1924 - Bréscia
+https://antenati.cultura.gov.it/ark:/12657/an_ud19467689
+
+# (adicione mais pares seguindo a mesma estrutura)

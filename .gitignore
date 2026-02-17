@@ -1,0 +1,121 @@
+# ============================
+# ATK-Pro · .gitignore v2.0.4
+# Aggiornato: 15/12/2025 (v2.0-modular release prep)
+# ============================
+
+# 🔁 Cache e compilati Python
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+*$py.class
+
+# 🐍 Ambienti virtuali
+.venv*/
+venv/
+env/
+.pipenv/
+.python-version
+scripts/.venv*/
+
+# 📄 File temporanei e di lavoro
+*.tmp
+*.bak
+*.log
+
+# 🔧 Script di setup e lavoro (per development locale, non per release)
+*.bat
+*.ps1
+run_tests.bat
+sposta_test_storici.bat
+git-commit.ps1
+i18n.ps1
+RigeneraContesto_ATK-Pro_v2.0.py
+setup_env_*.ps1
+run_gui_harness_*.ps1
+
+# 🧪 Output e dati generati
+output/
+out/
+temp/
+cache/
+test_output/
+test_data/
+logs/
+outdir/
+works/
+
+# 📚 Cartelle di sviluppo obsolete (archiviate per release v2.0)
+# NOTA: Archivio/ manteniamo LOCALMENTE per reference (v1.4.1, v1.5, v1.6)
+#       ma lo escludiamo da GitHub per non ingrassare il repo
+Archivio/
+tests_storici/
+ms-playwright/
+scripts/
+_archive/
+
+# ⚙️ Configurazioni locali
+*.local
+*.env
+*.ini
+*.cfg
+*.yaml
+*.yml
+*.toml
+
+# 🗃️ Database e dati
+*.db
+*.sqlite*
+*.csv
+*.tsv
+*.json
+
+# ✅ ECCEZIONI - File critici che DEVONO essere salvati in GitHub
+!docs_generali/glossario_multilingua_ATK-Pro.json  # CRITICO per localizzazione v2.0
+!manifest.json/  # Mantieni manifest per reference (ma escludiamo i contenuti)
+
+# 🧱 Build e distribuzione
+build/
+dist/
+*.exe
+*.msi
+*.deb
+*.rpm
+*.whl
+*.egg-info/
+.eggs/
+
+# 🔨 PyInstaller specifici
+*.spec
+__pycache__/
+pyinstaller/
+ATK-Pro_exe/
+
+# 🧭 IDE ed editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# 📦 Node.js (se mai usato per frontend)
+node_modules/
+package-lock.json
+yarn.lock
+
+# 🧪 Pytest e coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage_html/
+
+# 📑 Documenti temporanei
+*.pdf
+
+# 🗂️ File di sistema
+.DS_Store
+Thumbs.db
+
+# 🎯 EXCEPTION: Include PyInstaller spec + Setup exe for release
+!ATK-Pro.spec
+!ATK-Pro-Setup-v*.exe

@@ -1,0 +1,28 @@
+# ================================================================
+# 📜 ATK-Pro – input_link_base_v2.0.txt
+# このファイルには、分析対象となる法律/登録簿のリストが含まれています。
+# フォーマット：
+# • モード - 説明
+# • 次の行にARKリンク（https://antenati.cultura.gov.it/ark:/...）
+# • 空行は無視されます
+# 
+# 許可されるモード：
+# D = 単一文書
+# d = 単一文書（バリアント）
+# R = レジスタ
+# r = レジスタ（バリアント）
+# ================================================================
+
+D - ピゴリ・アンジェロ - 死亡 1896年 - ブレシア
+https://antenati.cultura.gov.it/ark:/12657/an_ua19490642/wXepJeG
+
+d - Pesci Daniele Giovanni and Savoldi Angela Carolina - 結婚 1924年 - ブレシア
+https://antenati.cultura.gov.it/ark:/12657/an_ud19467689
+
+R - 登録 - 死亡 - 1808年 - ポンカラーレとボルゴ・ポンカラーレ（現在のポンカラーレ）
+https://antenati.cultura.gov.it/ark:/12657/an_ua331306/0Z89vd3
+
+r - 登録 - 結婚 - 1924 - ブレシア
+https://antenati.cultura.gov.it/ark:/12657/an_ud19467689
+
+# （同じ構造でさらにペアを追加してください）

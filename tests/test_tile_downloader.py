@@ -1,0 +1,86 @@
+import os
+import pytest
+from unittest.mock import MagicMock
+import src.tile_downloader as td
+
+
+def test_download_tile_success(tmp_path, monkeypatch, caplog):
+    class DummyResponse:
+        status_code = 200
+        def iter_content(self, chunk_size=8192):
+            yield b"x" * 2048
+
+    monkeypatch.setattr(td.requests, "get", lambda *a, **k: DummyResponse())
+
+    out_file = tmp_path / "tile_0_0.jpg"
+    with caplog.at_level("INFO"):
+        td.download_tile("http://fake", 0, 0, 256, tmp_path)
+
+    assert out_file.exists()
+    assert out_file.stat().st_size > 1024
+    assert any("Tile salvato correttamente" in rec.message for rec in caplog.records)
+
+
+def test_download_tile_already_exists(tmp_path, monkeypatch, caplog):
+    out_file = tmp_path / "tile_0_0.jpg"
+    out_file.write_bytes(b"x" * 2048)
+
+    called = {}
+    def fake_get(*a, **k):
+        called["yes"] = True
+        return None
+
+    monkeypatch.setattr(td.requests, "get", fake_get)
+
+    with caplog.at_level("INFO"):
+        td.download_tile("http://fake", 0, 0, 256, tmp_path)
+
+    assert "yes" not in called
+    assert any("Tile già presente e valido" in rec.message for rec in caplog.records)
+
+
+def test_download_tile_http_error(tmp_path, monkeypatch, caplog):
+    class DummyResponse:
+        status_code = 500
+        def iter_content(self, chunk_size=8192): return []
+
+    monkeypatch.setattr(td.requests, "get", lambda *a, **k: DummyResponse())
+
+    with caplog.at_level("ERROR"):
+        td.download_tile("http://fake", 0, 0, 256, tmp_path)
+
+    assert any("Errore HTTP" in rec.message for rec in caplog.records)
+
+
+def test_download_tile_too_small(tmp_path, monkeypatch, caplog):
+    class DummyResponse:
+        status_code = 200
+        def iter_content(self, chunk_size=8192):
+            yield b"x" * 10
+
+    monkeypatch.setattr(td.requests, "get", lambda *a, **k: DummyResponse())
+
+    out_file = tmp_path / "tile_0_0.jpg"
+    with caplog.at_level("WARNING"):
+        td.download_tile("http://fake", 0, 0, 256, tmp_path)
+
+    assert not out_file.exists()
+    assert any("Tile troppo piccolo" in rec.message for rec in caplog.records)
+
+
+def test_download_tiles_invokes_download_tile(monkeypatch):
+    info = {
+        "@id": "http://fake",
+        "width": 512,
+        "height": 512,
+        "tiles": [{"width": 256}],
+    }
+
+    called = []
+    def fake_download_tile(base_url, x, y, tile_size, output_dir):
+        called.append((x, y))
+
+    monkeypatch.setattr(td, "download_tile", fake_download_tile)
+
+    td.download_tiles(info, "outdir")
+    assert set(called) == {(0, 0), (1, 0), (0, 1), (1, 1)}

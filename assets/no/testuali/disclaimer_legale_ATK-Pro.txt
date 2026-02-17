@@ -1,0 +1,23 @@
+📋 Ansvarsfraskrivelse
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Ansvarsfraskrivelse og etisk forpliktelse til bruk
+
+ATK-Pro-prosjektet er utviklet for arkiv-, slekts- og konsultasjonsformål.
+Alt innhold, med mindre annet er angitt, distribueres under Creative Commons BY-NC-SA 4.0-lisens.
+Direkte kommersiell bruk, redistribusjon uten kildehenvisning eller ikke-sporbar endring av originalt innhold er forbudt.
+ATK-Pro redistribuerer ikke noe innhold fra Antenati-portalen (antenati.cultura.gov.it) og har ikke til hensikt å replikere dens grensesnitt, struktur eller organisasjon.
+Alle som installerer eller bruker ATK-Pro, forplikter seg til å handle i full overensstemmelse med de juridiske merknadene og bruksvilkårene definert av Kulturdepartementet, tilgjengelig på følgende adresse:
+https://antenati.cultura.gov.it/note-legali/
+Dokumentene som er inkludert i konsultasjonsnoden utgjør ikke en offisiell kilde og har ingen sertifiserende eller juridisk verdi.
+Grensesnittet og verktøyene utviklet i prosjektet er ment å legge til rette for selvstendig konsultasjon av slektsbrukere i lokale miljøer, uten tilkobling eller støtte fra eksterne tjenester.
+Eventuelle referanser til offentlige organer, arkiver eller historisk dokumentasjon er kun ment for studie-, analyse- og kontekstformål.
+Hver fil i ATK-Pro-strukturen (i .txt, .md, .html eller .pdf-format) er utarbeidet med deklarativt, arkiv- eller demonstrasjonsformål.
+Katalogstrukturer, operasjonelle skript og slektsnotater leveres som prototyper, uten noen garanti for funksjonalitet eller ekstern validering.
+Prosjektets forfatter fraskriver seg ethvert ansvar for feil bruk, feilfortolkning eller uautorisert endring av de inkluderte dokumentene og verktøyene.
+Konsultasjonsnoden skal forstås som et arkiv med begrenset sirkulasjon, kun ment for studieformål og ikke for offentlig eller systematisk distribusjon.
+Denne erklæringen er en integrert del av prosjektets dokumentasjonsarkitektur.
+
+© 2026 Antenati Toolkit Pro | Versjon 2.0
+antenati.toolkit.pro@gmail.com

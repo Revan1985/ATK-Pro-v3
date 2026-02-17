@@ -1,0 +1,23 @@
+📋 Zastrzeżenie prawne
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Zastrzeżenie prawne i zobowiązanie etyczne do użytkowania
+
+Projekt ATK-Pro został stworzony do celów archiwalnych, genealogicznych i konsultacyjnych.
+Wszystkie treści, o ile nie zaznaczono inaczej, są rozpowszechniane na licencji Creative Commons BY-NC-SA 4.0.
+Zabronione jest bezpośrednie wykorzystanie komercyjne, redystrybucja bez podania źródła lub nieśledzone modyfikacje oryginalnych treści.
+ATK-Pro nie rozpowszechnia żadnych treści pochodzących z portalu Antenati (antenati.cultura.gov.it) i nie zamierza replikować jego interfejsu, struktury ani organizacji.
+Każdy, kto instaluje lub korzysta z ATK-Pro, zobowiązuje się do pełnej zgodności z notami prawnymi i warunkami użytkowania określonymi przez Ministerstwo Kultury, dostępnymi pod adresem:
+https://antenati.cultura.gov.it/note-legali/
+Dokumenty zawarte w węźle konsultacyjnym nie stanowią oficjalnego źródła i nie mają wartości certyfikacyjnej ani prawnej.
+Interfejs i narzędzia opracowane w ramach projektu mają na celu ułatwienie samodzielnej konsultacji użytkowników genealogicznych w środowiskach lokalnych, bez połączenia lub wsparcia ze strony usług zewnętrznych.
+Wszelkie odniesienia do instytucji, archiwów publicznych lub dokumentacji historycznej należy traktować wyłącznie jako materiały do badań, analiz i kontekstualizacji.
+Każdy plik obecny w strukturze ATK-Pro (w formacie .txt, .md, .html lub .pdf) został sporządzony w celach deklaratywnych, archiwalnych lub demonstracyjnych.
+Struktury katalogów, skrypty operacyjne i notatki genealogiczne są udostępniane w formie prototypu, bez żadnej gwarancji funkcjonalności lub zewnętrznej weryfikacji.
+Autor projektu zrzeka się odpowiedzialności za niewłaściwe użycie, błędną interpretację lub nieautoryzowaną modyfikację zawartych dokumentów i narzędzi.
+Węzeł konsultacyjny należy traktować jako archiwum o ograniczonym obiegu, przeznaczone wyłącznie do celów badawczych, a nie do publicznego lub systematycznego rozpowszechniania.
+Niniejsze oświadczenie stanowi integralną część architektury dokumentacji projektu.
+
+© 2026 Antenati Toolkit Pro | Wersja 2.0
+antenati.toolkit.pro@gmail.com

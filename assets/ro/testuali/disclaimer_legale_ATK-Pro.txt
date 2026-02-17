@@ -1,0 +1,23 @@
+📋 Disclaimer Legal
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Disclaimer legal e compromisso ético de uso
+
+O projeto ATK-Pro foi concebido para fins arquivísticos, genealógicos e de consulta.
+Todo o conteúdo, salvo indicação em contrário, é distribuído sob licença Creative Commons BY-NC-SA 4.0.
+É proibido o uso comercial direto, a redistribuição sem atribuição ou a modificação não rastreada do conteúdo original.
+ATK-Pro não redistribui nenhum conteúdo proveniente do Portal Antenati (antenati.cultura.gov.it) nem pretende replicar sua interface, estrutura ou organização.
+Quem instala ou utiliza o ATK-Pro compromete-se a agir em plena conformidade com as notas legais e os termos de uso definidos pelo Ministério da Cultura, disponíveis no seguinte endereço:
+https://antenati.cultura.gov.it/note-legali/
+Os documentos incluídos no nó consultivo não constituem uma fonte oficial nem têm valor certificativo ou legal.
+A interface e as ferramentas desenvolvidas no projeto têm como objetivo facilitar a consulta autônoma por parte dos usuários genealógicos em ambientes locais, sem conexão ou suporte de serviços externos.
+Qualquer referência a órgãos, arquivos públicos ou documentação histórica deve ser entendida exclusivamente para fins de estudo, análise e contextualização.
+Cada arquivo presente na estrutura do ATK-Pro (em formato .txt, .md, .html ou .pdf) foi redigido com intenção declarativa, arquivística ou demonstrativa.
+As estruturas de diretórios, os scripts operacionais e as notas genealógicas são fornecidos em forma de protótipo, sem qualquer garantia de funcionalidade ou validação externa.
+O autor do projeto declina toda responsabilidade pelo uso indevido, interpretação errada ou modificação não autorizada dos documentos e ferramentas incluídos.
+O nó consultivo deve ser entendido como um arquivo de circulação limitada, destinado exclusivamente a fins de estudo e não à divulgação pública ou sistemática.
+A presente declaração faz parte integrante da arquitetura documental do projeto.
+
+© 2026 Antenati Toolkit Pro | Versão 2.0
+antenati.toolkit.pro@gmail.com

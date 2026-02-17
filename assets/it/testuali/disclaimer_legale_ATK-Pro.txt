@@ -1,0 +1,23 @@
+📋 Disclaimer Legale
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Disclaimer legale e impegno etico d'uso
+
+Il progetto ATK-Pro è concepito a fini archivistici, genealogici e di consultazione.
+Tutti i contenuti, salvo diversa indicazione, sono distribuiti sotto licenza Creative Commons BY-NC-SA 4.0.
+È vietato l'utilizzo commerciale diretto, la redistribuzione priva di attribuzione o la modifica non tracciata dei contenuti originali.
+ATK-Pro non redistribuisce alcun contenuto proveniente dal Portale Antenati (antenati.cultura.gov.it) né intende replicarne l'interfaccia, la struttura o l'organizzazione.
+Chiunque installi o utilizzi ATK-Pro si impegna ad agire in piena conformità con le note legali e i termini di utilizzo definiti dal Ministero della Cultura, reperibili al seguente indirizzo:
+https://antenati.cultura.gov.it/note-legali/
+I documenti inclusi nel nodo consultivo non costituiscono una fonte ufficiale né hanno valore certificativo o legale.
+L’interfaccia e gli strumenti sviluppati all’interno del progetto hanno lo scopo di facilitare la consultazione autonoma da parte degli utenti genealogici in ambienti locali, senza connessione o supporto da parte di servizi esterni.
+Eventuali riferimenti a enti, archivi pubblici o documentazione storica sono da intendersi esclusivamente a fini di studio, analisi e contestualizzazione.
+Ogni file presente nella struttura di ATK-Pro (in formato .txt, .md, .html o .pdf) è stato redatto con intento dichiarativo, archivistico o dimostrativo.
+Le strutture di directory, gli script operativi e le note genealogiche sono forniti in forma di prototipo, senza alcuna garanzia di funzionalità o validazione esterna.
+L’autore del progetto declina ogni responsabilità in merito all’uso improprio, all’interpretazione errata o alla modifica non autorizzata dei documenti e degli strumenti inclusi.
+Il nodo consultativo è da intendersi come un archivio a circolazione limitata, destinato esclusivamente a finalità di studio e non alla diffusione pubblica o sistematica.
+La presente dichiarazione fa parte integrante dell’architettura documentale del progetto.
+
+© 2026 Antenati Toolkit Pro | Versione 2.0
+antenati.toolkit.pro@gmail.com

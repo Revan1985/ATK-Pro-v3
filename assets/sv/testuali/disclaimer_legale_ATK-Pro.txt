@@ -1,0 +1,23 @@
+📋 Juridisk friskrivning
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Juridisk friskrivning og etisk brug
+
+ATK-Pro-projektet er udviklet til arkiv-, slægts- og konsulentformål.
+Alt indhold, medmindre andet er angivet, distribueres under Creative Commons BY-NC-SA 4.0-licens.
+Direkte kommerciel brug, redistribuering uden kildehenvisning eller ikke-sporbar ændring af originalt indhold er forbudt.
+ATK-Pro redistribuerer ikke noget indhold fra Antenati-portalen (antenati.cultura.gov.it) og har ikke til hensigt at replikere dens grænseflade, struktur eller organisation.
+Alle, der installerer eller bruger ATK-Pro, forpligter sig til at handle i fuld overensstemmelse med de juridiske meddelelser og brugsvilkår defineret af Kulturministeriet, tilgængelige på følgende adresse:
+https://antenati.cultura.gov.it/note-legali/
+Dokumenterne, der er inkluderet i konsulentnoden, udgør ikke en officiel kilde og har ingen certificerende eller juridisk værdi.
+Grænsefladen og værktøjerne udviklet i projektet er beregnet til at lette selvstændig konsultation af slægtsbrugere i lokale miljøer, uden forbindelse eller støtte fra eksterne tjenester.
+Eventuelle henvisninger til offentlige organer, arkiver eller historisk dokumentation er kun beregnet til studie-, analyse- og kontekstformål.
+Hver fil i ATK-Pro-strukturen (i .txt, .md, .html eller .pdf-format) er udarbejdet med deklarativt, arkiv- eller demonstrationsformål.
+Katalogstrukturer, operationelle scripts og slægtsnotater leveres som prototyper, uden nogen garanti for funktionalitet eller ekstern validering.
+Projektets forfatter fraskriver sig ethvert ansvar for forkert brug, fejltolkning eller uautoriseret ændring af de inkluderede dokumenter og værktøjer.
+Konsulentnoden skal forstås som et arkiv med begrænset cirkulation, kun beregnet til studieformål og ikke til offentlig eller systematisk distribution.
+Denne erklæring er en integreret del af projektets dokumentationsarkitektur.
+
+© 2026 Antenati Toolkit Pro | Version 2.0
+antenati.toolkit.pro@gmail.com

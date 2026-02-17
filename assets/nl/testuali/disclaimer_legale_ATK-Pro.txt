@@ -1,0 +1,23 @@
+📋 Juridische disclaimer
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Juridische disclaimer en ethisch gebruik
+
+Het ATK-Pro-project is bedoeld voor archief-, genealogische en consultatiedoeleinden.
+Alle inhoud, tenzij anders aangegeven, wordt verspreid onder de Creative Commons BY-NC-SA 4.0-licentie.
+Direct commercieel gebruik, herdistributie zonder bronvermelding of niet-traceerbare wijziging van de originele inhoud is verboden.
+ATK-Pro herdistribueert geen inhoud van het Antenati-portaal (antenati.cultura.gov.it) en is niet van plan de interface, structuur of organisatie ervan te repliceren.
+Iedereen die ATK-Pro installeert of gebruikt, stemt ermee in volledig te voldoen aan de juridische kennisgevingen en gebruiksvoorwaarden die zijn vastgesteld door het Ministerie van Cultuur, beschikbaar op het volgende adres:
+https://antenati.cultura.gov.it/note-legali/
+De documenten die zijn opgenomen in de consultatieve node vormen geen officiële bron en hebben geen certificerende of juridische waarde.
+De interface en tools die binnen het project zijn ontwikkeld, zijn bedoeld om onafhankelijke consultatie door genealogische gebruikers in lokale omgevingen te vergemakkelijken, zonder verbinding of ondersteuning van externe diensten.
+Eventuele verwijzingen naar openbare instanties, archieven of historische documentatie zijn uitsluitend bedoeld voor studie, analyse en contextualisering.
+Elk bestand in de ATK-Pro-structuur (in .txt, .md, .html of .pdf-formaat) is opgesteld met een declaratief, archief- of demonstratief doel.
+Directorystructuren, operationele scripts en genealogische aantekeningen worden als prototype verstrekt, zonder enige garantie voor functionaliteit of externe validatie.
+De auteur van het project wijst elke verantwoordelijkheid af voor onjuist gebruik, verkeerde interpretatie of niet-geautoriseerde wijziging van de opgenomen documenten en tools.
+De consultatieve node moet worden beschouwd als een archief met beperkte circulatie, uitsluitend bedoeld voor studiedoeleinden en niet voor openbare of systematische verspreiding.
+Deze verklaring maakt integraal deel uit van de documentatiearchitectuur van het project.
+
+© 2026 Antenati Toolkit Pro | Versie 2.0
+antenati.toolkit.pro@gmail.com

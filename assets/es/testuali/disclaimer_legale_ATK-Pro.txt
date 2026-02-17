@@ -1,0 +1,23 @@
+📋 Descargo de responsabilidad legal
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Descargo de responsabilidad legal y compromiso ético de uso
+
+El proyecto ATK-Pro está concebido con fines archivísticos, genealógicos y de consulta.
+Todos los contenidos, salvo indicación contraria, se distribuyen bajo licencia Creative Commons BY-NC-SA 4.0.
+Está prohibido el uso comercial directo, la redistribución sin atribución o la modificación no rastreada de los contenidos originales.
+ATK-Pro no redistribuye ningún contenido proveniente del Portal Antenati (antenati.cultura.gov.it) ni pretende replicar su interfaz, estructura u organización.
+Quien instale o utilice ATK-Pro se compromete a actuar en plena conformidad con las notas legales y los términos de uso definidos por el Ministerio de Cultura, disponibles en la siguiente dirección:
+https://antenati.cultura.gov.it/note-legali/
+Los documentos incluidos en el nodo consultivo no constituyen una fuente oficial ni tienen valor certificativo o legal.
+La interfaz y las herramientas desarrolladas en el proyecto tienen como objetivo facilitar la consulta autónoma por parte de los usuarios genealógicos en entornos locales, sin conexión ni soporte de servicios externos.
+Cualquier referencia a entidades, archivos públicos o documentación histórica debe entenderse exclusivamente con fines de estudio, análisis y contextualización.
+Cada archivo presente en la estructura de ATK-Pro (en formato .txt, .md, .html o .pdf) ha sido redactado con intención declarativa, archivística o demostrativa.
+Las estructuras de directorios, los scripts operativos y las notas genealógicas se proporcionan en forma de prototipo, sin ninguna garantía de funcionalidad o validación externa.
+El autor del proyecto declina toda responsabilidad por el uso indebido, la interpretación errónea o la modificación no autorizada de los documentos y herramientas incluidos.
+El nodo consultivo debe entenderse como un archivo de circulación limitada, destinado exclusivamente a fines de estudio y no a la difusión pública o sistemática.
+La presente declaración forma parte integrante de la arquitectura documental del proyecto.
+
+© 2026 Antenati Toolkit Pro | Versión 2.0
+antenati.toolkit.pro@gmail.com

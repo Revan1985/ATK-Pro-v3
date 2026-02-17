@@ -1,0 +1,23 @@
+📋 Tuyên bố Miễn trừ Trách nhiệm Pháp lý
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Tuyên bố miễn trừ trách nhiệm pháp lý và cam kết sử dụng đạo đức
+
+Dự án ATK-Pro được thiết kế cho mục đích lưu trữ, phả hệ và tư vấn.
+Tất cả nội dung, trừ khi có quy định khác, được phân phối theo giấy phép Creative Commons BY-NC-SA 4.0.
+Cấm sử dụng thương mại trực tiếp, phân phối lại mà không ghi nguồn hoặc sửa đổi không được theo dõi của nội dung gốc.
+ATK-Pro không phân phối lại bất kỳ nội dung nào từ Cổng thông tin Antenati (antenati.cultura.gov.it) và không có ý định sao chép giao diện, cấu trúc hoặc tổ chức của nó.
+Bất kỳ ai cài đặt hoặc sử dụng ATK-Pro đều cam kết tuân thủ đầy đủ các thông báo pháp lý và điều khoản sử dụng do Bộ Văn hóa quy định, có tại địa chỉ:
+https://antenati.cultura.gov.it/note-legali/
+Các tài liệu được đưa vào nút tư vấn không phải là nguồn chính thức và không có giá trị xác nhận hoặc pháp lý.
+Giao diện và các công cụ được phát triển trong dự án nhằm tạo điều kiện thuận lợi cho người dùng phả hệ tự tư vấn trong môi trường địa phương, không cần kết nối hoặc hỗ trợ từ các dịch vụ bên ngoài.
+Bất kỳ tham chiếu nào đến cơ quan công cộng, kho lưu trữ hoặc tài liệu lịch sử chỉ nhằm mục đích nghiên cứu, phân tích và bối cảnh hóa.
+Mỗi tệp trong cấu trúc ATK-Pro (định dạng .txt, .md, .html hoặc .pdf) được soạn thảo với mục đích tuyên bố, lưu trữ hoặc trình diễn.
+Cấu trúc thư mục, tập lệnh vận hành và ghi chú phả hệ được cung cấp dưới dạng nguyên mẫu, không có bất kỳ đảm bảo nào về chức năng hoặc xác minh bên ngoài.
+Tác giả dự án từ chối mọi trách nhiệm liên quan đến việc sử dụng sai, diễn giải sai hoặc sửa đổi không được phép đối với các tài liệu và công cụ được đưa vào.
+Nút tư vấn được hiểu là một kho lưu trữ có lưu thông hạn chế, chỉ dành cho mục đích nghiên cứu và không dành cho phân phối công khai hoặc có hệ thống.
+Tuyên bố này là một phần không thể tách rời của cấu trúc tài liệu của dự án.
+
+© 2026 Antenati Toolkit Pro | Phiên bản 2.0
+antenati.toolkit.pro@gmail.com

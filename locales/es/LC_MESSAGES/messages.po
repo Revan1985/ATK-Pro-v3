@@ -1,0 +1,89 @@
+# Spanish translations for PROJECT.
+# Copyright (C) 2025 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2025-08-18 17:59+0200\n"
+"PO-Revision-Date: 2025-08-19 17:45+0200\n"
+"Last-Translator: \n"
+"Language-Team: es <LL@li.org>\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Generated-By: Babel 2.17.0\n"
+"X-Generator: Poedit 3.6\n"
+
+#: test_i18n.py:36
+msgid "Apri PDF"
+msgstr "Abrir PDF"
+
+#: docs/template_html_ATK-Pro.html:19 test_i18n.py:37
+msgid "Timestamp:"
+msgstr "Marca de tiempo:"
+
+#: docs/template_html_ATK-Pro.html:6
+msgid "Titolo documento"
+msgstr "Título del documento"
+
+#: docs/template_html_ATK-Pro.html:13
+msgid "ATK-Pro Logo"
+msgstr "Logotipo de ATK-Pro"
+
+#: docs/template_html_ATK-Pro.html:16
+msgid "Titolo principale"
+msgstr "Título principal"
+
+#: docs/template_html_ATK-Pro.html:22
+msgid "Descrizione breve / info documento"
+msgstr "Breve descripción / información del documento"
+
+#: docs/template_html_ATK-Pro.html:27
+msgid "Titolo sezione 1"
+msgstr "Título de la sección 1"
+
+#: docs/template_html_ATK-Pro.html:28
+msgid "Contenuto sezione 1"
+msgstr "Contenido de la sección 1"
+
+#: docs/template_html_ATK-Pro.html:32
+msgid "Titolo sezione 2"
+msgstr "Título de la sección 2"
+
+#: docs/template_html_ATK-Pro.html:33
+msgid "Contenuto sezione 2"
+msgstr "Contenido de la sección 2"
+
+#: docs/template_html_ATK-Pro.html:37
+msgid "Titolo sezione 3"
+msgstr "Título de la sección 3"
+
+#: docs/template_html_ATK-Pro.html:38
+msgid "Contenuto sezione 3"
+msgstr "Contenido de la sección 3"
+
+#: src/ui_info.py:4
+msgid "Antenati Tile Rebuilder"
+msgstr "Antenati Tile Rebuilder"
+
+#: src/ui_info.py:5
+msgid "Benvenuto in ATK-Pro v1.5"
+msgstr "Bienvenido a ATK-Pro v1.5"
+
+#: src/ui_info.py:6
+msgid ""
+"Usa la CLI per rigenerare tessere, gestire metadati e creare PDF "
+"multipagina."
+msgstr ""
+"Utilice la CLI para regenerar mosaicos, administrar metadatos y "
+"crear archivos PDF de varias páginas."
+
+#: placeholder universale
+msgid "..."
+msgstr "..."

@@ -1,0 +1,28 @@
+# ================================================================
+# 📜 ATK-Pro – input_link_base_v2.0.txt
+# Tệp này chứa danh sách các hành vi/sổ đăng ký cần phân tích.
+# ĐỊNH DẠNG:
+# • Một dòng với "Chế độ - Mô tả"
+# • Dòng tiếp theo với liên kết ARK (https://antenati.cultura.gov.it/ark:/...)
+# • Các dòng trống sẽ bị bỏ qua
+# 
+# Các chế độ được phép:
+# D = Tài liệu đơn
+# d = Tài liệu đơn lẻ (biến thể)
+# R = Đăng ký
+# r = Đăng ký (biến thể)
+# ================================================================
+
+D - Pigoli Angelo - Mất năm 1896 - Brescia
+https://antenati.cultura.gov.it/ark:/12657/an_ua19490642/wXepJeG
+
+d - Pesci Daniele Giovanni và Savoldi Angela Carolina - Hôn nhân 1924 - Brescia
+https://antenati.cultura.gov.it/ark:/12657/an_ud19467689
+
+R - Đăng ký - Tử vong - 1808 - Poncarale với Borgo Poncarale (nay là Poncarale)
+https://antenati.cultura.gov.it/ark:/12657/an_ua331306/0Z89vd3
+
+r - Đăng ký - Hôn nhân - 1924 - Brescia
+https://antenati.cultura.gov.it/ark:/12657/an_ud19467689
+
+# (thêm nhiều cặp theo cùng cấu trúc)

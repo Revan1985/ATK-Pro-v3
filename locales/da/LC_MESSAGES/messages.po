@@ -1,0 +1,59 @@
+# Danish translations for ATK-Pro
+# Copyright (C) 2026 ATK-Pro
+# This file is distributed under the same license as the ATK-Pro project.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: ATK-Pro 2.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-01-22 00:00+0000\n"
+"PO-Revision-Date: 2026-01-22 00:00+0000\n"
+"Last-Translator: ATK-Pro Team <info@atk-pro.com>\n"
+"Language-Team: Danish\n"
+"Language: da\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: main window
+msgid "File di input"
+msgstr "Inputfil"
+
+msgid "Output"
+msgstr "Output"
+
+msgid "Servizi"
+msgstr "Tjenester"
+
+msgid "Documenti"
+msgstr "Dokumenter"
+
+msgid "Parametri"
+msgstr "Parametre"
+
+msgid "Continuare l'iterazione?"
+msgstr "Fortsætte iterationen?"
+
+msgid "Conferma"
+msgstr "Bekræft"
+
+msgid "Annulla"
+msgstr "Annuller"
+
+msgid "Errore"
+msgstr "Fejl"
+
+msgid "Operazione completata"
+msgstr "Handling fuldført"
+
+msgid "Input:"
+msgstr "Input:"
+
+msgid "Formati:"
+msgstr "Formater:"
+
+msgid "Configurazione attuale"
+msgstr "Aktuel konfiguration"
+
+msgid "File non trovato"
+msgstr "Fil ikke fundet"

@@ -1,0 +1,119 @@
+# ============================================================================
+# ATK-Pro v2.0 - Complete Dependencies
+# ============================================================================
+# Generated: 2025-12-15
+# Python version: 3.12.3
+# Usage: pip install -r requirements.txt
+# ============================================================================
+# ============================================================================
+# ATK-Pro v2.0 - Complete Dependencies
+# ============================================================================
+# Generated: 2025-12-15
+# Python version: 3.12.3
+# Usage: pip install -r requirements.txt
+# ============================================================================
+
+# === CORE NETWORK & DATA ===
+requests==2.32.5                      # HTTP library
+urllib3==2.5.0                        # HTTP client
+certifi==2025.10.5                    # SSL certificates
+charset-normalizer==3.4.4             # Character encoding
+idna==3.11                            # Internationalized domain names
+# httpx==0.13.3                         # HTTPX (compatibile con idna 3.11)
+
+# === IMAGE PROCESSING ===
+Pillow==12.0.0                        # Image manipulation
+piexif==1.1.3                         # EXIF metadata
+opencv-python-headless==4.12.0.88     # Computer vision (headless)
+numpy==2.2.6                          # Numerical computing
+
+# === PDF GENERATION ===
+pypdf==6.1.3                          # PDF manipulation
+
+# === SPREADSHEET ===
+openpyxl==3.1.5                       # Excel files
+et_xmlfile==2.0.0                     # XML utilities for Excel
+
+# === BROWSER AUTOMATION ===
+playwright==1.55.0                    # Modern browser automation (IIIF extraction)
+pyee==13.0.0                          # Event emitter for Playwright
+selenium==4.38.0                      # Legacy browser support
+
+# === INTERNATIONALIZATION & LOCALIZATION ===
+Babel==2.17.0                         # i18n utilities
+polib==1.2.0                          # GNU gettext .po/.pot files
+
+# === DATETIME & UTILITIES ===
+python-dateutil==2.9.0.post0          # Advanced date handling
+PyYAML==6.0.3                         # YAML parsing
+six==1.17.0                           # Python 2/3 compatibility
+
+# === GUI (Qt6) ===
+PySide6[webengine]==6.10.1             # Qt6 Python bindings + WebEngine (browser)
+PySide6_Essentials==6.10.1            # Qt6 essentials
+PySide6_Addons==6.10.1                # Qt6 addons
+shiboken6==6.10.1                     # Shiboken binding generator
+QtPy==2.4.0                           # Qt abstraction layer
+
+# === TESTING SUITE ===
+pytest==8.4.2                         # Testing framework
+pytest-cov==7.0.0                     # Code coverage
+pytest-mock==3.15.1                   # Mocking support
+pytest-qt==4.5.0                      # Qt-specific testing
+requests-mock==1.12.1                 # HTTP mocking
+coverage==7.11.0                      # Code coverage measurement
+
+# === EXECUTION & PACKAGING ===
+pyinstaller==6.16.0                   # Create standalone executables
+pyinstaller-hooks-contrib==2025.9     # PyInstaller hooks for libraries
+typing_extensions==4.15.0             # Extended type hints
+packaging==25.0                       # Package utilities
+
+# === ASYNC & NETWORKING ===
+trio==0.31.0                          # Async I/O (Playwright dependency)
+trio-websocket==0.12.2                # WebSocket support (Playwright)
+sniffio==1.3.1                        # Async detection
+websocket-client==1.9.0               # WebSocket client
+wsproto==1.2.0                        # WebSocket protocol
+sortedcontainers==2.4.0               # Sorted containers
+PySocks==1.7.1                        # SOCKS proxy support
+
+# === OCR (PLACEHOLDER - disabled for v2.0) ===
+pytesseract==0.3.13                   # Tesseract OCR interface (future scope)
+
+# === INTERNAL UTILITIES ===
+attrs==25.4.0                         # Class decorator utilities
+iniconfig==2.3.0                      # INI config file parsing
+pluggy==1.6.0                         # Plugin system
+Jinja2==3.1.6                         # Template engine
+MarkupSafe==3.0.3                     # Safe string handling
+colorama==0.4.6                       # Colored terminal output
+Pygments==2.19.2                      # Syntax highlighting
+pefile==2023.2.7                      # PE file parser (PyInstaller)
+altgraph==0.17.4                      # Graph algorithms (PyInstaller)
+pywin32-ctypes==0.2.3                 # Windows registry access
+pycparser==2.23                       # C parser (cffi dependency)
+cffi==2.0.0                           # C Foreign Function Interface
+greenlet==3.2.4                       # Lightweight concurrency
+
+# ============================================================================
+# INSTALLATION INSTRUCTIONS
+# ============================================================================
+#
+# 1. Create virtual environment (optional but recommended):
+#    python -m venv .venv312
+#    .\.venv312\Scripts\activate
+#
+# 2. Install all dependencies:
+#    pip install -r requirements.txt
+#
+# 3. Setup Playwright browsers (one-time):
+#    python -m playwright install chromium
+#
+# 4. Run tests to verify installation:
+#    pytest -v
+#
+# 5. Run application:
+#    python -m src.main
+#
+# ============================================================================
