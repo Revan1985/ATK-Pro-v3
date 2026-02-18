@@ -1,0 +1,128 @@
+name: Build macOS App
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Permette esecuzione manuale
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+        cache: 'pip'
+        
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+        
+    - name: Install Playwright browsers
+      run: |
+        playwright install chromium
+        
+    - name: Verify project structure
+      run: |
+        echo "=== Project structure ==="
+        ls -la
+        echo "=== Assets ==="
+        ls -la assets/ | head -20
+        echo "=== Locales ==="
+        ls -la locales/ | head -10
+        echo "=== Docs generali ==="
+        ls -la docs_generali/
+        
+    - name: Build macOS app with PyInstaller
+      run: |
+        # Build usando spec file (adattato per macOS)
+        pyinstaller \
+          --name ATK-Pro \
+          --windowed \
+          --onefile \
+          --icon=assets/common/grafici/ATK-Pro.ico \
+          --add-data "src/main_gui_qt.py:src" \
+          --add-data "src/user_prompts.py:src" \
+          --add-data "assets:assets" \
+          --add-data "locales:locales" \
+          --add-data "docs_generali/glossario_multilingua_ATK-Pro.json:docs_generali" \
+          --hidden-import=playwright \
+          --hidden-import=PIL \
+          --hidden-import=PySide6 \
+          --hidden-import=PySide6.QtCore \
+          --hidden-import=PySide6.QtGui \
+          --hidden-import=PySide6.QtWidgets \
+          --hidden-import=requests \
+          --hidden-import=urllib3 \
+          --hidden-import=certifi \
+          --hidden-import=src.main_gui_qt \
+          --exclude-module=pytest \
+          --exclude-module=matplotlib \
+          --exclude-module=scipy \
+          --exclude-module=numpy \
+          --exclude-module=pandas \
+          --noconsole \
+          src/main.py
+          
+    - name: Verify build output
+      run: |
+        echo "=== Build output ==="
+        ls -lah dist/
+        if [ -f "dist/ATK-Pro.app/Contents/MacOS/ATK-Pro" ]; then
+          echo "✓ ATK-Pro.app compiled successfully"
+          du -sh dist/ATK-Pro.app
+        else
+          echo "✗ Build failed - no .app found"
+          exit 1
+        fi
+        
+    - name: Create DMG installer (optional)
+      run: |
+        # Crea directory per DMG
+        mkdir -p dist/dmg
+        cp -r dist/ATK-Pro.app dist/dmg/
+        
+        # Crea link simbolico ad Applications
+        ln -s /Applications dist/dmg/Applications
+        
+        # Crea DMG
+        hdiutil create -volname "ATK-Pro" \
+          -srcfolder dist/dmg \
+          -ov -format UDZO \
+          dist/ATK-Pro-macOS.dmg
+          
+        echo "✓ DMG created: $(du -sh dist/ATK-Pro-macOS.dmg)"
+        
+    - name: Upload .app artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ATK-Pro-macOS-app
+        path: dist/ATK-Pro.app
+        retention-days: 30
+        
+    - name: Upload DMG artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ATK-Pro-macOS-dmg
+        path: dist/ATK-Pro-macOS.dmg
+        retention-days: 30
+        
+    - name: Upload to GitHub Release (if tagged)
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/ATK-Pro-macOS.dmg
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
