@@ -1,18 +1,18 @@
 # Italian (Italy) translations for Antenati ToolKit Pro.
-# Copyright (C) 2025 ORGANIZATION
+# Copyright (C) 2025 ATK-Pro Team
 # This file is distributed under the same license as the Antenati ToolKit
 # Pro project.
 # Daniele Pigoli <antenati.toolkit.pro@gmail.com>, 2025.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ATK-Pro VERSION\n"
+"Project-Id-Version: Antenati ToolKit Pro VERSION\n"
 "Report-Msgid-Bugs-To: antenati.toolkit.pro@gmail.com\n"
 "POT-Creation-Date: 2025-08-18 17:59+0200\n"
 "PO-Revision-Date: 2025-08-19 17:53+0200\n"
 "Last-Translator: Daniele Pigoli <antenati.toolkit.pro@gmail.com>\n"
-"Language: it_IT\n"
-"Language-Team: it_IT <LL@li.org>\n"
+"Language: tr\n"
+"Language-Team: Turkish <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
@@ -21,67 +21,65 @@ msgstr ""
 
 #: test_i18n.py:36
 msgid "Apri PDF"
-msgstr "Åpne PDF"
+msgstr "PDF'yi aç"
 
 #: docs/template_html_ATK-Pro.html:19 test_i18n.py:37
 msgid "Timestamp:"
-msgstr "Tidsstempel:"
+msgstr "Zaman damgası:"
 
 #: docs/template_html_ATK-Pro.html:6
 msgid "Titolo documento"
-msgstr "Dokumenttittel"
+msgstr "Belge başlığı"
 
 #: docs/template_html_ATK-Pro.html:13
 msgid "ATK-Pro Logo"
-msgstr "ATK-Pro-logo"
+msgstr "ATK-Pro Logosu"
 
 #: docs/template_html_ATK-Pro.html:16
 msgid "Titolo principale"
-msgstr "Hovedtittel"
+msgstr "Ana başlık"
 
 #: docs/template_html_ATK-Pro.html:22
 msgid "Descrizione breve / info documento"
-msgstr "Kort beskrivelse / dokumentinfo"
+msgstr "Kısa açıklama / belge bilgisi"
 
 #: docs/template_html_ATK-Pro.html:27
 msgid "Titolo sezione 1"
-msgstr "Seksjonstittel 1"
+msgstr "Bölüm başlığı 1"
 
 #: docs/template_html_ATK-Pro.html:28
 msgid "Contenuto sezione 1"
-msgstr "Innhold i del 1"
+msgstr "1. bölümün içeriği"
 
 #: docs/template_html_ATK-Pro.html:32
 msgid "Titolo sezione 2"
-msgstr "Seksjonstittel 2"
+msgstr "Bölüm başlığı 2"
 
 #: docs/template_html_ATK-Pro.html:33
 msgid "Contenuto sezione 2"
-msgstr "Innholdet i del 2"
+msgstr "2. bölümün içeriği"
 
 #: docs/template_html_ATK-Pro.html:37
 msgid "Titolo sezione 3"
-msgstr "Seksjon 3 tittel"
+msgstr "Bölüm 3 başlığı"
 
 #: docs/template_html_ATK-Pro.html:38
 msgid "Contenuto sezione 3"
-msgstr "Innholdet i seksjon 3"
+msgstr "3. bölümün içeriği"
 
 #: src/ui_info.py:4
 msgid "Antenati Tile Rebuilder"
-msgstr "Ancestors Tile Rebuilder"
+msgstr "Ataların Kiremit Yenileyicisi"
 
 #: src/ui_info.py:5
 msgid "Benvenuto in ATK-Pro v1.5"
-msgstr "Velkommen til ATK-Pro v1.5"
+msgstr "ATK-Pro v1.5'e hoş geldiniz"
 
 #: src/ui_info.py:6
-msgid ""
-"Usa la CLI per rigenerare tessere, gestire metadati e creare PDF "
-"multipagina."
+msgid "Usa la CLI per rigenerare tessere, gestire metadati e creare PDF multipagina."
 msgstr ""
-"Bruk CLI til å regenerere fliser, administrere metadata og lage PDF-er på"
-" flere sider."
+"Kutucukları yeniden oluşturmak, meta verileri yönetmek ve çok sayfalı PDF'ler"
+" oluşturmak için CLI'yi kullanın."
 
 #: placeholder universale
 msgid "..."
