@@ -76,8 +76,8 @@ a = Analysis(
         # Glossario JSON (CRITICAL for i18n)
         ('docs_generali/glossario_multilingua_ATK-Pro.json', 'docs_generali'),
         
-        # Playwright browsers (required for canvas extraction)
-        ('.venv312/Lib/site-packages/playwright', 'playwright'),
+        # NOTA: Playwright incluso automaticamente tramite hiddenimports
+        # I browser Chromium (~150 MB) vengono scaricati on-demand al primo uso
         
         # Configuration + documentation
         # ('README.md', '.'),
