@@ -75,6 +75,7 @@ _archive/
 # ✅ ECCEZIONI - File critici che DEVONO essere salvati in GitHub
 !docs_generali/glossario_multilingua_ATK-Pro.json  # CRITICO per localizzazione v2.0
 !manifest.json/  # Mantieni manifest per reference (ma escludiamo i contenuti)
+!.github/workflows/*.yml  # GitHub Actions workflow (CI/CD automation)
 
 # 🧱 Build e distribuzione
 build/
