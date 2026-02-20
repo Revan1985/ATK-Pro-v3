@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Bundle Identity -->
+    <key>CFBundleIdentifier</key>
+    <string>com.atkpro.atkpro</string>
+    
+    <key>CFBundleName</key>
+    <string>ATK-Pro</string>
+    
+    <key>CFBundleDisplayName</key>
+    <string>ATK-Pro</string>
+    
+    <key>CFBundleVersion</key>
+    <string>2.0.6</string>
+    
+    <key>CFBundleShortVersionString</key>
+    <string>2.0.6</string>
+    
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    
+    <key>CFBundleSignature</key>
+    <string>????</string>
+    
+    <key>CFBundleExecutable</key>
+    <string>ATK-Pro</string>
+    
+    <key>CFBundleIconFile</key>
+    <string>ATK-Pro.icns</string>
+    
+    <!-- macOS Version Requirements -->
+    <key>LSMinimumSystemVersion</key>
+    <string>10.13</string>
+    
+    <!-- High Resolution Display Support -->
+    <key>NSHighResolutionCapable</key>
+    <true/>
+    
+    <!-- App Behavior -->
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.productivity</string>
+    
+    <key>NSPrincipalClass</key>
+    <string>NSApplication</string>
+    
+    <key>NSAppleScriptEnabled</key>
+    <false/>
+    
+    <!-- GUI Application (not background) -->
+    <key>LSUIElement</key>
+    <false/>
+    
+    <!-- Privacy/Security (for network access) -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <true/>
+    </dict>
+    
+    <!-- Document Types (if needed in future) -->
+    <key>CFBundleDocumentTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeName</key>
+            <string>Text File</string>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>LSItemContentTypes</key>
+            <array>
+                <string>public.text</string>
+            </array>
+        </dict>
+    </array>
+    
+    <!-- Human Readable Copyright -->
+    <key>NSHumanReadableCopyright</key>
+    <string>Copyright © 2026 ATK-Pro. All rights reserved.</string>
+</dict>
+</plist>

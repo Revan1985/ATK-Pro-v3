@@ -46,12 +46,13 @@ jobs:
         
     - name: Build macOS app with PyInstaller
       run: |
-        # Build usando spec file (adattato per macOS)
+        # Build usando spec file (adattato per macOS con Info.plist)
         pyinstaller \
           --name ATK-Pro \
           --windowed \
           --onefile \
           --icon=assets/common/grafici/ATK-Pro.ico \
+          --osx-bundle-identifier=com.atkpro.atkpro \
           --add-data "src/main_gui_qt.py:src" \
           --add-data "src/user_prompts.py:src" \
           --add-data "assets:assets" \
@@ -72,8 +73,13 @@ jobs:
           --exclude-module=scipy \
           --exclude-module=numpy \
           --exclude-module=pandas \
-          --noconsole \
           src/main.py
+        
+        # Copia Info.plist personalizzato nell'app bundle
+        if [ -f "Info.plist" ]; then
+          cp -f Info.plist dist/ATK-Pro.app/Contents/Info.plist
+          echo "✓ Info.plist personalizzato copiato"
+        fi
           
     - name: Verify build output
       run: |

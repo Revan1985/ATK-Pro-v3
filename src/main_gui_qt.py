@@ -2227,10 +2227,12 @@ def main():
     logging.debug("Avvio main_gui_qt.py")
     app = QApplication(sys.argv)
 
-    # Font custom
-    QFontDatabase.addApplicationFont("assets/common/fonts/Aref_Ruqaa/ArefRuqaa-Regular.ttf")
-    QFontDatabase.addApplicationFont("assets/common/fonts/Crimson_Text/CrimsonText-Regular.ttf")
-    logging.debug("Font custom caricati: Aref Ruqaa, Crimson Text")
+    # Font custom (usa asset_path per supportare bundle macOS/Windows)
+    font1_path = asset_path("assets/common/fonts/Aref_Ruqaa/ArefRuqaa-Regular.ttf")
+    font2_path = asset_path("assets/common/fonts/Crimson_Text/CrimsonText-Regular.ttf")
+    QFontDatabase.addApplicationFont(font1_path)
+    QFontDatabase.addApplicationFont(font2_path)
+    logging.debug(f"Font custom caricati: {font1_path}, {font2_path}")
 
     # Stile ATK da QSS
     file = QFile(asset_path("assets/common/testuali/atk_style.qss"))
