@@ -93,22 +93,38 @@ jobs:
           exit 1
         fi
         
-    - name: Create DMG installer (optional)
+    - name: Create DMG installer
       run: |
+        # Rimuovi attributi di quarantena dall'app (previene "app danneggiata")
+        echo "Rimozione attributi di quarantena..."
+        xattr -cr dist/ATK-Pro.app
+        
         # Crea directory per DMG
         mkdir -p dist/dmg
         cp -r dist/ATK-Pro.app dist/dmg/
         
-        # Crea link simbolico ad Applications
+        # Copia README con istruzioni macOS
+        if [ -f "README_MACOS.txt" ]; then
+          cp README_MACOS.txt dist/dmg/
+          echo "✓ README_MACOS.txt incluso nel DMG"
+        fi
+        
+        # Crea link simbolico ad Applications per drag & drop
         ln -s /Applications dist/dmg/Applications
         
-        # Crea DMG
+        # Crea DMG compresso
         hdiutil create -volname "ATK-Pro" \
           -srcfolder dist/dmg \
-          -ov -format UDZO \
+          -ov \
+          -format UDZO \
+          -imagekey zlib-level=9 \
           dist/ATK-Pro-macOS.dmg
           
         echo "✓ DMG created: $(du -sh dist/ATK-Pro-macOS.dmg)"
+        
+        # Verifica che il DMG sia leggibile
+        hdiutil verify dist/ATK-Pro-macOS.dmg
+        echo "✓ DMG verification passed"
         
     - name: Upload .app artifact
       uses: actions/upload-artifact@v4
