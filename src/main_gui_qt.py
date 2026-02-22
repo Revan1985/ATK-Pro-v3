@@ -2226,11 +2226,15 @@ def main():
     logging.info("Test log avvio")
     logging.debug("Avvio main_gui_qt.py")
 
-    # Su Linux disabilita il sandbox Chromium (richiesto in ambienti headless/CI
-    # dove il kernel non supporta user namespaces per il renderer QtWebEngine)
+    # Su Linux, disabilita il sandbox Chromium solo in ambienti CI/headless
+    # (dove il kernel non supporta user namespaces per il renderer QtWebEngine).
+    # Su desktop reale (con DISPLAY o WAYLAND_DISPLAY) il sandbox rimane attivo.
     if sys.platform.startswith("linux"):
-        os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
-        os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox")
+        in_ci = os.environ.get("CI") or os.environ.get("GITHUB_ACTIONS")
+        has_display = os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")
+        if in_ci or not has_display:
+            os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+            os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox")
 
     app = QApplication(sys.argv)
 
