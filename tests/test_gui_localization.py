@@ -44,7 +44,8 @@ def test_stringhe_localizzate_presenti():
         assert stringa in tutti_i_messaggi, f"Stringa '{stringa}' non trovata nel glossario"
 
 
-@pytest.mark.parametrize("lingua", ["IT", "EN", "ES", "DE", "FR", "PT", "NL", "AR", "HE", "RU"])
+@pytest.mark.parametrize("lingua", ["IT", "EN", "ES", "DE", "FR", "PT", "NL", "AR", "HE", "RU",
+                                     "DA", "EL", "JA", "NO", "PL", "RO", "SV", "TR", "VI", "ZH"])
 def test_get_msg_funziona_tutte_lingue(lingua):
     """Verifica che get_msg funziona per tutte le lingue."""
     glossario = carica_glossario(lingua)

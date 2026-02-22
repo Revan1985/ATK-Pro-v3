@@ -128,7 +128,9 @@ def get_language_from_registry():
             lang, _ = winreg.QueryValueEx(reg_key, "Language")
             winreg.CloseKey(reg_key)
             logging.debug(f"Lingua letta dal registro: {lang}")
-            return lang if lang in ["it", "en", "es", "de", "fr", "pt", "nl", "ar", "he", "ru"] else "en"
+            lingue_valide = ["it", "en", "es", "de", "fr", "pt", "nl", "ar", "he", "ru",
+                             "da", "el", "ja", "no", "pl", "ro", "sv", "tr", "vi", "zh"]
+            return lang if lang in lingue_valide else "en"
         except FileNotFoundError:
             logging.debug("Chiave registro ATK-Pro non trovata")
             return "en"

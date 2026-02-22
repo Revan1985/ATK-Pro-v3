@@ -52,7 +52,9 @@ class TestElaborazioneWorkerInit:
         """ElaborazioneWorker usa lingua default se non specificata."""
         worker = ElaborazioneWorker([])
         assert hasattr(worker, 'lingua')
-        assert worker.lingua in ["IT", "EN", "ES", "DE", "FR", "PT", "NL", "AR", "HE", "RU"]
+        lingue_supportate = ["IT", "EN", "ES", "DE", "FR", "PT", "NL", "AR", "HE", "RU",
+                               "DA", "EL", "JA", "NO", "PL", "RO", "SV", "TR", "VI", "ZH"]
+        assert worker.lingua in lingue_supportate
 
 
 class TestWorkerSignals:
