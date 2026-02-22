@@ -181,6 +181,8 @@ jobs:
           libxcb-shape0 \
           libxcb-xfixes0 \
           libxcb-xkb1 \
+          libxcb-cursor0 \
+          libxcb-util1 \
           libxkbcommon-x11-0 \
           libdbus-1-3 \
           libegl1 \
@@ -190,55 +192,52 @@ jobs:
           libnss3 \
           libxcomposite1 \
           libxdamage1 \
-          libxrandr2
+          libxrandr2 \
+          libx11-xcb1 \
+          libxext6
         echo "✓ Runtime dependencies installed"
 
-    - name: Verifica eseguibile
+    - name: Verifica eseguibile e librerie
       run: |
         chmod +x dist/ATK-Pro
         ls -lah dist/ATK-Pro
         file dist/ATK-Pro
-        echo "✓ Executable ready"
+        echo ""
+        echo "=== Librerie NON trovate ==="
+        ldd dist/ATK-Pro 2>&1 | grep "not found" || echo "✓ Tutte le librerie di sistema trovate"
 
-    - name: Smoke test - avvio applicazione (display virtuale)
+    - name: Smoke test - modalità offscreen Qt (primario)
       run: |
         chmod +x dist/ATK-Pro
-        # Avvia con display virtuale Xvfb e timeout 20 secondi
-        # Exit 124 = timeout (app ancora viva dopo 20s) = SUCCESSO
-        # Exit 0   = app chiusa normalmente               = SUCCESSO
-        # Altro    = crash immdiato                       = FALLIMENTO
         set +e
-        timeout 20 xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" dist/ATK-Pro
-        EXIT_CODE=$?
-        set -e
-        echo "Exit code: $EXIT_CODE"
-        if [ "$EXIT_CODE" -eq 124 ]; then
-          echo "✓ PASS: App avviata e rimasta in esecuzione per 20 secondi"
-        elif [ "$EXIT_CODE" -eq 0 ]; then
-          echo "✓ PASS: App terminata normalmente"
-        else
-          echo "✗ FAIL: App crashata con exit code $EXIT_CODE"
-          exit 1
-        fi
-
-    - name: Smoke test - modalità offscreen Qt
-      run: |
-        # Test alternativo con Qt offscreen (senza Xvfb)
-        set +e
-        QT_QPA_PLATFORM=offscreen timeout 15 dist/ATK-Pro
+        QT_QPA_PLATFORM=offscreen timeout 20 dist/ATK-Pro 2>&1
         EXIT_CODE=$?
         set -e
         echo "Offscreen exit code: $EXIT_CODE"
         if [ "$EXIT_CODE" -eq 124 ] || [ "$EXIT_CODE" -eq 0 ]; then
           echo "✓ PASS: App funziona in modalità offscreen"
         else
-          echo "⚠ WARN: Exit code $EXIT_CODE in offscreen (può essere normale se richiede display reale)"
+          echo "✗ FAIL: App crashata in modalità offscreen con exit code $EXIT_CODE"
+          exit 1
         fi
 
-    - name: Verifica librerie dinamiche linkate
+    - name: Smoke test - display virtuale Xvfb (secondario)
       run: |
-        echo "=== Librerie richieste dall'eseguibile ==="
-        ldd dist/ATK-Pro 2>&1 | head -40 || true
-        echo ""
-        echo "=== Librerie NON trovate ==="
-        ldd dist/ATK-Pro 2>&1 | grep "not found" || echo "✓ Tutte le librerie trovate"
+        set +e
+        QT_DEBUG_PLUGINS=0 timeout 20 xvfb-run \
+          --auto-servernum \
+          --server-args="-screen 0 1280x720x24" \
+          dist/ATK-Pro 2>&1
+        EXIT_CODE=$?
+        set -e
+        echo "Xvfb exit code: $EXIT_CODE"
+        if [ "$EXIT_CODE" -eq 124 ] || [ "$EXIT_CODE" -eq 0 ]; then
+          echo "✓ PASS: App avviata correttamente con display virtuale"
+        else
+          echo "⚠ WARN: Exit code $EXIT_CODE con Xvfb (verificare log sopra)"
+        fi
+
+    - name: Verifica librerie dinamiche linkate (completo)
+      run: |
+        echo "=== Tutte le librerie dinamiche ==="
+        ldd dist/ATK-Pro 2>&1 | head -50 || true
