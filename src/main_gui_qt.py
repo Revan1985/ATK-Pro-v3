@@ -2225,6 +2225,13 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path)
 def main():
     logging.info("Test log avvio")
     logging.debug("Avvio main_gui_qt.py")
+
+    # Su Linux disabilita il sandbox Chromium (richiesto in ambienti headless/CI
+    # dove il kernel non supporta user namespaces per il renderer QtWebEngine)
+    if sys.platform.startswith("linux"):
+        os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+        os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox")
+
     app = QApplication(sys.argv)
 
     # Font custom (usa asset_path per supportare bundle macOS/Windows)

@@ -207,10 +207,15 @@ jobs:
         ldd dist/ATK-Pro 2>&1 | grep "not found" || echo "✓ Tutte le librerie di sistema trovate"
 
     - name: Smoke test - modalità offscreen Qt (primario)
+      env:
+        QT_QPA_PLATFORM: offscreen
+        QTWEBENGINE_DISABLE_SANDBOX: "1"
+        QTWEBENGINE_CHROMIUM_FLAGS: "--no-sandbox"
+        DISPLAY: ":99"
       run: |
         chmod +x dist/ATK-Pro
         set +e
-        QT_QPA_PLATFORM=offscreen timeout 20 dist/ATK-Pro 2>&1
+        timeout 20 dist/ATK-Pro 2>&1
         EXIT_CODE=$?
         set -e
         echo "Offscreen exit code: $EXIT_CODE"
@@ -222,9 +227,12 @@ jobs:
         fi
 
     - name: Smoke test - display virtuale Xvfb (secondario)
+      env:
+        QTWEBENGINE_DISABLE_SANDBOX: "1"
+        QTWEBENGINE_CHROMIUM_FLAGS: "--no-sandbox"
       run: |
         set +e
-        QT_DEBUG_PLUGINS=0 timeout 20 xvfb-run \
+        timeout 20 xvfb-run \
           --auto-servernum \
           --server-args="-screen 0 1280x720x24" \
           dist/ATK-Pro 2>&1
