@@ -1,0 +1,213 @@
+name: Build Linux App
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Permette esecuzione manuale
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libxcb-xinerama0 \
+          libxcb-icccm4 \
+          libxcb-image0 \
+          libxcb-keysyms1 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-shape0 \
+          libxcb-xfixes0 \
+          libxcb-xkb1 \
+          libxkbcommon-x11-0 \
+          libdbus-1-3 \
+          libegl1 \
+          libfontconfig1 \
+          libgl1 \
+          libglib2.0-0 \
+          libnss3 \
+          libxcomposite1 \
+          libxdamage1 \
+          libxrandr2
+        echo "✓ System dependencies installed"
+        
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install "setuptools<70.0" wheel
+        python -c "import pkg_resources; print('✓ pkg_resources disponibile')"
+        pip install --no-cache-dir pyinstaller -r requirements.txt
+        
+    - name: Install Playwright browsers
+      run: |
+        playwright install chromium
+        playwright install-deps chromium
+        
+    - name: Verify project structure
+      run: |
+        echo "=== Project structure ==="
+        ls -la
+        echo -e "\n=== Assets ==="
+        ls -la assets/ | head -20
+        echo -e "\n=== Locales ==="
+        ls -la locales/ | head -10
+        echo -e "\n=== Docs generali ==="
+        ls -la docs_generali/
+        
+    - name: Build Linux executable with PyInstaller
+      run: |
+        pyinstaller \
+          --name ATK-Pro \
+          --onefile \
+          --windowed \
+          --icon=assets/common/grafici/ATK-Pro.ico \
+          --add-data "src/main_gui_qt.py:src" \
+          --add-data "src/user_prompts.py:src" \
+          --add-data "assets:assets" \
+          --add-data "locales:locales" \
+          --add-data "docs_generali/glossario_multilingua_ATK-Pro.json:docs_generali" \
+          --hidden-import=playwright \
+          --hidden-import=PIL \
+          --hidden-import=PySide6 \
+          --hidden-import=PySide6.QtCore \
+          --hidden-import=PySide6.QtGui \
+          --hidden-import=PySide6.QtWidgets \
+          --hidden-import=requests \
+          --hidden-import=urllib3 \
+          --hidden-import=certifi \
+          --hidden-import=src.main_gui_qt \
+          --exclude-module=pytest \
+          --exclude-module=matplotlib \
+          --exclude-module=scipy \
+          --exclude-module=numpy \
+          --exclude-module=pandas \
+          src/main.py
+          
+    - name: Verify build output
+      run: |
+        echo "=== Build output ==="
+        ls -lah dist/
+        if [ -f "dist/ATK-Pro" ]; then
+          echo "✓ ATK-Pro executable compiled successfully"
+          SIZE=$(du -h dist/ATK-Pro | cut -f1)
+          echo "Executable size: $SIZE"
+          file dist/ATK-Pro
+          chmod +x dist/ATK-Pro
+        else
+          echo "✗ Build failed - no executable found"
+          exit 1
+        fi
+        
+    - name: Create README for Linux
+      run: |
+        cat > dist/README_LINUX.txt << 'EOF'
+================================================================================
+  ATK-Pro v2.0 per Linux - Istruzioni di utilizzo
+================================================================================
+
+REQUISITI SISTEMA:
+- Linux x86_64 (Ubuntu 20.04+, Debian 11+, Fedora 34+, etc.)
+- Librerie Qt6 (di solito già presenti)
+- Connessione Internet per scaricare browser Playwright al primo avvio
+
+INSTALLAZIONE:
+
+1. Estrai l'archivio:
+   tar -xzf ATK-Pro-Linux.tar.gz
+
+2. Rendi eseguibile (se necessario):
+   chmod +x ATK-Pro
+
+3. Avvia l'applicazione:
+   ./ATK-Pro
+
+PRIMO AVVIO:
+Al primo utilizzo, ATK-Pro scaricherà automaticamente Chromium (~150 MB).
+Questo processo può richiedere alcuni minuti.
+
+DIPENDENZE MANCANTI:
+Se ricevi errori su librerie mancanti, installa:
+
+Ubuntu/Debian:
+  sudo apt-get install libxcb-xinerama0 libxcb-cursor0 libegl1 libdbus-1-3
+
+Fedora/RHEL:
+  sudo dnf install xcb-util-cursor libxkbcommon-x11 mesa-libEGL dbus-libs
+
+Arch Linux:
+  sudo pacman -S xcb-util-cursor libxkbcommon-x11 mesa dbus
+
+DESKTOP INTEGRATION (opzionale):
+Per aggiungere ATK-Pro al menu applicazioni, crea:
+~/.local/share/applications/atkpro.desktop
+
+Contenuto:
+[Desktop Entry]
+Type=Application
+Name=ATK-Pro
+Comment=IIIF Archive Toolkit Professional
+Exec=/percorso/completo/ATK-Pro
+Icon=/percorso/completo/assets/common/grafici/ATK-Pro.ico
+Terminal=false
+Categories=Utility;
+
+SUPPORTO:
+Repository GitHub: https://github.com/DanielePigoli/ATK-Pro-v2
+Issues: https://github.com/DanielePigoli/ATK-Pro-v2/issues
+
+================================================================================
+© 2026 ATK-Pro - Distribuito sotto licenza open source
+================================================================================
+EOF
+        echo "✓ README_LINUX.txt created"
+        
+    - name: Create tarball
+      run: |
+        cd dist
+        tar -czf ATK-Pro-Linux.tar.gz ATK-Pro README_LINUX.txt
+        echo "✓ Tarball created: $(du -sh ATK-Pro-Linux.tar.gz)"
+        sha256sum ATK-Pro-Linux.tar.gz > ATK-Pro-Linux.tar.gz.sha256
+        echo "✓ SHA256 checksum:"
+        cat ATK-Pro-Linux.tar.gz.sha256
+        
+    - name: Upload executable artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ATK-Pro-Linux-executable
+        path: dist/ATK-Pro
+        retention-days: 30
+        
+    - name: Upload tarball artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ATK-Pro-Linux-tarball
+        path: |
+          dist/ATK-Pro-Linux.tar.gz
+          dist/ATK-Pro-Linux.tar.gz.sha256
+        retention-days: 30
+        
+    - name: Upload to GitHub Release (if tagged)
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          dist/ATK-Pro-Linux.tar.gz
+          dist/ATK-Pro-Linux.tar.gz.sha256
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
