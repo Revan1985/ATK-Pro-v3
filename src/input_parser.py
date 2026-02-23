@@ -14,6 +14,7 @@ def parse_input_text(testo):
     - Processa le righe a coppie: modalità + URL
     - Normalizza la modalità (D/R)
     - Valida gli URL (solo http/https)
+    - Normalizza il vecchio dominio www.antenati.san.beniculturali.it → antenati.cultura.gov.it
     - Restituisce lista di dict con modalita, nome_file, url
     """
     righe = testo.strip().splitlines()
@@ -31,7 +32,11 @@ def parse_input_text(testo):
         if not riga_url.startswith("http"):
             logger.warning(f"⚠️ URL non valido: {riga_url}")
             continue
-
+        # Normalizza URL vecchio dominio → nuovo dominio
+        if "www.antenati.san.beniculturali.it" in riga_url:
+            riga_url_orig = riga_url
+            riga_url = riga_url.replace("www.antenati.san.beniculturali.it", "antenati.cultura.gov.it")
+            logger.info(f"🔄 URL normalizzato: {riga_url_orig} → {riga_url}")
         # Estrai modalità e nome file
         if "-" in riga_modalita:
             parti = riga_modalita.split("-", 1)
