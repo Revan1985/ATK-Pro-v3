@@ -126,6 +126,7 @@ jobs:
         echo "✓ DMG created: $(du -sh dist/ATK-Pro-macOS.dmg)"
         
         # Verifica che il DMG sia leggibile
+        sleep 3
         hdiutil verify dist/ATK-Pro-macOS.dmg
         echo "✓ DMG verification passed"
         
