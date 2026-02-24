@@ -137,6 +137,60 @@ def get_language_from_registry():
     except (ImportError, OSError) as e:
         logging.debug(f"Impossibile leggere registro: {e}")
         return "en"
+
+
+_LINGUE_VALIDE = ["it", "en", "es", "de", "fr", "pt", "nl", "ar", "he", "ru",
+                  "da", "el", "ja", "no", "pl", "ro", "sv", "tr", "vi", "zh"]
+
+
+def _config_file_path():
+    """Ritorna il percorso del file di configurazione utente (lazy, usa os al runtime)."""
+    import os as _os
+    return _os.path.join(_os.path.expanduser("~"), ".config", "atk-pro", "config.json")
+
+
+def _read_config_language():
+    """Legge la lingua salvata nel file di configurazione utente (Linux/macOS)."""
+    import os as _os
+    import json as _json
+    try:
+        cfg = _config_file_path()
+        if _os.path.exists(cfg):
+            with open(cfg, encoding="utf-8") as fh:
+                data = _json.load(fh)
+            lang = data.get("language", "")
+            if lang in _LINGUE_VALIDE:
+                logging.debug(f"Lingua letta da config file: {lang}")
+                return lang
+    except Exception as e:
+        logging.debug(f"Errore lettura config file: {e}")
+    return None
+
+
+def _write_config_language(lang: str) -> None:
+    """Salva la lingua scelta nel file di configurazione utente (Linux/macOS)."""
+    import os as _os
+    import json as _json
+    try:
+        cfg = _config_file_path()
+        cfg_dir = _os.path.dirname(cfg)
+        _os.makedirs(cfg_dir, exist_ok=True)
+        data = {}
+        if _os.path.exists(cfg):
+            with open(cfg, encoding="utf-8") as fh:
+                data = _json.load(fh)
+        data["language"] = lang
+        with open(cfg, "w", encoding="utf-8") as fh:
+            _json.dump(data, fh, ensure_ascii=False, indent=2)
+        logging.debug(f"Lingua salvata in config file: {lang}")
+    except Exception as e:
+        logging.debug(f"Errore scrittura config file: {e}")
+
+
+def _is_first_run() -> bool:
+    """Ritorna True se il config file non esiste ancora (primo avvio)."""
+    import os as _os
+    return not _os.path.exists(_config_file_path())
 def asset_path(rel_path):
     return os.path.join(BASE_DIR, rel_path)
 from PySide6.QtGui import QBrush, QPalette, QPixmap, QIcon
@@ -447,7 +501,9 @@ class MainWindow(QMainWindow):
         nuova_lingua = scegli_lingua(self.glossario_data, self.lingua)
         if nuova_lingua and nuova_lingua != self.lingua:
             self.lingua = nuova_lingua
-            # Salva la lingua nel registro di Windows
+            # Salva sempre nel config file (Linux/macOS/sviluppo)
+            _write_config_language(self.lingua)
+            # Su Windows salva anche nel registro (per compatibilità installer)
             try:
                 import winreg
                 reg_path = r"Software\\ATK-Pro"
@@ -456,7 +512,7 @@ class MainWindow(QMainWindow):
                 winreg.CloseKey(reg_key)
             except Exception as e:
                 import logging
-                logging.warning(f"Impossibile salvare la lingua nel registro: {e}")
+                logging.debug(f"Registro Windows non disponibile (normale su Linux/macOS): {e}")
             show_operation_completed_dialog(self, self.glossario_data, self.lingua)
             # Dialog stile "Funzione in sviluppo"
             from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
@@ -2285,17 +2341,44 @@ def main():
     else:
         logging.debug("Errore: impossibile caricare atk_style.qss")
 
-    # Selezione lingua: leggi dal registro se exe, altrimenti mostra dialog di selezione
+    # Selezione lingua e gestione primo avvio
     _is_frozen = getattr(sys, 'frozen', False)
-    if _is_frozen:
-        # EXE: leggi dalla lingua dal registro (settata dall'installer)
+    primo_avvio = False
+
+    if _is_frozen and sys.platform == "win32":
+        # Windows EXE: leggi la lingua dal registro (settata dall'Inno Setup installer)
         lingua = get_language_from_registry()
-        logging.debug(f"EXE rilevato, lingua dal registro: {lingua}")
+        logging.debug(f"Windows EXE: lingua dal registro: {lingua}")
+
+    elif _is_frozen and sys.platform in ("linux", "darwin"):
+        # Linux/macOS bundle: usa file di configurazione utente
+        saved = _read_config_language()
+        if saved:
+            lingua = saved
+            primo_avvio = False
+            logging.debug(f"Linux/macOS EXE: lingua da config file: {lingua}")
+        else:
+            # Primo avvio: nessun config trovato → mostra dialog scelta lingua
+            primo_avvio = True
+            glossario_data_tmp = carica_glossario("en")
+            lingua = scegli_lingua(glossario_data_tmp, "en")
+            _write_config_language(lingua)
+            logging.debug(f"Linux/macOS primo avvio: lingua scelta: {lingua}")
+
     else:
-        # Sviluppo: mostra dialog di selezione
-        lingua = scegli_lingua()
-        logging.debug(f"Modalità sviluppo, lingua scelta: {lingua}")
-    
+        # Modalità sviluppo: stessa logica Linux/macOS (config file per primo avvio)
+        saved = _read_config_language()
+        if saved:
+            lingua = saved
+            primo_avvio = False
+            logging.debug(f"Sviluppo: lingua da config file: {lingua}")
+        else:
+            primo_avvio = True
+            glossario_data_tmp = carica_glossario("en")
+            lingua = scegli_lingua(glossario_data_tmp, "en")
+            _write_config_language(lingua)
+            logging.debug(f"Sviluppo primo avvio: lingua scelta: {lingua}")
+
     glossario_data = carica_glossario(lingua)
 
     # Carica file di esempio localizzato
@@ -2303,9 +2386,13 @@ def main():
     state["records"].append(example_path)
     logging.debug(f"File di esempio caricato: {example_path}")
 
-    # Creazione finestra principale (senza mostrare disclaimer al primo avvio)
+    # Creazione finestra principale
     window = MainWindow(glossario_data, lingua)
     window.show()
+
+    # Mostra disclaimer al primo avvio su Linux/macOS
+    if primo_avvio:
+        mostra_disclaimer(glossario_data, lingua)
 
     # Gestione chiusura con banner
     def on_close():
