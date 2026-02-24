@@ -641,8 +641,8 @@ class MainWindow(QMainWindow):
         # --- Servizi ---
         servizi_menu = QMenu(gm("Servizi"), self)
         servizi_menu.addAction(gm("Integrazione API Portale Antenati"), self.funzione_in_sviluppo)
-        servizi_menu.addAction(gm("Visualizzazione Immagini"), self.funzione_in_sviluppo)
-        servizi_menu.addAction(gm("Visualizzazione Metadati JSON"), self.funzione_in_sviluppo)
+        servizi_menu.addAction(gm("Visualizzazione Immagini"), self.apri_visualizzatore_immagini)
+        servizi_menu.addAction(gm("Visualizzazione Metadati JSON"), self.apri_visualizzatore_metadati)
         servizi_menu.addAction(gm("OCR Avanzato"), self.funzione_in_sviluppo)
         servizi_menu.addAction(gm("Traduzione OCR"), self.funzione_in_sviluppo)
         servizi_menu.addAction(gm("Esportazione GEDCOM"), self.funzione_in_sviluppo)
@@ -1043,6 +1043,36 @@ class MainWindow(QMainWindow):
         layout.addWidget(ok_btn, alignment=Qt.AlignCenter)
         dlg.setLayout(layout)
         dlg.exec()
+
+    # ------------------------------------------------------------------
+    # Visualizzazione Immagini
+    # ------------------------------------------------------------------
+    def apri_visualizzatore_immagini(self):
+        try:
+            from image_metadata_viewer import apri_visualizzatore_immagini
+        except ImportError:
+            from src.image_metadata_viewer import apri_visualizzatore_immagini
+        apri_visualizzatore_immagini(
+            parent=self,
+            glossario_data=self.glossario_data,
+            lingua=self.lingua,
+            output_folder=state.get("output_folder") or "",
+        )
+
+    # ------------------------------------------------------------------
+    # Visualizzazione Metadati JSON
+    # ------------------------------------------------------------------
+    def apri_visualizzatore_metadati(self):
+        try:
+            from image_metadata_viewer import apri_visualizzatore_metadati
+        except ImportError:
+            from src.image_metadata_viewer import apri_visualizzatore_metadati
+        apri_visualizzatore_metadati(
+            parent=self,
+            glossario_data=self.glossario_data,
+            lingua=self.lingua,
+            output_folder=state.get("output_folder") or "",
+        )
 
     def mostra_disclaimer(self):
         percorso_html = asset_path(f"assets/{self.lingua}/testuali/disclaimer_legale_ATK-Pro.html")

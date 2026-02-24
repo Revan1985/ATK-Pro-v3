@@ -42,7 +42,8 @@ def json_to_html_glossario():
         "etichette_menu": "📋 Etichette Menu",
         "menu_servizi": "🔧 Menu Servizi",
         "etichette_output": "📤 Etichette Output",
-        "messaggi_dialogo": "💬 Messaggi Dialogo"
+        "messaggi_dialogo": "💬 Messaggi Dialogo",
+        "visualizzatore": "🖼️ Visualizzatore Immagini e Metadati"
     }
     
     # CSS minimale - NON sovrascrive atk_style.css
@@ -179,8 +180,8 @@ def json_to_html_glossario():
 """
     
     # Per ogni sezione nel glossario
-    for section_key in ["banner_sostegno", "funzioni_atkpro", "etichette_gui", "etichette_menu", 
-                       "menu_servizi", "etichette_output", "messaggi_dialogo"]:
+    for section_key in ["banner_sostegno", "funzioni_atkpro", "etichette_gui", "etichette_menu",
+                       "menu_servizi", "etichette_output", "messaggi_dialogo", "visualizzatore"]:
         if section_key not in glossario:
             continue
         
@@ -246,7 +247,7 @@ def json_to_html_glossario():
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html_content)
     
-    print(f"✅ Glossario HTML generato con 7 sezioni: {html_path}")
+    print(f"Glossario HTML generato con 8 sezioni: {html_path}")
     return True
 
 if __name__ == "__main__":

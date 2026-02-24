@@ -26,6 +26,7 @@ a = Analysis(
     binaries=[],
     datas=[
         ('src/main_gui_qt.py', 'src'),
+        ('src/image_metadata_viewer.py', 'src'),
         ('src/user_prompts.py', 'src'),
         # Multilingual UI assets (20 lingue)
         ('assets/en', 'assets/en'),
