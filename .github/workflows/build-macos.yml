@@ -118,33 +118,8 @@ jobs:
         # Installa create-dmg per SLA obbligatoria (legal disclaimer)
         brew install create-dmg
 
-        # Scrivi il disclaimer completo in un file temporaneo
-        cat > /tmp/atk-disclaimer.txt << 'EOF_DISC'
-ATK-Pro v2.0 - Legal Disclaimer and Ethical Use Commitment
-
-ATK-Pro is designed for archival, genealogical, and consultation purposes.
-All content is distributed under a Creative Commons BY-NC-SA 4.0 license.
-Direct commercial use, redistribution without attribution, or untracked
-modification of the original content is prohibited.
-
-ATK-Pro does not redistribute any content from the Antenati Portal
-(antenati.cultura.gov.it) nor does it intend to replicate its interface,
-structure, or organization.
-
-Anyone who installs or uses ATK-Pro agrees to act in full compliance with
-the legal notices and terms of use defined by the Ministry of Culture,
-available at: https://antenati.cultura.gov.it/note-legali/
-
-The documents included do not constitute an official source nor have any
-certifying or legal value. Tools are intended for independent consultation
-in local environments, without connection or support from external services.
-
-The author disclaims any responsibility regarding improper use,
-misinterpretation, or unauthorized modification of the included tools.
-
-(c) 2026 Antenati Toolkit Pro | Version 2.0
-antenati.toolkit.pro@gmail.com
-EOF_DISC
+        # Usa il file disclaimer già presente nel repo (no heredoc, no YAML issues)
+        cp assets/en/testuali/disclaimer_legale_ATK-Pro.txt /tmp/atk-disclaimer.txt
 
         # Crea DMG con SLA integrata (il disclaimer appare al primo montaggio,
         # l'utente DEVE cliccare "Accetto" per procedere all'installazione)
@@ -175,6 +150,7 @@ EOF_DISC
       if: startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v1
       with:
+        overwrite: true
         files: |
           dist/ATK-Pro-macOS.dmg
       env:
