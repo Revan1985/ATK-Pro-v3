@@ -190,59 +190,50 @@ jobs:
         echo "✓ Icona convertita"
 
         # File .desktop (crea voce nel menu applicazioni)
-        cat > "$PKG_DIR/usr/share/applications/atk-pro.desktop" << 'DESKTOP'
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=ATK-Pro
-Comment=Estrazione immagini da Canvas LMS (portale Antenati)
-Exec=/opt/ATK-Pro/ATK-Pro
-Icon=atk-pro
-Terminal=false
-Categories=Utility;Education;
-StartupNotify=true
-StartupWMClass=ATK-Pro
-DESKTOP
+        # Nota: si usa printf invece di heredoc per compatibilità YAML
+        printf '%s\n' \
+          '[Desktop Entry]' \
+          'Version=1.0' \
+          'Type=Application' \
+          'Name=ATK-Pro' \
+          'Comment=Estrazione immagini da Canvas LMS (portale Antenati)' \
+          'Exec=/opt/ATK-Pro/ATK-Pro' \
+          'Icon=atk-pro' \
+          'Terminal=false' \
+          'Categories=Utility;Education;' \
+          'StartupNotify=true' \
+          'StartupWMClass=ATK-Pro' \
+          > "$PKG_DIR/usr/share/applications/atk-pro.desktop"
+        echo "✓ .desktop creato"
 
         # File control del pacchetto
         INSTALLED_SIZE=$(du -sk "$PKG_DIR/opt" | cut -f1)
-        cat > "$PKG_DIR/DEBIAN/control" << CONTROL
-Package: atk-pro
-Version: ${VERSION}
-Section: utils
-Priority: optional
-Architecture: amd64
-Installed-Size: ${INSTALLED_SIZE}
-Maintainer: Daniele Pigoli
-Description: ATK-Pro - Estrazione immagini da Canvas LMS
- Strumento per estrarre, visualizzare ed esportare immagini e documenti
- dai corsi Canvas LMS (portale Antenati).
- .
- Supporta 20 lingue: IT, EN, ES, DE, FR, PT, NL, AR, HE, RU,
- JA, SV, ZH, RO, EL, PL, DA, NO, TR, VI
-CONTROL
+        printf 'Package: atk-pro\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: amd64\nInstalled-Size: %s\nMaintainer: Daniele Pigoli\nDescription: ATK-Pro - Estrazione immagini da Canvas LMS\n Strumento per estrarre, visualizzare ed esportare immagini e documenti\n dai corsi Canvas LMS (portale Antenati).\n .\n Supporta 20 lingue: IT, EN, ES, DE, FR, PT, NL, AR, HE, RU,\n JA, SV, ZH, RO, EL, PL, DA, NO, TR, VI\n' \
+          "$VERSION" "$INSTALLED_SIZE" \
+          > "$PKG_DIR/DEBIAN/control"
+        echo "✓ control creato"
 
         # Script post-install: aggiorna database icone e menu
-        cat > "$PKG_DIR/DEBIAN/postinst" << 'POSTINST'
-#!/bin/sh
-set -e
-if command -v update-desktop-database > /dev/null 2>&1; then
-    update-desktop-database /usr/share/applications || true
-fi
-if command -v gtk-update-icon-cache > /dev/null 2>&1; then
-    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
-fi
-POSTINST
+        printf '%s\n' \
+          '#!/bin/sh' \
+          'set -e' \
+          'if command -v update-desktop-database > /dev/null 2>&1; then' \
+          '    update-desktop-database /usr/share/applications || true' \
+          'fi' \
+          'if command -v gtk-update-icon-cache > /dev/null 2>&1; then' \
+          '    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true' \
+          'fi' \
+          > "$PKG_DIR/DEBIAN/postinst"
         chmod 755 "$PKG_DIR/DEBIAN/postinst"
 
         # Script pre-remove: rimuovi icone cache al disinstall
-        cat > "$PKG_DIR/DEBIAN/prerm" << 'PRERM'
-#!/bin/sh
-set -e
-if command -v update-desktop-database > /dev/null 2>&1; then
-    update-desktop-database /usr/share/applications || true
-fi
-PRERM
+        printf '%s\n' \
+          '#!/bin/sh' \
+          'set -e' \
+          'if command -v update-desktop-database > /dev/null 2>&1; then' \
+          '    update-desktop-database /usr/share/applications || true' \
+          'fi' \
+          > "$PKG_DIR/DEBIAN/prerm"
         chmod 755 "$PKG_DIR/DEBIAN/prerm"
 
         # Costruisci il .deb
