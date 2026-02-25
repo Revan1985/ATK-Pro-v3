@@ -115,20 +115,47 @@ jobs:
         # Crea link simbolico ad Applications per drag & drop
         ln -s /Applications dist/dmg/Applications
         
-        # Crea DMG compresso
-        hdiutil create -volname "ATK-Pro" \
-          -srcfolder dist/dmg \
-          -ov \
-          -format UDZO \
-          -imagekey zlib-level=9 \
-          dist/ATK-Pro-macOS.dmg
-          
-        echo "✓ DMG created: $(du -sh dist/ATK-Pro-macOS.dmg)"
-        
-        # Verifica che il DMG sia leggibile
-        sleep 3
-        hdiutil verify dist/ATK-Pro-macOS.dmg
-        echo "✓ DMG verification passed"
+        # Installa create-dmg per SLA obbligatoria (legal disclaimer)
+        brew install create-dmg
+
+        # Scrivi il disclaimer completo in un file temporaneo
+        cat > /tmp/atk-disclaimer.txt << 'EOF_DISC'
+ATK-Pro v2.0 - Legal Disclaimer and Ethical Use Commitment
+
+ATK-Pro is designed for archival, genealogical, and consultation purposes.
+All content is distributed under a Creative Commons BY-NC-SA 4.0 license.
+Direct commercial use, redistribution without attribution, or untracked
+modification of the original content is prohibited.
+
+ATK-Pro does not redistribute any content from the Antenati Portal
+(antenati.cultura.gov.it) nor does it intend to replicate its interface,
+structure, or organization.
+
+Anyone who installs or uses ATK-Pro agrees to act in full compliance with
+the legal notices and terms of use defined by the Ministry of Culture,
+available at: https://antenati.cultura.gov.it/note-legali/
+
+The documents included do not constitute an official source nor have any
+certifying or legal value. Tools are intended for independent consultation
+in local environments, without connection or support from external services.
+
+The author disclaims any responsibility regarding improper use,
+misinterpretation, or unauthorized modification of the included tools.
+
+(c) 2026 Antenati Toolkit Pro | Version 2.0
+antenati.toolkit.pro@gmail.com
+EOF_DISC
+
+        # Crea DMG con SLA integrata (il disclaimer appare al primo montaggio,
+        # l'utente DEVE cliccare "Accetto" per procedere all'installazione)
+        create-dmg \
+          --volname "ATK-Pro v2.0" \
+          --eula /tmp/atk-disclaimer.txt \
+          --no-internet-enable \
+          dist/ATK-Pro-macOS.dmg \
+          dist/dmg/
+
+        echo "✓ DMG with mandatory SLA created: $(du -sh dist/ATK-Pro-macOS.dmg)"
         
     - name: Upload .app artifact
       uses: actions/upload-artifact@v4
