@@ -214,12 +214,12 @@ jobs:
         echo "✓ control creato"
 
         # DEBIAN/templates — definisce la domanda debconf (funziona sia in GUI che CLI)
-        TEMPLATES=$'Template: atk-pro/accept-license\nType: boolean\nDefault: false\nDescription: Accept ATK-Pro legal disclaimer and license terms?\n ATK-Pro v2.0 - Legal Disclaimer and Ethical Use Commitment\n .\n ATK-Pro is designed for archival, genealogical, and consultation\n purposes. Content is distributed under CC BY-NC-SA 4.0 license.\n Commercial use, redistribution without attribution, or untracked\n modification of the original content is prohibited.\n .\n ATK-Pro does not redistribute content from the Antenati Portal\n (antenati.cultura.gov.it) nor replicate its interface or structure.\n .\n By installing you agree to the legal notices of the Ministry of\n Culture: https://antenati.cultura.gov.it/note-legali/\n .\n The author disclaims responsibility for improper use or unauthorized\n modification of the included tools.\n .\n (c) 2026 Antenati Toolkit Pro | Version 2.0\n'
+        TEMPLATES=$'Template: atk-pro/accept-license\nType: boolean\nDefault: false\nDescription: Accept ATK-Pro legal disclaimer and license terms?\n ATK-Pro v2.0 - Legal Disclaimer and Ethical Use Commitment\n .\n ATK-Pro is designed for archival, genealogical, and consultation\n purposes. Content is distributed under CC BY-NC-SA 4.0 license.\n Commercial use, redistribution without attribution, or untracked\n modification of the original content is prohibited.\n .\n ATK-Pro does not redistribute content from the Antenati Portal\n (antenati.cultura.gov.it) nor replicate its interface or structure.\n .\n By installing you agree to the legal notices of the Ministry of\n Culture: https://antenati.cultura.gov.it/note-legali/\n .\n The author disclaims responsibility for improper use or unauthorized\n modification of the included tools.\n .\n (c) 2026 Antenati Toolkit Pro | Version 2.0\n\nTemplate: atk-pro/language\nType: select\nChoices: it, en, es, de, fr, pt, nl, ar, he, ru, da, el, ja, no, pl, ro, sv, tr, vi, zh\nDefault: en\nDescription: Select ATK-Pro interface language:\n Choose the default language for ATK-Pro.\n You can change this at any time from the Settings menu in the app.\n'
         printf '%s' "$TEMPLATES" > "$PKG_DIR/DEBIAN/templates"
         echo "✓ templates creato"
 
         # DEBIAN/config — chiamato da dpkg PRIMA del preinst; mostra il dialog
-        CONFIG=$'#!/bin/sh\nset -e\n. /usr/share/debconf/confmodule\ndb_input high atk-pro/accept-license || true\ndb_go || true\n'
+        CONFIG=$'#!/bin/sh\nset -e\n. /usr/share/debconf/confmodule\ndb_input high atk-pro/accept-license || true\ndb_input medium atk-pro/language || true\ndb_go || true\n'
         printf '%s' "$CONFIG" > "$PKG_DIR/DEBIAN/config"
         chmod 755 "$PKG_DIR/DEBIAN/config"
         echo "✓ config creato"
@@ -234,7 +234,7 @@ jobs:
         echo "✓ preinst creato"
 
         # DEBIAN/postinst — aggiorna database icone e menu
-        POSTINST=$'#!/bin/sh\nset -e\nif command -v update-desktop-database > /dev/null 2>&1; then\n    update-desktop-database /usr/share/applications || true\nfi\nif command -v gtk-update-icon-cache > /dev/null 2>&1; then\n    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true\nfi\n'
+        POSTINST=$'#!/bin/sh\nset -e\n. /usr/share/debconf/confmodule\ndb_get atk-pro/language\nSELECTED_LANG=\"$RET\"\nif [ -n \"$SELECTED_LANG\" ]; then\n    ACTUAL_USER=\"${SUDO_USER:-}\"\n    if [ -z \"$ACTUAL_USER\" ]; then\n        ACTUAL_USER=$(logname 2>/dev/null || true)\n    fi\n    if [ -n \"$ACTUAL_USER\" ] && id \"$ACTUAL_USER\" >/dev/null 2>&1; then\n        USER_HOME=$(getent passwd \"$ACTUAL_USER\" | cut -d: -f6)\n        CONFIG_DIR=\"$USER_HOME/.config/atk-pro\"\n        mkdir -p \"$CONFIG_DIR\"\n        printf \'{\"language\": \"%s\"}\n\' \"$SELECTED_LANG\" > \"$CONFIG_DIR/config.json\"\n        chown -R \"$ACTUAL_USER\" \"$CONFIG_DIR\" 2>/dev/null || true\n    fi\n    mkdir -p /etc/atk-pro\n    printf \'{\"language\": \"%s\"}\n\' \"$SELECTED_LANG\" > /etc/atk-pro/defaults.json\nfi\nif command -v update-desktop-database > /dev/null 2>&1; then\n    update-desktop-database /usr/share/applications || true\nfi\nif command -v gtk-update-icon-cache > /dev/null 2>&1; then\n    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true\nfi\n'
         printf '%s' "$POSTINST" > "$PKG_DIR/DEBIAN/postinst"
         chmod 755 "$PKG_DIR/DEBIAN/postinst"
         echo "✓ postinst creato"
