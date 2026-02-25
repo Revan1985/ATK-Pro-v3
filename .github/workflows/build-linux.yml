@@ -206,12 +206,84 @@ jobs:
           > "$PKG_DIR/usr/share/applications/atk-pro.desktop"
         echo "✓ .desktop creato"
 
-        # File control del pacchetto
+        # File control del pacchetto (con Depends: debconf per il disclaimer)
         INSTALLED_SIZE=$(du -sk "$PKG_DIR/opt" | cut -f1)
-        printf 'Package: atk-pro\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: amd64\nInstalled-Size: %s\nMaintainer: Daniele Pigoli\nDescription: ATK-Pro - Estrazione immagini da Canvas LMS\n Strumento per estrarre, visualizzare ed esportare immagini e documenti\n dai corsi Canvas LMS (portale Antenati).\n .\n Supporta 20 lingue: IT, EN, ES, DE, FR, PT, NL, AR, HE, RU,\n JA, SV, ZH, RO, EL, PL, DA, NO, TR, VI\n' \
+        printf 'Package: atk-pro\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: amd64\nInstalled-Size: %s\nDepends: debconf (>= 0.5) | debconf-2.0\nMaintainer: Daniele Pigoli\nDescription: ATK-Pro - Estrazione immagini da Canvas LMS\n Strumento per estrarre, visualizzare ed esportare immagini e documenti\n dai corsi Canvas LMS (portale Antenati).\n .\n Supporta 20 lingue: IT, EN, ES, DE, FR, PT, NL, AR, HE, RU,\n JA, SV, ZH, RO, EL, PL, DA, NO, TR, VI\n' \
           "$VERSION" "$INSTALLED_SIZE" \
           > "$PKG_DIR/DEBIAN/control"
         echo "✓ control creato"
+
+        # DEBIAN/templates: definisce la domanda debconf per il disclaimer
+        printf '%s\n' \
+          'Template: atk-pro/accept-disclaimer' \
+          'Type: boolean' \
+          'Default: false' \
+          'Description: Accettazione disclaimer - ATK-Pro' \
+          ' ATK-Pro estrae immagini e documenti dal portale Antenati (Canvas LMS).' \
+          ' .' \
+          ' DISCLAIMER - CONDIZIONI D'"''USO OBBLIGATORIE:' \
+          ' .' \
+          ' Questo software e'"'' destinato esclusivamente a ricercatori genealogici' \
+          ' e utenti che accedono LEGITTIMAMENTE al portale Antenati con le' \
+          ' proprie credenziali personali.' \
+          ' .' \
+          ' L'"''utente e'"'' il solo responsabile del rispetto dei Termini di' \
+          ' Servizio del portale Antenati e della normativa sul diritto d'"''autore.' \
+          ' .' \
+          ' Il software viene fornito SENZA GARANZIE di alcun tipo.' \
+          ' Gli autori non si assumono responsabilita'"'' per usi impropri.' \
+          ' .' \
+          ' Accetti le condizioni e desideri procedere con l'"''installazione?' \
+          > "$PKG_DIR/DEBIAN/templates"
+        echo "✓ templates creato"
+
+        # DEBIAN/config: presenta la domanda debconf prima dell'installazione
+        printf '%s\n' \
+          '#!/bin/sh' \
+          '. /usr/share/debconf/confmodule' \
+          'db_input high atk-pro/accept-disclaimer || true' \
+          'db_go || true' \
+          > "$PKG_DIR/DEBIAN/config"
+        chmod 755 "$PKG_DIR/DEBIAN/config"
+        echo "✓ config creato"
+
+        # DEBIAN/preinst: blocca installazione se disclaimer non accettato
+        printf '%s\n' \
+          '#!/bin/sh' \
+          'set -e' \
+          'if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then' \
+          '    if [ -f /usr/share/debconf/confmodule ]; then' \
+          '        . /usr/share/debconf/confmodule' \
+          '        db_get atk-pro/accept-disclaimer' \
+          '        if [ "$RET" != "true" ]; then' \
+          '            echo "" >&2' \
+          '            echo "=============================================" >&2' \
+          '            echo " ATK-Pro: installazione annullata." >&2' \
+          '            echo " E necessario accettare il disclaimer." >&2' \
+          '            echo "=============================================" >&2' \
+          '            exit 1' \
+          '        fi' \
+          '    else' \
+          '        echo ""' \
+          '        echo "================================================"' \
+          '        echo "  ATK-Pro - DISCLAIMER D'"''USO"' \
+          '        echo "================================================"' \
+          '        echo "  Uso consentito solo a chi accede LEGITTIMAMENTE"' \
+          '        echo "  al portale Antenati con proprie credenziali."' \
+          '        echo "  Software fornito SENZA GARANZIE. L'"''utente e'"''"' \
+          '        echo "  responsabile del rispetto dei Termini di Servizio."' \
+          '        echo "================================================"' \
+          '        printf "Accetto le condizioni d'"''uso? [s/N]: "' \
+          '        read REPLY' \
+          '        case "$REPLY" in' \
+          '            [sS]|[sS][iI]) ;;' \
+          '            *) echo "Installazione annullata."; exit 1 ;;' \
+          '        esac' \
+          '    fi' \
+          'fi' \
+          > "$PKG_DIR/DEBIAN/preinst"
+        chmod 755 "$PKG_DIR/DEBIAN/preinst"
+        echo "✓ preinst con disclaimer creato"
 
         # Script post-install: aggiorna database icone e menu
         printf '%s\n' \
