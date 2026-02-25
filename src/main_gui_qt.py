@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 # Versione corrente dell'applicazione
-VERSION = "2.0.7"
+VERSION = "2.0.8"
 GITHUB_REPO = "DanielePigoli/ATK-Pro-v2"
 
 # Stato globale
