@@ -2292,7 +2292,32 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path)
                         url = raw if raw.startswith("http") else None
                         if url:
                             logging.debug(f"Apro PayPal URL: {url}")
-                            QDesktopServices.openUrl(QUrl(url))
+                            opened = False
+                            # Tentativo 1: QDesktopServices (funziona su Windows/macOS)
+                            try:
+                                opened = QDesktopServices.openUrl(QUrl(url))
+                            except Exception as e:
+                                logging.debug(f"QDesktopServices fallito: {e}")
+                            # Tentativo 2: xdg-open (Linux — richiede xdg-utils)
+                            if not opened:
+                                import platform, subprocess
+                                if platform.system() == "Linux":
+                                    try:
+                                        subprocess.Popen(
+                                            ["xdg-open", url],
+                                            stdout=subprocess.DEVNULL,
+                                            stderr=subprocess.DEVNULL
+                                        )
+                                        opened = True
+                                    except Exception as e:
+                                        logging.debug(f"xdg-open fallito: {e}")
+                            # Tentativo 3: webbrowser (fallback universale)
+                            if not opened:
+                                import webbrowser
+                                try:
+                                    webbrowser.open(url)
+                                except Exception as e:
+                                    logging.warning(f"Impossibile aprire URL PayPal: {e}")
 
                 lbl.mousePressEvent = apri_paypal
                 layout.addWidget(lbl)
