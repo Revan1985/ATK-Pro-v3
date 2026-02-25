@@ -150,9 +150,12 @@ def _config_file_path():
 
 
 def _read_config_language():
-    """Legge la lingua salvata nel file di configurazione utente (Linux/macOS)."""
+    """Legge la lingua salvata nel file di configurazione utente (Linux/macOS).
+    Fallback: /etc/atk-pro/defaults.json scritto dal postinst del .deb.
+    """
     import os as _os
     import json as _json
+    # 1) Config utente: ~/.config/atk-pro/config.json
     try:
         cfg = _config_file_path()
         if _os.path.exists(cfg):
@@ -164,6 +167,18 @@ def _read_config_language():
                 return lang
     except Exception as e:
         logging.debug(f"Errore lettura config file: {e}")
+    # 2) Default di sistema: /etc/atk-pro/defaults.json (scritto dal .deb postinst)
+    try:
+        sys_cfg = "/etc/atk-pro/defaults.json"
+        if _os.path.exists(sys_cfg):
+            with open(sys_cfg, encoding="utf-8") as fh:
+                data = _json.load(fh)
+            lang = data.get("language", "")
+            if lang in _LINGUE_VALIDE:
+                logging.debug(f"Lingua letta da defaults di sistema: {lang}")
+                return lang
+    except Exception as e:
+        logging.debug(f"Errore lettura defaults di sistema: {e}")
     return None
 
 
@@ -2292,32 +2307,31 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path)
                         url = raw if raw.startswith("http") else None
                         if url:
                             logging.debug(f"Apro PayPal URL: {url}")
-                            opened = False
-                            # Tentativo 1: QDesktopServices (funziona su Windows/macOS)
-                            try:
-                                opened = QDesktopServices.openUrl(QUrl(url))
-                            except Exception as e:
-                                logging.debug(f"QDesktopServices fallito: {e}")
-                            # Tentativo 2: xdg-open (Linux — richiede xdg-utils)
-                            if not opened:
-                                import platform, subprocess
-                                if platform.system() == "Linux":
-                                    try:
-                                        subprocess.Popen(
-                                            ["xdg-open", url],
-                                            stdout=subprocess.DEVNULL,
-                                            stderr=subprocess.DEVNULL
-                                        )
-                                        opened = True
-                                    except Exception as e:
-                                        logging.debug(f"xdg-open fallito: {e}")
-                            # Tentativo 3: webbrowser (fallback universale)
-                            if not opened:
-                                import webbrowser
+                            import platform as _plt, subprocess as _sub
+                            # Su Linux PyInstaller frozen QDesktopServices.openUrl()  
+                            # restituisce True senza aprire nulla: usa xdg-open come primario
+                            if _plt.system() == "Linux":
                                 try:
-                                    webbrowser.open(url)
-                                except Exception as e:
-                                    logging.warning(f"Impossibile aprire URL PayPal: {e}")
+                                    _sub.Popen(
+                                        ["xdg-open", url],
+                                        stdout=_sub.DEVNULL,
+                                        stderr=_sub.DEVNULL
+                                    )
+                                    return
+                                except Exception as _e:
+                                    logging.debug(f"xdg-open fallito: {_e}")
+                            # Windows / macOS: QDesktopServices
+                            try:
+                                if QDesktopServices.openUrl(QUrl(url)):
+                                    return
+                            except Exception as _e:
+                                logging.debug(f"QDesktopServices fallito: {_e}")
+                            # Fallback universale
+                            try:
+                                import webbrowser
+                                webbrowser.open(url)
+                            except Exception as _e:
+                                logging.warning(f"Impossibile aprire URL PayPal: {_e}")
 
                 lbl.mousePressEvent = apri_paypal
                 layout.addWidget(lbl)
