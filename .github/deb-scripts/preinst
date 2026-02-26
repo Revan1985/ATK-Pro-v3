@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+. /usr/share/debconf/confmodule
+if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
+    db_get atk-pro/accept-license
+    if [ "$RET" != "true" ]; then
+        echo "ATK-Pro: installation cancelled - license terms not accepted." >&2
+        exit 1
+    fi
+fi
