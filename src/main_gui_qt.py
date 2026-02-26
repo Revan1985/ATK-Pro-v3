@@ -2302,37 +2302,47 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path)
                            min(scaled.height() + pad_h, max_h + pad_h))
 
                 def apri_paypal(event):
-                    if os.path.exists(paypal_url_path):
-                        raw = carica_testo_asset(paypal_url_path).strip()
-                        url = raw if raw.startswith("http") else None
-                        if url:
-                            logging.debug(f"Apro PayPal URL: {url}")
-                            import platform as _plt, subprocess as _sub
-                            # Su Linux PyInstaller frozen QDesktopServices.openUrl()  
-                            # restituisce True senza aprire nulla: usa xdg-open come primario
-                            if _plt.system() == "Linux":
-                                try:
-                                    _sub.Popen(
-                                        ["xdg-open", url],
-                                        stdout=_sub.DEVNULL,
-                                        stderr=_sub.DEVNULL
-                                    )
-                                    return
-                                except Exception as _e:
-                                    logging.debug(f"xdg-open fallito: {_e}")
-                            # Windows / macOS: QDesktopServices
+                    if not os.path.exists(paypal_url_path):
+                        return
+                    raw = carica_testo_asset(paypal_url_path).strip()
+                    url = raw if raw.startswith("http") else None
+                    if not url:
+                        return
+                    logging.debug(f"Apro PayPal URL: {url}")
+                    import platform as _plt, subprocess as _sub
+                    if _plt.system() == "Linux":
+                        # Su Linux PyInstaller frozen: QDesktopServices.openUrl() non funziona.
+                        # Prova xdg-open, sensible-browser, x-www-browser in ordine.
+                        env = os.environ.copy()
+                        # Assicura che DISPLAY/WAYLAND_DISPLAY siano presenti
+                        if not env.get("DISPLAY") and not env.get("WAYLAND_DISPLAY"):
+                            env["DISPLAY"] = ":0"
+                        for _cmd in ["xdg-open", "sensible-browser", "x-www-browser",
+                                     "firefox", "chromium-browser", "chromium", "google-chrome"]:
                             try:
-                                if QDesktopServices.openUrl(QUrl(url)):
-                                    return
-                            except Exception as _e:
-                                logging.debug(f"QDesktopServices fallito: {_e}")
-                            # Fallback universale
-                            try:
-                                import webbrowser
-                                webbrowser.open(url)
-                            except Exception as _e:
-                                logging.warning(f"Impossibile aprire URL PayPal: {_e}")
-
+                                _sub.Popen([_cmd, url], stdout=_sub.DEVNULL, stderr=_sub.DEVNULL, env=env)
+                                logging.debug(f"PayPal: aperto con {_cmd}")
+                                return
+                            except (FileNotFoundError, OSError):
+                                continue
+                        # Fallback finale
+                        try:
+                            import webbrowser
+                            webbrowser.open(url)
+                        except Exception as _e:
+                            logging.warning(f"PayPal: impossibile aprire URL: {_e}")
+                    else:
+                        # Windows / macOS: QDesktopServices
+                        try:
+                            if QDesktopServices.openUrl(QUrl(url)):
+                                return
+                        except Exception as _e:
+                            logging.debug(f"QDesktopServices fallito: {_e}")
+                        try:
+                            import webbrowser
+                            webbrowser.open(url)
+                        except Exception as _e:
+                            logging.warning(f"PayPal: impossibile aprire URL: {_e}")
                 lbl.mousePressEvent = apri_paypal
                 layout.addWidget(lbl)
         except Exception as e:
