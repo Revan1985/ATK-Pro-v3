@@ -267,6 +267,19 @@ jobs:
     - name: Upload to GitHub Release (if tagged)
       if: startsWith(github.ref, 'refs/tags/v')
       run: |
+        # Assicura che la release esista e non sia draft
+        # (gh release upload fallisce con 404 su release draft)
+        REPO="$GITHUB_REPOSITORY"
+        REL_ID=$(gh api "repos/$REPO/releases" \
+          --jq "[.[] | select(.tag_name==\"${{ github.ref_name }}\")][0].id // empty" 2>/dev/null || true)
+        if [ -n "$REL_ID" ]; then
+          gh api "repos/$REPO/releases/$REL_ID" --method PATCH \
+            --field draft=false --field prerelease=false > /dev/null 2>&1 || true
+        else
+          gh release create "${{ github.ref_name }}" \
+            --title "ATK-Pro ${{ github.ref_name }}" \
+            --notes "" --draft=false 2>/dev/null || true
+        fi
         gh release upload "${{ github.ref_name }}" \
           dist/ATK-Pro-Linux.tar.gz \
           dist/ATK-Pro-Linux.tar.gz.sha256 \
