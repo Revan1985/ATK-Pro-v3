@@ -266,14 +266,13 @@ jobs:
 
     - name: Upload to GitHub Release (if tagged)
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v2
-      with:
-        overwrite: true
-        files: |
-          dist/ATK-Pro-Linux.tar.gz
-          dist/ATK-Pro-Linux.tar.gz.sha256
-          dist/ATK-Pro-Linux.deb
-          dist/ATK-Pro-Linux.deb.sha256
+      run: |
+        gh release upload "${{ github.ref_name }}" \
+          dist/ATK-Pro-Linux.tar.gz \
+          dist/ATK-Pro-Linux.tar.gz.sha256 \
+          dist/ATK-Pro-Linux.deb \
+          dist/ATK-Pro-Linux.deb.sha256 \
+          --clobber
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
