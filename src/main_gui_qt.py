@@ -150,12 +150,9 @@ def _config_file_path():
 
 
 def _read_config_language():
-    """Legge la lingua salvata nel file di configurazione utente (Linux/macOS).
-    Fallback: /etc/atk-pro/defaults.json scritto dal postinst del .deb.
-    """
+    """Legge la lingua salvata nel file di configurazione utente (Linux/macOS)."""
     import os as _os
     import json as _json
-    # 1) Config utente: ~/.config/atk-pro/config.json
     try:
         cfg = _config_file_path()
         if _os.path.exists(cfg):
@@ -167,18 +164,6 @@ def _read_config_language():
                 return lang
     except Exception as e:
         logging.debug(f"Errore lettura config file: {e}")
-    # 2) Default di sistema: /etc/atk-pro/defaults.json (scritto dal .deb postinst)
-    try:
-        sys_cfg = "/etc/atk-pro/defaults.json"
-        if _os.path.exists(sys_cfg):
-            with open(sys_cfg, encoding="utf-8") as fh:
-                data = _json.load(fh)
-            lang = data.get("language", "")
-            if lang in _LINGUE_VALIDE:
-                logging.debug(f"Lingua letta da defaults di sistema: {lang}")
-                return lang
-    except Exception as e:
-        logging.debug(f"Errore lettura defaults di sistema: {e}")
     return None
 
 
@@ -2302,47 +2287,48 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path)
                            min(scaled.height() + pad_h, max_h + pad_h))
 
                 def apri_paypal(event):
-                    if not os.path.exists(paypal_url_path):
-                        return
-                    raw = carica_testo_asset(paypal_url_path).strip()
-                    url = raw if raw.startswith("http") else None
-                    if not url:
-                        return
-                    logging.debug(f"Apro PayPal URL: {url}")
-                    import platform as _plt, subprocess as _sub
-                    if _plt.system() == "Linux":
-                        # Su Linux PyInstaller frozen: QDesktopServices.openUrl() non funziona.
-                        # Prova xdg-open, sensible-browser, x-www-browser in ordine.
-                        env = os.environ.copy()
-                        # Assicura che DISPLAY/WAYLAND_DISPLAY siano presenti
-                        if not env.get("DISPLAY") and not env.get("WAYLAND_DISPLAY"):
-                            env["DISPLAY"] = ":0"
-                        for _cmd in ["xdg-open", "sensible-browser", "x-www-browser",
-                                     "firefox", "chromium-browser", "chromium", "google-chrome"]:
-                            try:
-                                _sub.Popen([_cmd, url], stdout=_sub.DEVNULL, stderr=_sub.DEVNULL, env=env)
-                                logging.debug(f"PayPal: aperto con {_cmd}")
-                                return
-                            except (FileNotFoundError, OSError):
-                                continue
-                        # Fallback finale
-                        try:
-                            import webbrowser
-                            webbrowser.open(url)
-                        except Exception as _e:
-                            logging.warning(f"PayPal: impossibile aprire URL: {_e}")
-                    else:
-                        # Windows / macOS: QDesktopServices
-                        try:
-                            if QDesktopServices.openUrl(QUrl(url)):
-                                return
-                        except Exception as _e:
-                            logging.debug(f"QDesktopServices fallito: {_e}")
-                        try:
-                            import webbrowser
-                            webbrowser.open(url)
-                        except Exception as _e:
-                            logging.warning(f"PayPal: impossibile aprire URL: {_e}")
+                    if os.path.exists(paypal_url_path):
+                        raw = carica_testo_asset(paypal_url_path).strip()
+                        url = raw if raw.startswith("http") else None
+                        if url:
+                            logging.debug(f"Apro PayPal URL: {url}")
+                            import platform, subprocess
+                            opened = False
+                            # Linux: xdg-open PRIMA (QDesktopServices può
+                            # restituire True anche quando non apre nulla
+                            # in ambienti senza DISPLAY/WAYLAND_DISPLAY)
+                            if platform.system() == "Linux":
+                                try:
+                                    env = os.environ.copy()
+                                    # Assicura che DISPLAY o WAYLAND_DISPLAY siano impostati
+                                    if not env.get("DISPLAY") and not env.get("WAYLAND_DISPLAY"):
+                                        env["DISPLAY"] = ":0"
+                                    subprocess.Popen(
+                                        ["xdg-open", url],
+                                        env=env,
+                                        stdout=subprocess.DEVNULL,
+                                        stderr=subprocess.DEVNULL
+                                    )
+                                    opened = True
+                                    logging.debug("PayPal: aperto con xdg-open")
+                                except Exception as e:
+                                    logging.debug(f"xdg-open fallito: {e}")
+                            # Windows/macOS (o Linux se xdg-open fallisce): QDesktopServices
+                            if not opened:
+                                try:
+                                    opened = QDesktopServices.openUrl(QUrl(url))
+                                    logging.debug(f"PayPal: QDesktopServices -> {opened}")
+                                except Exception as e:
+                                    logging.debug(f"QDesktopServices fallito: {e}")
+                            # Fallback universale
+                            if not opened:
+                                import webbrowser
+                                try:
+                                    webbrowser.open(url)
+                                    logging.debug("PayPal: aperto con webbrowser")
+                                except Exception as e:
+                                    logging.warning(f"Impossibile aprire URL PayPal: {e}")
+
                 lbl.mousePressEvent = apri_paypal
                 layout.addWidget(lbl)
         except Exception as e:
@@ -2407,12 +2393,33 @@ def main():
             primo_avvio = False
             logging.debug(f"Linux/macOS EXE: lingua da config file: {lingua}")
         else:
-            # Primo avvio: nessun config trovato → mostra dialog scelta lingua
-            primo_avvio = True
-            glossario_data_tmp = carica_glossario("en")
-            lingua = scegli_lingua(glossario_data_tmp, "en")
-            _write_config_language(lingua)
-            logging.debug(f"Linux/macOS primo avvio: lingua scelta: {lingua}")
+            # Fallback: leggi /etc/atk-pro/defaults.json (scritto dal postinst)
+            # Questo copre i casi in cui il postinst non ha trovato SUDO_USER
+            # (es. installazione via polkit/GNOME Software)
+            _sys_default = None
+            try:
+                import json as _jj
+                with open("/etc/atk-pro/defaults.json", encoding="utf-8") as _fh:
+                    _dd = _jj.load(_fh)
+                _cl = _dd.get("language", "").strip().lower()
+                if _cl in _LINGUE_VALIDE:
+                    _sys_default = _cl
+                    logging.debug(f"Lingua da /etc/atk-pro/defaults.json: {_sys_default}")
+            except Exception as _ex:
+                logging.debug(f"defaults.json non leggibile: {_ex}")
+
+            if _sys_default:
+                lingua = _sys_default
+                primo_avvio = False
+                _write_config_language(lingua)  # propaga in ~/.config
+                logging.debug(f"Linux/macOS: lingua da defaults di sistema: {lingua}")
+            else:
+                # Solo se nessun default è disponibile → mostra dialog scelta lingua
+                primo_avvio = True
+                glossario_data_tmp = carica_glossario("en")
+                lingua = scegli_lingua(glossario_data_tmp, "en")
+                _write_config_language(lingua)
+                logging.debug(f"Linux/macOS primo avvio: lingua scelta: {lingua}")
 
     else:
         # Modalità sviluppo: stessa logica Linux/macOS (config file per primo avvio)
