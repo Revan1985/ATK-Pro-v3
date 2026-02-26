@@ -1,6 +1,3 @@
 #!/bin/sh
-set -e
-. /usr/share/debconf/confmodule
-db_input high atk-pro/accept-license || true
-db_input medium atk-pro/language || true
-db_go || true
+# debconf config stub — interactive dialogs handled directly in preinst
+exit 0
