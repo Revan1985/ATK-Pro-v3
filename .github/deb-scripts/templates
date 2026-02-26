@@ -1,0 +1,29 @@
+Template: atk-pro/accept-license
+Type: boolean
+Default: false
+Description: Accept ATK-Pro legal disclaimer and license terms?
+ ATK-Pro v2.0 - Legal Disclaimer and Ethical Use Commitment
+ .
+ ATK-Pro is designed for archival, genealogical, and consultation
+ purposes only. Content is distributed under CC BY-NC-SA 4.0 license.
+ Commercial use, redistribution without attribution, or untracked
+ modification of the original content is prohibited.
+ .
+ ATK-Pro does not redistribute content from the Antenati Portal
+ (antenati.cultura.gov.it) nor replicate its interface or structure.
+ .
+ By installing you agree to the legal notices of the Ministry of
+ Culture: https://antenati.cultura.gov.it/note-legali/
+ .
+ The author disclaims responsibility for improper use or unauthorized
+ modification of the included tools.
+ .
+ (c) 2026 Antenati Toolkit Pro | Version 2.0
+
+Template: atk-pro/language
+Type: select
+Choices: it, en, es, de, fr, pt, nl, ar, he, ru, da, el, ja, no, pl, ro, sv, tr, vi, zh
+Default: en
+Description: Select ATK-Pro interface language:
+ Choose the default language for the ATK-Pro graphical interface.
+ You can change this at any time from the Settings menu inside the app.
