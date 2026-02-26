@@ -1,10 +1,83 @@
 #!/bin/sh
 set -e
-. /usr/share/debconf/confmodule
+
+LANGS="it en es de fr pt nl ar he ru da el ja no pl ro sv tr vi zh"
+
 if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
-    db_get atk-pro/accept-license
-    if [ "$RET" != "true" ]; then
-        echo "ATK-Pro: installation cancelled - license terms not accepted." >&2
-        exit 1
+
+    # ── Mostra disclaimer ───────────────────────────────────────────────────
+    # Usa /dev/tty per leggere/scrivere direttamente sul terminale anche
+    # quando stdin/stdout sono reindirizzati (es. dpkg-preconfigure)
+    if [ -e /dev/tty ]; then
+        exec 3>/dev/tty
+        exec 4</dev/tty
+    else
+        exec 3>&1
+        exec 4<&0
     fi
+
+    cat >&3 <<'DISCLAIMER_EOF'
+📋 Legal Disclaimer
+Antenati Toolkit Pro
+
+ATK-Pro – Antenati Toolkit Pro
+Legal Disclaimer and Ethical Use Commitment
+
+The ATK-Pro project is designed for archival, genealogical, and consultation purposes.
+All content, unless otherwise stated, is distributed under a Creative Commons BY-NC-SA 4.0 license.
+Direct commercial use, redistribution without attribution, or untracked modification of the original content is prohibited.
+ATK-Pro does not redistribute any content from the Antenati Portal (antenati.cultura.gov.it) nor does it intend to replicate its interface, structure, or organization.
+Anyone who installs or uses ATK-Pro agrees to act in full compliance with the legal notices and terms of use defined by the Ministry of Culture, available at the following address: https://antenati.cultura.gov.it/note-legali/.
+The documents included in the advisory node do not constitute an official source nor do they have any certifying or legal value. 
+The interface and tools developed within the project are intended to facilitate independent consultation by genealogical users in local environments, without connection or support from external services.
+Any references to public bodies, archives, or historical documentation are for study, analysis, and contextualization purposes only.
+Every file present in the ATK-Pro structure (in .txt, .md, .html, or .pdf format) has been drafted with a declarative, archival, or demonstrative intent.
+Directory structures, operational scripts, and genealogical notes are provided in prototype form, without any warranty of functionality or external validation.
+The author of the project disclaims any responsibility regarding the improper use, misinterpretation, or unauthorized modification of the included documents and tools.
+The consultative node is to be understood as a limited circulation archive, intended exclusively for study purposes and not for public or systematic dissemination.
+This declaration is an integral part of the project's documentation architecture.
+
+© 2026 Antenati Toolkit Pro | Version 2.0
+antenati.toolkit.pro@gmail.com
+DISCLAIMER_EOF
+
+    printf '\n\nAccetti le condizioni sopra riportate? [si/no]: ' >&3
+    read REPLY <&4
+
+    case "$REPLY" in
+        si|SI|Si|yes|YES|Yes|y|Y)
+            printf 'Accettato.\n\n' >&3
+            ;;
+        *)
+            printf 'Installazione annullata: termini non accettati.\n' >&3
+            exit 1
+            ;;
+    esac
+
+    # ── Scelta lingua ───────────────────────────────────────────────────────
+    printf 'Lingue disponibili: %s\n' "$LANGS" >&3
+    printf 'Seleziona la lingua predefinita [en]: ' >&3
+    read LANG_CHOICE <&4
+
+    # Valida
+    LANG_CHOICE="${LANG_CHOICE:-en}"
+    VALID=0
+    for L in $LANGS; do
+        if [ "$LANG_CHOICE" = "$L" ]; then
+            VALID=1
+            break
+        fi
+    done
+    if [ "$VALID" = "0" ]; then
+        printf 'Lingua non valida, uso "en" come predefinito.\n' >&3
+        LANG_CHOICE="en"
+    fi
+
+    printf 'Lingua selezionata: %s\n\n' "$LANG_CHOICE" >&3
+
+    # Salva in /tmp per postinst
+    printf '%s' "$LANG_CHOICE" > /tmp/atk-pro-install-lang
+
+    exec 3>&-
+    exec 4<&-
 fi
