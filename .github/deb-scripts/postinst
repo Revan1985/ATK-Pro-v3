@@ -1,12 +1,21 @@
 #!/bin/sh
 set -e
-. /usr/share/debconf/confmodule
 
-db_get atk-pro/language
-SELECTED_LANG="$RET"
+if [ "$1" = "configure" ]; then
 
-if [ -n "$SELECTED_LANG" ]; then
-    # Scrivi config per l'utente che ha lanciato sudo
+    # Leggi lingua scelta dal preinst
+    SELECTED_LANG="en"
+    if [ -f /tmp/atk-pro-install-lang ]; then
+        SELECTED_LANG=$(cat /tmp/atk-pro-install-lang)
+        rm -f /tmp/atk-pro-install-lang
+    fi
+
+    # Scrivi config di sistema (fallback per tutti gli utenti)
+    mkdir -p /etc/atk-pro
+    printf '{"language": "%s"}\n' "$SELECTED_LANG" > /etc/atk-pro/defaults.json
+    echo "ATK-Pro: system language default set to '$SELECTED_LANG'"
+
+    # Scrivi config per l'utente che ha invocato sudo
     ACTUAL_USER="${SUDO_USER:-}"
     if [ -z "$ACTUAL_USER" ]; then
         ACTUAL_USER=$(logname 2>/dev/null || true)
@@ -19,15 +28,12 @@ if [ -n "$SELECTED_LANG" ]; then
         chown -R "$ACTUAL_USER" "$CONFIG_DIR" 2>/dev/null || true
         echo "ATK-Pro: language '$SELECTED_LANG' saved for user $ACTUAL_USER"
     fi
-    # Scrivi default di sistema (usato da _read_config_language come fallback)
-    mkdir -p /etc/atk-pro
-    printf '{"language": "%s"}\n' "$SELECTED_LANG" > /etc/atk-pro/defaults.json
-    echo "ATK-Pro: system language default set to '$SELECTED_LANG'"
-fi
 
-if command -v update-desktop-database > /dev/null 2>&1; then
-    update-desktop-database /usr/share/applications || true
-fi
-if command -v gtk-update-icon-cache > /dev/null 2>&1; then
-    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
+    # Aggiorna database applicazioni e icone
+    if command -v update-desktop-database > /dev/null 2>&1; then
+        update-desktop-database /usr/share/applications || true
+    fi
+    if command -v gtk-update-icon-cache > /dev/null 2>&1; then
+        gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
+    fi
 fi
