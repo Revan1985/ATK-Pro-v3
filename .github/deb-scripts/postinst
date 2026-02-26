@@ -3,23 +3,30 @@ set -e
 
 if [ "$1" = "configure" ]; then
 
-    # Leggi lingua scelta dal preinst
+    # Read language chosen by preinst
     SELECTED_LANG="en"
     if [ -f /tmp/atk-pro-install-lang ]; then
         SELECTED_LANG=$(cat /tmp/atk-pro-install-lang)
         rm -f /tmp/atk-pro-install-lang
     fi
 
-    # Scrivi config di sistema (fallback per tutti gli utenti)
+    # Write system-wide config (fallback for all users / polkit installs)
     mkdir -p /etc/atk-pro
     printf '{"language": "%s"}\n' "$SELECTED_LANG" > /etc/atk-pro/defaults.json
     echo "ATK-Pro: system language default set to '$SELECTED_LANG'"
 
-    # Scrivi config per l'utente che ha invocato sudo
+    # Detect real user: sudo -> polkit/pkexec -> logname -> who
     ACTUAL_USER="${SUDO_USER:-}"
+    if [ -z "$ACTUAL_USER" ] && [ -n "${PKEXEC_UID:-}" ]; then
+        ACTUAL_USER=$(getent passwd "$PKEXEC_UID" | cut -d: -f1 2>/dev/null || true)
+    fi
     if [ -z "$ACTUAL_USER" ]; then
         ACTUAL_USER=$(logname 2>/dev/null || true)
     fi
+    if [ -z "$ACTUAL_USER" ]; then
+        ACTUAL_USER=$(who | awk 'NR==1{print $1}' 2>/dev/null || true)
+    fi
+
     if [ -n "$ACTUAL_USER" ] && id "$ACTUAL_USER" >/dev/null 2>&1; then
         USER_HOME=$(getent passwd "$ACTUAL_USER" | cut -d: -f6)
         CONFIG_DIR="$USER_HOME/.config/atk-pro"
@@ -27,9 +34,11 @@ if [ "$1" = "configure" ]; then
         printf '{"language": "%s"}\n' "$SELECTED_LANG" > "$CONFIG_DIR/config.json"
         chown -R "$ACTUAL_USER" "$CONFIG_DIR" 2>/dev/null || true
         echo "ATK-Pro: language '$SELECTED_LANG' saved for user $ACTUAL_USER"
+    else
+        echo "ATK-Pro: could not detect real user -- language saved system-wide only"
     fi
 
-    # Aggiorna database applicazioni e icone
+    # Update desktop database and icon cache
     if command -v update-desktop-database > /dev/null 2>&1; then
         update-desktop-database /usr/share/applications || true
     fi
