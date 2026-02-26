@@ -48,7 +48,8 @@ jobs:
           libxcomposite1 \
           libxdamage1 \
           libxrandr2 \
-          imagemagick
+          imagemagick \
+          xdg-utils
         echo "✓ System dependencies installed"
 
     - name: Install Python dependencies
@@ -208,41 +209,24 @@ jobs:
 
         # File control del pacchetto
         INSTALLED_SIZE=$(du -sk "$PKG_DIR/opt" | cut -f1)
-        printf 'Package: atk-pro\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: amd64\nInstalled-Size: %s\nDepends: debconf (>= 0.5) | debconf-2.0, libxcb-xinerama0, libxcb-cursor0, libegl1, libdbus-1-3, libxkbcommon-x11-0\nMaintainer: Daniele Pigoli\nDescription: ATK-Pro - Estrazione immagini da Canvas LMS\n Strumento per estrarre, visualizzare ed esportare immagini e documenti\n dai corsi Canvas LMS (portale Antenati).\n .\n Supporta 20 lingue: IT, EN, ES, DE, FR, PT, NL, AR, HE, RU,\n JA, SV, ZH, RO, EL, PL, DA, NO, TR, VI\n' \
+        printf 'Package: atk-pro\nVersion: %s\nSection: utils\nPriority: optional\nArchitecture: amd64\nInstalled-Size: %s\nDepends: debconf (>= 0.5) | debconf-2.0, libxcb-xinerama0, libxcb-cursor0, libegl1, libdbus-1-3, libxkbcommon-x11-0, xdg-utils\nMaintainer: Daniele Pigoli\nDescription: ATK-Pro - Estrazione immagini da Canvas LMS\n Strumento per estrarre, visualizzare ed esportare immagini e documenti\n dai corsi Canvas LMS (portale Antenati).\n .\n Supporta 20 lingue: IT, EN, ES, DE, FR, PT, NL, AR, HE, RU,\n JA, SV, ZH, RO, EL, PL, DA, NO, TR, VI\n' \
           "$VERSION" "$INSTALLED_SIZE" \
           > "$PKG_DIR/DEBIAN/control"
         echo "✓ control creato"
 
-        # DEBIAN/templates — definisce la domanda debconf (funziona sia in GUI che CLI)
-        TEMPLATES=$'Template: atk-pro/accept-license\nType: boolean\nDefault: false\nDescription: Accept ATK-Pro legal disclaimer and license terms?\n ATK-Pro v2.0 - Legal Disclaimer and Ethical Use Commitment\n .\n ATK-Pro is designed for archival, genealogical, and consultation\n purposes. Content is distributed under CC BY-NC-SA 4.0 license.\n Commercial use, redistribution without attribution, or untracked\n modification of the original content is prohibited.\n .\n ATK-Pro does not redistribute content from the Antenati Portal\n (antenati.cultura.gov.it) nor replicate its interface or structure.\n .\n By installing you agree to the legal notices of the Ministry of\n Culture: https://antenati.cultura.gov.it/note-legali/\n .\n The author disclaims responsibility for improper use or unauthorized\n modification of the included tools.\n .\n (c) 2026 Antenati Toolkit Pro | Version 2.0\n\nTemplate: atk-pro/language\nType: select\nChoices: it, en, es, de, fr, pt, nl, ar, he, ru, da, el, ja, no, pl, ro, sv, tr, vi, zh\nDefault: en\nDescription: Select ATK-Pro interface language:\n Choose the default language for ATK-Pro.\n You can change this at any time from the Settings menu in the app.\n'
-        printf '%s' "$TEMPLATES" > "$PKG_DIR/DEBIAN/templates"
-        echo "✓ templates creato"
+        # Copia i file DEBIAN dal repo (no inline generation — evita problemi di quoting YAML)
+        cp .github/deb-scripts/templates "$PKG_DIR/DEBIAN/templates"
+        cp .github/deb-scripts/config    "$PKG_DIR/DEBIAN/config"
+        cp .github/deb-scripts/preinst   "$PKG_DIR/DEBIAN/preinst"
+        cp .github/deb-scripts/postinst  "$PKG_DIR/DEBIAN/postinst"
+        cp .github/deb-scripts/prerm     "$PKG_DIR/DEBIAN/prerm"
+        chmod 755 "$PKG_DIR/DEBIAN/config" "$PKG_DIR/DEBIAN/preinst" "$PKG_DIR/DEBIAN/postinst" "$PKG_DIR/DEBIAN/prerm"
+        echo "✓ scripts DEBIAN copiati (templates, config, preinst, postinst, prerm)"
 
-        # DEBIAN/config — chiamato da dpkg PRIMA del preinst; mostra il dialog
-        CONFIG=$'#!/bin/sh\nset -e\n. /usr/share/debconf/confmodule\ndb_input high atk-pro/accept-license || true\ndb_input medium atk-pro/language || true\ndb_go || true\n'
-        printf '%s' "$CONFIG" > "$PKG_DIR/DEBIAN/config"
-        chmod 755 "$PKG_DIR/DEBIAN/config"
-        echo "✓ config creato"
-
-
-        # DEBIAN/preinst — mostra disclaimer e blocca se non accettato
-        # Usa $'...' ANSI-C quoting: \n=newline, \'=apice, \"=doppia-virg
-        # DEBIAN/preinst — legge risposta debconf (funziona in GUI e CLI)
-        PREINST=$'#!/bin/sh\nset -e\n. /usr/share/debconf/confmodule\nif [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then\n    db_get atk-pro/accept-license\n    if [ "$RET" != "true" ]; then\n        echo "ATK-Pro: installation cancelled - license terms not accepted." >&2\n        exit 1\n    fi\nfi\n'
-        printf '%s' "$PREINST" > "$PKG_DIR/DEBIAN/preinst"
-        chmod 755 "$PKG_DIR/DEBIAN/preinst"
-        echo "✓ preinst creato"
-
-        # DEBIAN/postinst — aggiorna database icone e menu
-        POSTINST=$'#!/bin/sh\nset -e\n. /usr/share/debconf/confmodule\ndb_get atk-pro/language\nSELECTED_LANG=\"$RET\"\nif [ -n \"$SELECTED_LANG\" ]; then\n    ACTUAL_USER=\"${SUDO_USER:-}\"\n    if [ -z \"$ACTUAL_USER\" ]; then\n        ACTUAL_USER=$(logname 2>/dev/null || true)\n    fi\n    if [ -n \"$ACTUAL_USER\" ] && id \"$ACTUAL_USER\" >/dev/null 2>&1; then\n        USER_HOME=$(getent passwd \"$ACTUAL_USER\" | cut -d: -f6)\n        CONFIG_DIR=\"$USER_HOME/.config/atk-pro\"\n        mkdir -p \"$CONFIG_DIR\"\n        printf \'{\"language\": \"%s\"}\n\' \"$SELECTED_LANG\" > \"$CONFIG_DIR/config.json\"\n        chown -R \"$ACTUAL_USER\" \"$CONFIG_DIR\" 2>/dev/null || true\n    fi\n    mkdir -p /etc/atk-pro\n    printf \'{\"language\": \"%s\"}\n\' \"$SELECTED_LANG\" > /etc/atk-pro/defaults.json\nfi\nif command -v update-desktop-database > /dev/null 2>&1; then\n    update-desktop-database /usr/share/applications || true\nfi\nif command -v gtk-update-icon-cache > /dev/null 2>&1; then\n    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true\nfi\n'
-        printf '%s' "$POSTINST" > "$PKG_DIR/DEBIAN/postinst"
-        chmod 755 "$PKG_DIR/DEBIAN/postinst"
-        echo "✓ postinst creato"
-
-        # DEBIAN/prerm — pulizia prima della rimozione
-        PRERM=$'#!/bin/sh\nset -e\nif command -v update-desktop-database > /dev/null 2>&1; then\n    update-desktop-database /usr/share/applications || true\nfi\n'
-        printf '%s' "$PRERM" > "$PKG_DIR/DEBIAN/prerm"
-        chmod 755 "$PKG_DIR/DEBIAN/prerm"
+        # Verifica che i file siano corretti
+        echo "--- templates ---"; cat "$PKG_DIR/DEBIAN/templates"
+        echo "--- config ---";    cat "$PKG_DIR/DEBIAN/config"
+        echo "--- preinst ---";   cat "$PKG_DIR/DEBIAN/preinst"
 
         # Costruisci il .deb
         dpkg-deb --build --root-owner-group "$PKG_DIR" dist/ATK-Pro-Linux.deb
