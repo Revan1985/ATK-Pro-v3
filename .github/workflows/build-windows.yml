@@ -97,10 +97,10 @@ jobs:
         
     - name: Upload to GitHub Release (if tagged)
       if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v2
-      with:
-        overwrite: true
-        files: |
-          Output/ATK-Pro-Setup-v2.0.exe
+      shell: bash
+      run: |
+        gh release upload "${{ github.ref_name }}" \
+          "Output/ATK-Pro-Setup-v2.0.exe" \
+          --clobber
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
