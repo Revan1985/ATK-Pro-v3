@@ -395,9 +395,11 @@ class _MetaPanel(QWidget):
         tree.setSortingEnabled(False)
 
         for key, value in meta.items():
-            # Localizza il nome del campo se presente nel glossario;
-            # i campi tecnici (CanvasID, ARK, UA…) non hanno traduzione
-            # e vengono mostrati invariati come fallback di _gm.
+            # Salta i campi interni (non destinati alla visualizzazione)
+            if str(key).startswith("_"):
+                continue
+            # Localizza il nome del campo tramite glossario;
+            # _gm restituisce il messaggio localizzato o, come fallback, la chiave stessa.
             display_key = _gm(gd, str(key), lg) if gd else str(key)
             item = QTreeWidgetItem([display_key, str(value)])
             tree.addTopLevelItem(item)
