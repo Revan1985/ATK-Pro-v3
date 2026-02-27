@@ -1,60 +1,63 @@
 ================================================================================
-  ATK-Pro v2.0 per Linux - Istruzioni di utilizzo
+  ATK-Pro v2.0 for Linux - Instructions
 ================================================================================
 
-REQUISITI SISTEMA:
-- Linux x86_64 (Ubuntu 20.04+, Debian 11+, Fedora 34+, etc.)
-- Librerie Qt6 (di solito già presenti)
-- Connessione Internet per scaricare browser Playwright al primo avvio
+SYSTEM REQUIREMENTS:
+  - Linux x86_64 (Ubuntu 20.04+, Debian 11+, Fedora 34+, etc.)
+  - Internet connection to download the Playwright browser on first launch
 
-INSTALLAZIONE:
+INSTALLATION — choose one method:
 
-1. Estrai l'archivio:
-   tar -xzf ATK-Pro-Linux.tar.gz
+  METHOD A — DEB package (Ubuntu/Debian, recommended):
+    Double-click ATK-Pro-Linux.deb in your file manager, OR:
+      sudo dpkg -i ATK-Pro-Linux.deb
+      sudo apt-get install -f       # fixes missing deps if any
+    The application will appear in your Applications menu.
 
-2. Rendi eseguibile (se necessario):
-   chmod +x ATK-Pro
+  METHOD B — Tarball (all distributions):
+    1. Extract:  tar -xzf ATK-Pro-Linux.tar.gz
+    2. Allow:    chmod +x ATK-Pro
+    3. Run:      ./ATK-Pro
 
-3. Avvia l'applicazione:
-   ./ATK-Pro
+FIRST LAUNCH:
+  ATK-Pro will automatically download Chromium (~150 MB) on first use.
+  This may take a few minutes. An internet connection is required.
 
-PRIMO AVVIO:
-Al primo utilizzo, ATK-Pro scaricherà automaticamente Chromium (~150 MB).
-Questo processo può richiedere alcuni minuti.
+MISSING DEPENDENCIES (tarball only — deb installs these automatically):
+  Ubuntu/Debian:
+    sudo apt-get install libxcb-xinerama0 libxcb-cursor0 \
+                         libegl1 libdbus-1-3 libxkbcommon-x11-0
+  Fedora/RHEL:
+    sudo dnf install xcb-util-cursor libxkbcommon-x11 mesa-libEGL dbus-libs
+  Arch Linux:
+    sudo pacman -S xcb-util-cursor libxkbcommon-x11 mesa dbus
 
-DIPENDENZE MANCANTI:
-Se ricevi errori su librerie mancanti, installa:
+DESKTOP INTEGRATION (tarball only — deb handles this automatically):
+  Create ~/.local/share/applications/atk-pro.desktop with:
 
-Ubuntu/Debian:
-  sudo apt-get install libxcb-xinerama0 libxcb-cursor0 libegl1 libdbus-1-3
+    [Desktop Entry]
+    Type=Application
+    Name=ATK-Pro
+    Comment=IIIF Archive Toolkit Professional
+    Exec=/full/path/ATK-Pro
+    Icon=/full/path/assets/common/grafici/ATK-Pro.ico
+    Terminal=false
+    Categories=Utility;Education;
 
-Fedora/RHEL:
-  sudo dnf install xcb-util-cursor libxkbcommon-x11 mesa-libEGL dbus-libs
+  Replace /full/path/ with the actual location of ATK-Pro.
 
-Arch Linux:
-  sudo pacman -S xcb-util-cursor libxkbcommon-x11 mesa dbus
+DISCLAIMER:
+  This software is intended exclusively for researchers who access the
+  Antenati portal (Canvas LMS) with their own valid credentials.
+  The user is solely responsible for compliance with the portal's Terms
+  of Service and applicable copyright law.
+  The software is provided "AS IS", without warranty of any kind.
+  The authors assume no liability for improper or unlawful use.
 
-DESKTOP INTEGRATION (opzionale):
-Per aggiungere ATK-Pro al menu applicazioni, crea il file:
-~/.local/share/applications/atkpro.desktop
-
-Con questo contenuto:
-
-[Desktop Entry]
-Type=Application
-Name=ATK-Pro
-Comment=IIIF Archive Toolkit Professional
-Exec=/percorso/completo/ATK-Pro
-Icon=/percorso/completo/assets/common/grafici/ATK-Pro.ico
-Terminal=false
-Categories=Utility;
-
-Sostituisci "/percorso/completo/" con il path reale dove hai copiato ATK-Pro.
-
-SUPPORTO:
-Repository GitHub: https://github.com/DanielePigoli/ATK-Pro-v2
-Issues: https://github.com/DanielePigoli/ATK-Pro-v2/issues
+SUPPORT:
+  GitHub : https://github.com/DanielePigoli/ATK-Pro-v2
+  Issues : https://github.com/DanielePigoli/ATK-Pro-v2/issues
 
 ================================================================================
-© 2026 ATK-Pro - Distribuito sotto licenza open source
+  (c) 2026 ATK-Pro - Distributed under open-source license
 ================================================================================

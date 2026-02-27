@@ -1231,8 +1231,8 @@ class MainWindow(QMainWindow):
         dlg.resize(900, 700)
         dlg.setMinimumSize(600, 400)
         dlg.setSizeGripEnabled(True)
-        # Aggiungi pulsanti di sistema (max/min/close)
-        dlg.setWindowFlags(dlg.windowFlags() | Qt.Window | Qt.WindowMinMaxButtonsHint)
+        # Sostituisce TUTTI i flag per evitare che Qt.Dialog blocchi min/max
+        dlg.setWindowFlags(Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint | Qt.WindowCloseButtonHint)
         layout = QVBoxLayout(dlg)
         try:
             web = QWebEngineView()
@@ -1270,7 +1270,7 @@ class MainWindow(QMainWindow):
         dlg.resize(700, 500)
         dlg.setMinimumSize(400, 300)
         dlg.setSizeGripEnabled(True)
-        dlg.setWindowFlags(dlg.windowFlags() | Qt.Window | Qt.WindowMinMaxButtonsHint)
+        dlg.setWindowFlags(Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowMaximizeButtonHint | Qt.WindowCloseButtonHint)
         dlg.setStyleSheet("QDialog { background: #fff; } QTextEdit { background: #fff; color: #222; font-size: 15px; }")
         layout = QVBoxLayout(dlg)
         text = QTextEdit()
@@ -2268,8 +2268,8 @@ def action_placeholder(glossario_data, lingua, voce):
         msg.exec()
 
 
-def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path):
-    dlg = QDialog()
+def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path, parent=None):
+    dlg = QDialog(parent)
     dlg.setWindowTitle(get_msg(glossario_data, "Sostieni il progetto", lingua.upper()))
     dlg.setWindowIcon(QIcon(get_pixmap_cached(asset_path("assets/common/grafici/ATK-Pro.ico"))))
     dlg.setStyleSheet("QDialog { background: transparent; }")
@@ -2287,6 +2287,7 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path)
                 lbl = QLabel()
                 lbl.setPixmap(scaled)
                 lbl.setAlignment(Qt.AlignCenter)
+                lbl.setCursor(Qt.PointingHandCursor)
 
                 # Ridimensiona dialog in modo aderente all'immagine + margine minimo
                 pad_w, pad_h = 32, 24
@@ -2480,7 +2481,7 @@ def main():
         else:
             logging.info(f"Banner path selezionato: {banner_path}")
         paypal_url_path = os.path.join(ASSET_COMMON, "testuali", "PayPal.me.url")
-        mostra_banner_chiusura(glossario_data, lingua_norm, banner_path, paypal_url_path)
+        mostra_banner_chiusura(glossario_data, lingua_norm, banner_path, paypal_url_path, parent=window)
 
     app.aboutToQuit.connect(on_close)
     sys.exit(app.exec())

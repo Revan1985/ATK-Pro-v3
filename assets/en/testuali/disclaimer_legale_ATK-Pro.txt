@@ -4,7 +4,19 @@ Antenati Toolkit Pro
 ATK-Pro – Antenati Toolkit Pro
 Legal Disclaimer and Ethical Use Commitment
 
-The ATK-Pro project is designed for archival, genealogical, and consultation purposes. All content, unless otherwise stated, is distributed under a Creative Commons BY-NC-SA 4.0 license. Direct commercial use, redistribution without attribution, or untracked modification of the original content is prohibited. ATK-Pro does not redistribute any content from the Antenati Portal (antenati.cultura.gov.it) nor does it intend to replicate its interface, structure, or organization. Anyone who installs or uses ATK-Pro agrees to act in full compliance with the legal notices and terms of use defined by the Ministry of Culture, available at the following address: https://antenati.cultura.gov.it/note-legali/. The documents included in the advisory node do not constitute an official source nor do they have any certifying or legal value. The interface and tools developed within the project are intended to facilitate independent consultation by genealogical users in local environments, without connection or support from external services. Any references to public bodies, archives, or historical documentation are for study, analysis, and contextualization purposes only. Every file present in the ATK-Pro structure (in .txt, .md, .html, or .pdf format) has been drafted with a declarative, archival, or demonstrative intent. Directory structures, operational scripts, and genealogical notes are provided in prototype form, without any warranty of functionality or external validation. The author of the project disclaims any responsibility regarding the improper use, misinterpretation, or unauthorized modification of the included documents and tools. The consultative node is to be understood as a limited circulation archive, intended exclusively for study purposes and not for public or systematic dissemination. This declaration is an integral part of the project's documentation architecture.
+The ATK-Pro project is designed for archival, genealogical, and consultation purposes.
+All content, unless otherwise stated, is distributed under a Creative Commons BY-NC-SA 4.0 license.
+Direct commercial use, redistribution without attribution, or untracked modification of the original content is prohibited.
+ATK-Pro does not redistribute any content from the Antenati Portal (antenati.cultura.gov.it) nor does it intend to replicate its interface, structure, or organization.
+Anyone who installs or uses ATK-Pro agrees to act in full compliance with the legal notices and terms of use defined by the Ministry of Culture, available at the following address: https://antenati.cultura.gov.it/note-legali/.
+The documents included in the advisory node do not constitute an official source nor do they have any certifying or legal value. 
+The interface and tools developed within the project are intended to facilitate independent consultation by genealogical users in local environments, without connection or support from external services.
+Any references to public bodies, archives, or historical documentation are for study, analysis, and contextualization purposes only.
+Every file present in the ATK-Pro structure (in .txt, .md, .html, or .pdf format) has been drafted with a declarative, archival, or demonstrative intent.
+Directory structures, operational scripts, and genealogical notes are provided in prototype form, without any warranty of functionality or external validation.
+The author of the project disclaims any responsibility regarding the improper use, misinterpretation, or unauthorized modification of the included documents and tools.
+The consultative node is to be understood as a limited circulation archive, intended exclusively for study purposes and not for public or systematic dissemination.
+This declaration is an integral part of the project's documentation architecture.
 
 © 2026 Antenati Toolkit Pro | Version 2.0
 antenati.toolkit.pro@gmail.com

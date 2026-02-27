@@ -1,71 +1,58 @@
 ================================================================================
-  ATK-Pro v2.0 per macOS - Istruzioni di installazione
+  ATK-Pro v2.0 for macOS - Installation Instructions
 ================================================================================
 
-IMPORTANTE: Questa applicazione non è firmata con un certificato Apple Developer.
-macOS potrebbe mostrarti un messaggio "L'app è danneggiata" o bloccarla.
+IMPORTANT: This application is not signed with an Apple Developer certificate.
+macOS may show an "App is damaged" message or block it from opening.
 
-SOLUZIONE (scegli una):
+HOW TO OPEN ATK-Pro (choose one method):
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-METODO 1: Rimuovi attributi di quarantena (CONSIGLIATO)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+────────────────────────────────────────────────────────────────────────────
+  METHOD 1 — Remove quarantine attribute (RECOMMENDED)
+────────────────────────────────────────────────────────────────────────────
+  1. Open Terminal (Applications > Utilities > Terminal)
+  2. Run the following command (adjust path if needed):
+       xattr -cr /Applications/ATK-Pro.app
+  3. Open ATK-Pro normally from your Applications folder.
 
-1. Apri il Terminale (Applicazioni > Utility > Terminale)
+────────────────────────────────────────────────────────────────────────────
+  METHOD 2 — Control+Click
+────────────────────────────────────────────────────────────────────────────
+  1. Locate ATK-Pro.app in Finder.
+  2. Hold Control and click the icon.
+  3. Select "Open" from the context menu.
+  4. Click "Open" again in the confirmation dialog.
+  After this, the app can be launched normally at any time.
 
-2. Trascina l'app ATK-Pro.app dentro la finestra del Terminale
-   (oppure digita il percorso completo)
+────────────────────────────────────────────────────────────────────────────
+  METHOD 3 — System Settings
+────────────────────────────────────────────────────────────────────────────
+  1. Go to System Settings > Privacy & Security.
+  2. Scroll to the "Security" section.
+  3. Click "Open Anyway" next to the ATK-Pro message.
+  4. Confirm with your password.
 
-3. Premi Backspace per rimuovere lo spazio finale, poi digita:
-   
-   Esempio se l'app è in /Applications:
-   xattr -cr /Applications/ATK-Pro.app
+SYSTEM REQUIREMENTS:
+  - macOS 10.13 (High Sierra) or later
+  - Internet connection to download Playwright browsers on first launch
+  - Python 3.12 is already bundled inside ATK-Pro.app
 
-4. Premi Invio
+FIRST LAUNCH:
+  ATK-Pro will automatically download Chromium (~150 MB) on first use.
+  This may take a few minutes. An internet connection is required.
 
-5. Ora puoi aprire normalmente ATK-Pro dalle Applicazioni
+DISCLAIMER:
+  This software is intended exclusively for researchers who access the
+  Antenati portal (Canvas LMS) with their own valid credentials.
+  The user is solely responsible for compliance with the portal's Terms
+  of Service and applicable copyright law.
+  The software is provided "AS IS", without warranty of any kind.
+  The authors assume no liability for improper or unlawful use.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-METODO 2: Apri con Control+Click (alternativo)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. Trova ATK-Pro.app in Finder
-
-2. Tieni premuto Control e clicca sull'icona
-
-3. Seleziona "Apri" dal menu
-
-4. Clicca di nuovo "Apri" nella finestra di conferma
-
-5. Da ora in poi potrai aprire l'app normalmente
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-METODO 3: Impostazioni di sistema (se i precedenti non funzionano)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. Vai in Impostazioni di sistema > Privacy e sicurezza
-
-2. Scorri fino a "Sicurezza"
-
-3. Se vedi un messaggio su ATK-Pro bloccata, clicca "Apri comunque"
-
-4. Conferma con la tua password
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-REQUISITI SISTEMA:
-- macOS 10.13 (High Sierra) o successivo
-- Connessione Internet per scaricare i browser Playwright al primo avvio
-- Python 3.12 già incluso nell'app bundle
-
-PRIMO AVVIO:
-Al primo utilizzo, ATK-Pro scaricherà automaticamente Chromium (~150 MB).
-Questo processo può richiedere alcuni minuti.
-
-SUPPORTO:
-Repository GitHub: https://github.com/DanielePigoli/ATK-Pro-v2
-Issues: https://github.com/DanielePigoli/ATK-Pro-v2/issues
+SUPPORT:
+  GitHub : https://github.com/DanielePigoli/ATK-Pro-v2
+  Issues : https://github.com/DanielePigoli/ATK-Pro-v2/issues
 
 ================================================================================
-© 2026 ATK-Pro - Distribuito sotto licenza open source
+  (c) 2026 ATK-Pro - Distributed under open-source license
 ================================================================================
