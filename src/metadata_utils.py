@@ -37,7 +37,7 @@ def build_image_metadata(
     if page_label: meta["Page"] = page_label
     if range_label: meta["Range"] = range_label
     if source_url: meta["Source"] = source_url
-    meta["Software"] = "Antenati Tile Rebuilder"
+    meta["Software"] = "Antenati ToolKit Pro"
     meta["ATK-Pro-Version"] = atk_version
 
     # JSON sidecar embedded
