@@ -395,7 +395,11 @@ class _MetaPanel(QWidget):
         tree.setSortingEnabled(False)
 
         for key, value in meta.items():
-            item = QTreeWidgetItem([str(key), str(value)])
+            # Localizza il nome del campo se presente nel glossario;
+            # i campi tecnici (CanvasID, ARK, UA…) non hanno traduzione
+            # e vengono mostrati invariati come fallback di _gm.
+            display_key = _gm(gd, str(key), lg) if gd else str(key)
+            item = QTreeWidgetItem([display_key, str(value)])
             tree.addTopLevelItem(item)
 
         # Ridimensiona entrambe le colonne in base al contenuto
