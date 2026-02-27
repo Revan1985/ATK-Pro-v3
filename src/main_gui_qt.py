@@ -1263,9 +1263,14 @@ class MainWindow(QMainWindow):
         layout.addWidget(label)
         dlg.exec()
     def _mostra_testo_lungo(self, titolo, testo):
+        from PySide6.QtGui import QIcon
         dlg = QDialog(self)
         dlg.setWindowTitle(titolo)
+        dlg.setWindowIcon(QIcon(get_pixmap_cached(asset_path("assets/common/grafici/ATK-Pro.ico"))))
         dlg.resize(700, 500)
+        dlg.setMinimumSize(400, 300)
+        dlg.setSizeGripEnabled(True)
+        dlg.setWindowFlags(dlg.windowFlags() | Qt.Window | Qt.WindowMinMaxButtonsHint)
         dlg.setStyleSheet("QDialog { background: #fff; } QTextEdit { background: #fff; color: #222; font-size: 15px; }")
         layout = QVBoxLayout(dlg)
         text = QTextEdit()
@@ -1275,6 +1280,8 @@ class MainWindow(QMainWindow):
         btn = QPushButton(get_msg(self.glossario_data, "Chiudi", self.lingua) or "Chiudi")
         btn.clicked.connect(dlg.accept)
         layout.addWidget(btn)
+        dlg.setLayout(layout)
+        dlg.exec()
 
     def seleziona_formati_immagine(self):
         scelti = ask_image_formats(self.glossario_data, self.lingua)
