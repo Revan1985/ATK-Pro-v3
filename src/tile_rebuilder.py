@@ -49,7 +49,7 @@ def build_image_metadata(
         meta["Range"] = range_label
     if source_url:
         meta["Source"] = source_url
-    meta["Software"] = "Antenati Tile Rebuilder"
+    meta["Software"] = "Antenati ToolKit Pro"
     meta["ATK-Pro-Version"] = atk_version
     # Prepara lo JSON sidecar (stesso contenuto, indentato)
     sidecar = {k: v for k, v in meta.items()}

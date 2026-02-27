@@ -123,8 +123,8 @@ def build_metadata_dict(title, subject, ua, ark):
         "/Author": "Portale Antenati",
         "/Subject": str(subject or ""),
         "/Keywords": keywords,
-        "/Creator": "Antenati Tile Rebuilder",
-        "/Producer": "Antenati Tile Rebuilder v1.4",
+        "/Creator": "Antenati ToolKit Pro",
+        "/Producer": "Antenati ToolKit Pro v2.0",
     }
 
 

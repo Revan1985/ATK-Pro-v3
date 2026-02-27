@@ -202,8 +202,8 @@ def enrich_pdf_metadata(pdf_path: str, title: str, subject: str, ua: str | None,
             "/Author": "Portale Antenati",
             "/Subject": str(subject or ""),
             "/Keywords": keywords,
-            "/Creator": "Antenati Tile Rebuilder",
-            "/Producer": "Antenati Tile Rebuilder v2.0",
+            "/Creator": "Antenati ToolKit Pro",
+            "/Producer": "Antenati ToolKit Pro v2.0",
         })
         tmp = pdf_path + ".tmp"
         with open(tmp, "wb") as f:

@@ -18,7 +18,7 @@ def json_to_html_glossario():
     # Percorsi (relativi alla root del progetto)
     script_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     json_path = os.path.join(script_dir, "docs_generali", "glossario_multilingua_ATK-Pro.json")
-    html_path = os.path.join(script_dir, "scripts", "glossario_multilingua_ATK-Pro.html")
+    html_path = os.path.join(script_dir, "docs_generali", "glossario_multilingua_ATK-Pro.html")
     
     # Leggi JSON
     if not os.path.exists(json_path):

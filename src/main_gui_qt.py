@@ -2284,17 +2284,12 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path,
                 # Dimensione stretta attorno al banner
                 max_w, max_h = 560, 360
                 scaled = pixmap.scaled(max_w, max_h, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                lbl = QLabel()
-                lbl.setPixmap(scaled)
-                lbl.setAlignment(Qt.AlignCenter)
-                lbl.setCursor(Qt.PointingHandCursor)
-
                 # Ridimensiona dialog in modo aderente all'immagine + margine minimo
                 pad_w, pad_h = 32, 24
                 dlg.resize(min(scaled.width() + pad_w, max_w + pad_w),
                            min(scaled.height() + pad_h, max_h + pad_h))
 
-                def apri_paypal(event):
+                def apri_paypal():
                     if os.path.exists(paypal_url_path):
                         raw = carica_testo_asset(paypal_url_path).strip()
                         url = raw if raw.startswith("http") else None
@@ -2337,8 +2332,19 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path,
                                 except Exception as e:
                                     logging.warning(f"Impossibile aprire URL PayPal: {e}")
 
-                lbl.mousePressEvent = apri_paypal
-                layout.addWidget(lbl)
+                # QPushButton flat: 'clicked' è un segnale Qt nativo e sempre
+                # affidabile (QLabel.mousePressEvent in PySide6 non intercetta
+                # gli eventi C++ via monkey-patch su istanza)
+                btn_paypal = QPushButton()
+                btn_paypal.setFlat(True)
+                btn_paypal.setStyleSheet(
+                    "QPushButton { border: none; background: transparent; margin: 0; padding: 0; }"
+                )
+                btn_paypal.setIcon(QIcon(scaled))
+                btn_paypal.setIconSize(scaled.size())
+                btn_paypal.setCursor(Qt.PointingHandCursor)
+                btn_paypal.clicked.connect(apri_paypal)
+                layout.addWidget(btn_paypal)
         except Exception as e:
             logging.debug(f"Errore caricamento banner: {e}")
             layout.addWidget(QLabel(get_msg(glossario_data, "Banner non disponibile", lingua.upper())))
@@ -2454,9 +2460,25 @@ def main():
     window = MainWindow(glossario_data, lingua)
     window.show()
 
-    # Mostra disclaimer al primo avvio su Linux/macOS
-    if primo_avvio:
-        mostra_disclaimer(glossario_data, lingua)
+    # Mostra disclaimer al primo avvio oppure dopo installazione silente (GNOME Software)
+    _PENDING_FLAG = "/var/lib/atk-pro/pending-disclaimer"
+    _ha_flag_pendente = (
+        not primo_avvio
+        and sys.platform.startswith("linux")
+        and _is_frozen
+        and os.path.exists(_PENDING_FLAG)
+    )
+    if primo_avvio or _ha_flag_pendente:
+        accettato = mostra_disclaimer(glossario_data, lingua)
+        if _ha_flag_pendente:
+            try:
+                os.remove(_PENDING_FLAG)
+                logging.info("Flag pending-disclaimer rimosso dopo accettazione")
+            except OSError as e:
+                logging.warning(f"Impossibile rimuovere flag pending-disclaimer: {e}")
+            if not accettato:
+                logging.warning("Disclaimer rifiutato → chiusura applicazione")
+                sys.exit(1)
 
     # Gestione chiusura con banner
     def on_close():

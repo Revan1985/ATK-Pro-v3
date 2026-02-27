@@ -92,15 +92,28 @@ DISCLAIMER_EOF
         rm -f "$TMPD"
     fi
 
-    # -- Fallback: /dev/tty (dpkg -i in terminale) --------------------------
+    # -- Fallback: /dev/tty (dpkg -i in terminale) / silent (GNOME Software) ---
     if [ "$ACCEPTED" = "0" ]; then
-        if [ -e /dev/tty ]; then
-            exec 3>/dev/tty
-            exec 4</dev/tty
-        else
-            exec 3>&1
-            exec 4<&0
+        # Controlla se c'è un terminale interattivo reale raggiungibile.
+        # GNOME Software / PackageKit usa un daemon senza terminale di controllo:
+        # l'accesso a /dev/tty fallisce con "No such device or address".
+        _have_tty=0
+        [ -e /dev/tty ] && ( exec 5>/dev/tty ) 2>/dev/null && _have_tty=1
+
+        if [ "$_have_tty" = "0" ]; then
+            # Nessun terminale disponibile (GNOME Software / PackageKit):
+            # scriviamo un flag che l'app leggerà al primo avvio per
+            # mostrare il disclaimer all'utente in modo grafico.
+            mkdir -p /var/lib/atk-pro
+            touch /var/lib/atk-pro/pending-disclaimer
+            chmod 0666 /var/lib/atk-pro/pending-disclaimer
+            chmod 0777 /var/lib/atk-pro
+            printf 'en' > /tmp/atk-pro-install-lang
+            exit 0
         fi
+
+        exec 3>/dev/tty
+        exec 4</dev/tty
 
         cat >&3 <<'DISCLAIMER_EOF'
 📋 Legal Disclaimer
