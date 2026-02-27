@@ -429,13 +429,13 @@ class Elaborazione:
             logger.info(f"[Cleanup] Cartella tiles eliminata: {tile_dir}")
             # Aggiorna metadati manifest con file generati
             if self.manifest_path and os.path.exists(self.manifest_path):
+                # Costruisce la lista con _normalize_format per inclusione corretta
+                # di JPG/TIF anche se formats è ['PNG','JPG','TIF'] (non normalizzato)
+                _nfmts = [_normalize_format(f) for f in formats]
                 immagini_generate = []
-                if 'PNG' in formats or 'png' in formats:
-                    immagini_generate.append(f"{self.nome_file}.png")
-                if 'JPEG' in formats or 'jpg' in formats or 'jpeg' in formats:
-                    immagini_generate.append(f"{self.nome_file}.jpg")
-                if 'TIFF' in formats or 'tiff' in formats or 'tif' in formats:
-                    immagini_generate.append(f"{self.nome_file}.tif")
+                for _ext, _nfmt in [('png', 'PNG'), ('jpg', 'JPEG'), ('tif', 'TIFF')]:
+                    if _nfmt in _nfmts:
+                        immagini_generate.append(f"{self.nome_file}.{_ext}")
                 estrai_metadati_da_manifest(
                     self.manifest_path,
                     record_prefix="D",
@@ -594,6 +594,12 @@ class Elaborazione:
                 self.immagini_mancanti = mancanti
             else:
                 self.immagini_mancanti = []
+
+            # Popola immagini_generate con tutti i file effettivamente prodotti
+            # (nota: process_canvas non aggiunge a immagini_generate per thread-safety)
+            for _img in immagini_attese:
+                if os.path.exists(os.path.join(self.output_dir, _img)):
+                    immagini_generate.append(_img)
 
             logger.info(f"[Elaborazione] File generati: {immagini_generate}")
             # --- RICHIESTA PDF DOPO ULTIMO CANVAS ---
