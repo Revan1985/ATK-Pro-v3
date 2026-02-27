@@ -1,3 +1,11 @@
+import os as _os
+import sys as _sys
+# Calcola percorso assoluto base (funziona sia in sviluppo sia da PyInstaller --onedir)
+_UP_BASE = getattr(_sys, '_MEIPASS', _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
+def _ico():
+    return _os.path.join(_UP_BASE, "assets", "common", "grafici", "ATK-Pro.ico")
+
+
 def ask_generate_pdf_missing_images(missing_count, glossario_data=None, lingua="IT", parent=None, dark_mode=False):
     """
     Mostra una finestra di dialogo localizzata che avvisa l’utente che mancano N immagini e chiede se generare comunque il PDF.
@@ -27,7 +35,7 @@ def ask_generate_pdf_missing_images(missing_count, glossario_data=None, lingua="
             dlg.resize(420, 170)
             dlg.setWindowTitle("PDF incompleto")
             try:
-                dlg.setWindowIcon(QIcon("assets/common/grafici/ATK-Pro.ico"))
+                dlg.setWindowIcon(QIcon(_ico()))
             except Exception:
                 pass
             try:
@@ -236,7 +244,7 @@ def ask_generate_pdf(glossario_data=None, lingua="IT", parent=None, dark_mode=Fa
             title_key = "Generazione PDF" if glossario_data is None else get_msg(glossario_data, "Generazione PDF", lingua.upper())
             dlg.setWindowTitle(title_key)
             try:
-                dlg.setWindowIcon(QIcon("assets/common/grafici/ATK-Pro.ico"))
+                dlg.setWindowIcon(QIcon(_ico()))
             except Exception:
                 pass
             try:
