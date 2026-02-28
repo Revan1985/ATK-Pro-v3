@@ -45,6 +45,10 @@ def _gm(glossario_data, key: str, lingua: str) -> str:
         result = get_msg(glossario_data, key.capitalize(), lingua)
         if result:
             return result
+        # 4) Tentativo lowercase (es. "Titolo" → "titolo")
+        result = get_msg(glossario_data, key.lower(), lingua)
+        if result:
+            return result
     except Exception:
         pass
     return key
