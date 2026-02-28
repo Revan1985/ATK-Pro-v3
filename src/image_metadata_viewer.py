@@ -27,13 +27,22 @@ from PySide6.QtWidgets import (
 # Helper localizzazione: get_msg con fallback IT
 # ---------------------------------------------------------------------------
 def _gm(glossario_data, key: str, lingua: str) -> str:
-    """Chiama get_msg con fallback al testo IT se non trovato."""
+    """Chiama get_msg con fallback case-insensitive e poi alla chiave raw."""
     try:
         try:
             from main_gui_qt import get_msg  # type: ignore
         except ImportError:
             from src.main_gui_qt import get_msg  # type: ignore
+        # 1) Tentativo esatto
         result = get_msg(glossario_data, key, lingua)
+        if result:
+            return result
+        # 2) Tentativo title-case (es. "datazione" → "Datazione")
+        result = get_msg(glossario_data, key.title(), lingua)
+        if result:
+            return result
+        # 3) Tentativo capitalize (es. "contesto archivistico" → "Contesto archivistico")
+        result = get_msg(glossario_data, key.capitalize(), lingua)
         if result:
             return result
     except Exception:
