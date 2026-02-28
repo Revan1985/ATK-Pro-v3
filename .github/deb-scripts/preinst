@@ -81,7 +81,7 @@ This declaration is an integral part of the project's documentation architecture
 antenati.toolkit.pro@gmail.com
 DISCLAIMER_EOF
 
-        kdialog --textbox "$TMPD" 660 480 2>/dev/null
+        kdialog --textbox "$TMPD" 660 480 2>/dev/null || true
         if kdialog --yesno "Do you accept the license agreement?" 2>/dev/null; then
             ACCEPTED=1
             LANG_CHOICE=$(kdialog --combobox                 "Select the default interface language:"                 it en es de fr pt nl ar he ru da el ja no pl ro sv tr vi zh 2>/dev/null || echo "")
@@ -98,7 +98,11 @@ DISCLAIMER_EOF
         # GNOME Software / PackageKit usa un daemon senza terminale di controllo:
         # l'accesso a /dev/tty fallisce con "No such device or address".
         _have_tty=0
-        [ -e /dev/tty ] && ( exec 5>/dev/tty ) 2>/dev/null && _have_tty=1
+        if [ -e /dev/tty ]; then
+            if ( exec 5>/dev/tty ) 2>/dev/null; then
+                _have_tty=1
+            fi
+        fi
 
         if [ "$_have_tty" = "0" ]; then
             # Nessun terminale disponibile (GNOME Software / PackageKit):
