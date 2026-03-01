@@ -6,165 +6,96 @@ LANGS="it en es de fr pt nl ar he ru da el ja no pl ro sv tr vi zh"
 if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
 
     LANG_CHOICE=""
-    ACCEPTED=0
 
-    # -- Rileva se siamo in ambiente grafico --------------------------------
-    HAS_GUI=0
-    if [ -n "${DISPLAY:-}" ] || [ -n "${WAYLAND_DISPLAY:-}" ]; then
-        HAS_GUI=1
+    # -----------------------------------------------------------------------
+    # Strategia disclaimer:
+    #
+    #  A) Installazione da TERMINALE (sudo dpkg -i, sudo apt install ...):
+    #     /dev/tty e accessibile -> mostra disclaimer e selezione lingua
+    #     direttamente nel terminale via /dev/tty.
+    #
+    #  B) Installazione da GUI (GDebi, Software Manager, GNOME Software,
+    #     PackageKit, qualsiasi installer grafico):
+    #     preinst gira come root via pkexec/polkit SENZA un terminale di
+    #     controllo reale. Anche se DISPLAY e impostato nell'ambiente, i
+    #     tool grafici (zenity, kdialog) vengono eseguiti come root e NON
+    #     possono aprire il display dell'utente -> si bloccano a tempo
+    #     indefinito causando il freeze dell'installer.
+    #     Soluzione: scrive il flag /var/lib/atk-pro/pending-disclaimer e
+    #     termina subito (exit 0). L'app mostrera il disclaimer al primo
+    #     avvio grafico in modo nativo con Qt, nella lingua dell'utente.
+    # -----------------------------------------------------------------------
+
+    _have_tty=0
+    if [ -e /dev/tty ]; then
+        if ( exec 5>/dev/tty ) 2>/dev/null; then
+            _have_tty=1
+        fi
     fi
 
-    # -- Disclaimer e scelta lingua con zenity (GNOME/GTK) ------------------
-    if [ "$HAS_GUI" = "1" ] && command -v zenity >/dev/null 2>&1; then
-        TMPD=$(mktemp /tmp/atk-pro-disc.XXXXXX)
-        cat > "$TMPD" <<'DISCLAIMER_EOF'
-📋 Legal Disclaimer
-Antenati Toolkit Pro
+    if [ "$_have_tty" = "0" ]; then
+        # Caso B: installer grafico o daemon senza tty.
+        # Scrivi flag: l'app mostrera il disclaimer al primo avvio.
+        mkdir -p /var/lib/atk-pro
+        touch /var/lib/atk-pro/pending-disclaimer
+        chmod 0666 /var/lib/atk-pro/pending-disclaimer
+        chmod 0777 /var/lib/atk-pro
+        printf 'en' > /tmp/atk-pro-install-lang
+        exit 0
+    fi
 
-ATK-Pro – Antenati Toolkit Pro
-Legal Disclaimer and Ethical Use Commitment
+    # Caso A: terminale reale disponibile -> disclaimer testuale su /dev/tty
+    exec 3>/dev/tty
+    exec 4</dev/tty
 
-The ATK-Pro project is designed for archival, genealogical, and consultation purposes.
-All content, unless otherwise stated, is distributed under a Creative Commons BY-NC-SA 4.0 license.
-Direct commercial use, redistribution without attribution, or untracked modification of the original content is prohibited.
-ATK-Pro does not redistribute any content from the Antenati Portal (antenati.cultura.gov.it) nor does it intend to replicate its interface, structure, or organization.
-Anyone who installs or uses ATK-Pro agrees to act in full compliance with the legal notices and terms of use defined by the Ministry of Culture, available at the following address: https://antenati.cultura.gov.it/note-legali/.
-The documents included in the advisory node do not constitute an official source nor do they have any certifying or legal value. 
-The interface and tools developed within the project are intended to facilitate independent consultation by genealogical users in local environments, without connection or support from external services.
-Any references to public bodies, archives, or historical documentation are for study, analysis, and contextualization purposes only.
-Every file present in the ATK-Pro structure (in .txt, .md, .html, or .pdf format) has been drafted with a declarative, archival, or demonstrative intent.
-Directory structures, operational scripts, and genealogical notes are provided in prototype form, without any warranty of functionality or external validation.
-The author of the project disclaims any responsibility regarding the improper use, misinterpretation, or unauthorized modification of the included documents and tools.
-The consultative node is to be understood as a limited circulation archive, intended exclusively for study purposes and not for public or systematic dissemination.
-This declaration is an integral part of the project's documentation architecture.
+    cat >&3 <<'DISCLAIMER_EOF'
 
-© 2026 Antenati Toolkit Pro | Version 2.0
+========================================================
+ ATK-Pro - Legal Disclaimer and Ethical Use Commitment
+========================================================
+
+The ATK-Pro project is designed for archival, genealogical, and
+consultation purposes. All content, unless otherwise stated, is
+distributed under a Creative Commons BY-NC-SA 4.0 license.
+Direct commercial use, redistribution without attribution, or
+untracked modification of the original content is prohibited.
+ATK-Pro does not redistribute any content from the Antenati Portal
+(antenati.cultura.gov.it) nor does it intend to replicate its
+interface, structure, or organization.
+Anyone who installs or uses ATK-Pro agrees to act in full compliance
+with the legal notices defined by the Ministry of Culture, available at:
+https://antenati.cultura.gov.it/note-legali/
+
+The author disclaims any responsibility regarding the improper use,
+misinterpretation, or unauthorized modification of the included
+documents and tools.
+
+(c) 2026 Antenati Toolkit Pro | Version 2.0
 antenati.toolkit.pro@gmail.com
+
 DISCLAIMER_EOF
 
-        if zenity --text-info                   --title="ATK-Pro — License Agreement"                   --filename="$TMPD"                   --ok-label="Accept"                   --cancel-label="Decline"                   --width=660 --height=480 2>/dev/null; then
-            ACCEPTED=1
-            # Scelta lingua con lista grafica
-            LANG_CHOICE=$(zenity --list                        --title="ATK-Pro — Select Language"                        --text="Select the default interface language:"                        --column="Code"                        it en es de fr pt nl ar he ru da el ja no pl ro sv tr vi zh                        --height=520 --width=300 2>/dev/null || echo "")
-        else
-            rm -f "$TMPD"
+    printf 'Do you accept the terms above? [yes/no]: ' >&3
+    read REPLY <&4
+
+    case "$REPLY" in
+        yes|YES|Yes|y|Y|si|SI|Si)
+            printf 'Accepted.\n\n' >&3
+            ;;
+        *)
+            printf 'Installation aborted: terms not accepted.\n' >&3
+            exec 3>&-
+            exec 4<&-
             exit 1
-        fi
-        rm -f "$TMPD"
-    fi
+            ;;
+    esac
 
-    # -- Disclaimer e scelta lingua con kdialog (KDE) -----------------------
-    if [ "$ACCEPTED" = "0" ] && [ "$HAS_GUI" = "1" ] && command -v kdialog >/dev/null 2>&1; then
-        TMPD=$(mktemp /tmp/atk-pro-disc.XXXXXX)
-        cat > "$TMPD" <<'DISCLAIMER_EOF'
-📋 Legal Disclaimer
-Antenati Toolkit Pro
+    printf 'Available languages: %s\n' "$LANGS" >&3
+    printf 'Select default language [en]: ' >&3
+    read LANG_CHOICE <&4
 
-ATK-Pro – Antenati Toolkit Pro
-Legal Disclaimer and Ethical Use Commitment
-
-The ATK-Pro project is designed for archival, genealogical, and consultation purposes.
-All content, unless otherwise stated, is distributed under a Creative Commons BY-NC-SA 4.0 license.
-Direct commercial use, redistribution without attribution, or untracked modification of the original content is prohibited.
-ATK-Pro does not redistribute any content from the Antenati Portal (antenati.cultura.gov.it) nor does it intend to replicate its interface, structure, or organization.
-Anyone who installs or uses ATK-Pro agrees to act in full compliance with the legal notices and terms of use defined by the Ministry of Culture, available at the following address: https://antenati.cultura.gov.it/note-legali/.
-The documents included in the advisory node do not constitute an official source nor do they have any certifying or legal value. 
-The interface and tools developed within the project are intended to facilitate independent consultation by genealogical users in local environments, without connection or support from external services.
-Any references to public bodies, archives, or historical documentation are for study, analysis, and contextualization purposes only.
-Every file present in the ATK-Pro structure (in .txt, .md, .html, or .pdf format) has been drafted with a declarative, archival, or demonstrative intent.
-Directory structures, operational scripts, and genealogical notes are provided in prototype form, without any warranty of functionality or external validation.
-The author of the project disclaims any responsibility regarding the improper use, misinterpretation, or unauthorized modification of the included documents and tools.
-The consultative node is to be understood as a limited circulation archive, intended exclusively for study purposes and not for public or systematic dissemination.
-This declaration is an integral part of the project's documentation architecture.
-
-© 2026 Antenati Toolkit Pro | Version 2.0
-antenati.toolkit.pro@gmail.com
-DISCLAIMER_EOF
-
-        kdialog --textbox "$TMPD" 660 480 2>/dev/null || true
-        if kdialog --yesno "Do you accept the license agreement?" 2>/dev/null; then
-            ACCEPTED=1
-            LANG_CHOICE=$(kdialog --combobox                 "Select the default interface language:"                 it en es de fr pt nl ar he ru da el ja no pl ro sv tr vi zh 2>/dev/null || echo "")
-        else
-            rm -f "$TMPD"
-            exit 1
-        fi
-        rm -f "$TMPD"
-    fi
-
-    # -- Fallback: /dev/tty (dpkg -i in terminale) / silent (GNOME Software) ---
-    if [ "$ACCEPTED" = "0" ]; then
-        # Controlla se c'è un terminale interattivo reale raggiungibile.
-        # GNOME Software / PackageKit usa un daemon senza terminale di controllo:
-        # l'accesso a /dev/tty fallisce con "No such device or address".
-        _have_tty=0
-        if [ -e /dev/tty ]; then
-            if ( exec 5>/dev/tty ) 2>/dev/null; then
-                _have_tty=1
-            fi
-        fi
-
-        if [ "$_have_tty" = "0" ]; then
-            # Nessun terminale disponibile (GNOME Software / PackageKit):
-            # scriviamo un flag che l'app leggerà al primo avvio per
-            # mostrare il disclaimer all'utente in modo grafico.
-            mkdir -p /var/lib/atk-pro
-            touch /var/lib/atk-pro/pending-disclaimer
-            chmod 0666 /var/lib/atk-pro/pending-disclaimer
-            chmod 0777 /var/lib/atk-pro
-            printf 'en' > /tmp/atk-pro-install-lang
-            exit 0
-        fi
-
-        exec 3>/dev/tty
-        exec 4</dev/tty
-
-        cat >&3 <<'DISCLAIMER_EOF'
-📋 Legal Disclaimer
-Antenati Toolkit Pro
-
-ATK-Pro – Antenati Toolkit Pro
-Legal Disclaimer and Ethical Use Commitment
-
-The ATK-Pro project is designed for archival, genealogical, and consultation purposes.
-All content, unless otherwise stated, is distributed under a Creative Commons BY-NC-SA 4.0 license.
-Direct commercial use, redistribution without attribution, or untracked modification of the original content is prohibited.
-ATK-Pro does not redistribute any content from the Antenati Portal (antenati.cultura.gov.it) nor does it intend to replicate its interface, structure, or organization.
-Anyone who installs or uses ATK-Pro agrees to act in full compliance with the legal notices and terms of use defined by the Ministry of Culture, available at the following address: https://antenati.cultura.gov.it/note-legali/.
-The documents included in the advisory node do not constitute an official source nor do they have any certifying or legal value. 
-The interface and tools developed within the project are intended to facilitate independent consultation by genealogical users in local environments, without connection or support from external services.
-Any references to public bodies, archives, or historical documentation are for study, analysis, and contextualization purposes only.
-Every file present in the ATK-Pro structure (in .txt, .md, .html, or .pdf format) has been drafted with a declarative, archival, or demonstrative intent.
-Directory structures, operational scripts, and genealogical notes are provided in prototype form, without any warranty of functionality or external validation.
-The author of the project disclaims any responsibility regarding the improper use, misinterpretation, or unauthorized modification of the included documents and tools.
-The consultative node is to be understood as a limited circulation archive, intended exclusively for study purposes and not for public or systematic dissemination.
-This declaration is an integral part of the project's documentation architecture.
-
-© 2026 Antenati Toolkit Pro | Version 2.0
-antenati.toolkit.pro@gmail.com
-DISCLAIMER_EOF
-
-        printf '\n\nDo you accept the terms above? [yes/no]: ' >&3
-        read REPLY <&4
-
-        case "$REPLY" in
-            yes|YES|Yes|y|Y|si|SI|Si)
-                printf 'Accepted.\n\n' >&3
-                ACCEPTED=1
-                ;;
-            *)
-                printf 'Installation aborted: terms not accepted.\n' >&3
-                exit 1
-                ;;
-        esac
-
-        printf 'Available languages: %s\n' "$LANGS" >&3
-        printf 'Select default language [en]: ' >&3
-        read LANG_CHOICE <&4
-
-        exec 3>&-
-        exec 4<&-
-    fi
+    exec 3>&-
+    exec 4<&-
 
     # -- Valida lingua scelta -----------------------------------------------
     LANG_CHOICE="${LANG_CHOICE:-en}"
