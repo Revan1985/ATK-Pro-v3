@@ -351,7 +351,7 @@
             <h3>5. 画像の処理とダウンロード</h3>
             <h3>6. 登録簿と文書のPDF</h3>
             <h3>7. 多言語ローカライゼーション</h3>
-            <h3>8. サービスメニュー - 将来の機能</h3>
+            <h3>8. サービスメニュー</h3>
             <h3>9. 出力フォルダとファイル</h3>
             <h3>10. ドキュメントメニュー - リソースとサポートへのアクセス</h3>
             <h3>11. プログラムの終了とプロジェクトサポート</h3>
@@ -362,29 +362,44 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>オペレーティングシステム</h4>
             <ul>
-                <li>Windows 10以降（Professional、Home、Server）</li>
-                <li>64ビット必須</li>
+                <li><strong>Windows：</strong> Windows 10以降（64ビット）— Professional、Home、Server</li>
+                <li><strong>Linux：</strong> Ubuntu 20.04+または互換ディストリビューション（.debパッケージまたは.tar.gz）</li>
+                <li><strong>macOS：</strong> macOS 11 Big Sur以降 — .dmg配布（実機テスト進行中）</li>
+                <li>すべてのプラットフォームで64ビット必須</li>
                 <li>最低2GBのRAM（バッチ処理には4GB推奨）</li>
                 <li>ディスク空き容量1GB</li>
             </ul>
             <h4>設置</h4>
-            <h3>1. 公式リポジトリからATK-Pro-Setup-v2.0.exeをダウンロードしてください。</h3>
-            <h3>2. インストーラーファイルをダブルクリックします</h3>
-            <h3>3. 必要に応じて「管理者として実行」を選択</h3>
-            <h3>4. ウィザードに従います（次へ → 次へ → インストール）</h3>
-            <h3>5. インストール中に言語の選択を求められます。</h3>
-            <ul>
-                <li>利用可能な20言語からご希望の言語をお選びください</li>
-                <li>この言語はWindowsレジストリに保存されます</li>
-                <li>プログラム起動時に自動的にロードされます</li>
-            </ul>
-            <h3>6. 最後に、「ATK-Proを起動」にチェックを入れてプログラムを起動します。</h3>
-            <h3>7. Windowsファイアウォール/Defenderからの通知を許可する</h3>
+            <h4>🪟 Windows</h4>
+            <ol>
+                <li>ダウンロード：公式リポジトリから<code>ATK-Pro-Setup-v2.0.exe</code></li>
+                <li>インストーラーファイルをダブルクリック</li>
+                <li>必要に応じて「管理者として実行」を選択</li>
+                <li>ウィザードに従う（次へ → 次へ → インストール）</li>
+                <li>インストール中に20言語から希望の言語を選択</li>
+                <li>最後に「ATK-Proを起動」にチェック</li>
+                <li>Windowsファイアウォール/Defenderの通知を許可</li>
+            </ol>
+            <h4>🐧 Linux</h4>
+            <ol>
+                <li>ダウンロード：<code>ATK-Pro-v2.0.deb</code>（または<code>.tar.gz</code>）</li>
+                <li><code>.deb</code>：<code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li><code>.tar.gz</code>：<code>/opt/ATK-Pro/</code>に展開して<code>./ATK-Pro</code>を実行</li>
+                <li>初回起動時に20言語から言語を選択</li>
+            </ol>
+            <h4>🍎 macOS</h4>
+            <ol>
+                <li>ダウンロード：<code>ATK-Pro-v2.0.dmg</code></li>
+                <li><code>.dmg</code>を開き、<code>ATK-Pro.app</code>を<em>アプリケーション</em>フォルダへドラッグ</li>
+                <li>初回起動時：右クリック → 開く、Gatekeeperの警告を許可</li>
+                <li>20言語から言語を選択</li>
+            </ol>
             <h4>デフォルト位置</h4>
             <ul>
-                <li>プログラム：C:\Program Files\ATK-Pro\</li>
-                <li>ユーザー出力：C:\Users\[あなたの名前]\Documents\ATK-Pro\output\</li>
-                <li>入力（オプション）：C:\Users\[あなたの名前]\Documents\ATK-Pro\input\</li>
+            <li><strong>Windows：</strong>プログラム：<code>C:\Program Files\ATK-Pro\</code></li>
+            <li><strong>Windows：</strong>出力：<code>C:\Users\[ユーザー名]\Documents\ATK-Pro\output\</code></li>
+            <li><strong>Linux：</strong>プログラム：<code>/opt/ATK-Pro/</code> — 出力：<code>~/Documents/ATK-Pro/output/</code></li>
+            <li><strong>macOS：</strong>プログラム：<code>/Applications/ATK-Pro.app</code> — 出力：<code>~/Documents/ATK-Pro/output/</code></li>
             </ul>
             <h4>ネットワーク要件</h4>
             <ul>
@@ -426,15 +441,16 @@
             <p>2025年末時点で入手可能なデータに基づき、世界中に散らばるイタリア系の子孫、イタリア人コミュニティ、またはイタリア語話者コミュニティの約98%をカバーできると推定されています。</p>
             <ul>
                 <li>言語はインストール中に選択されます（インストーラープロセスの一部です）</li>
-                <li>Windowsレジストリに保存され、自動的にロードされます</li>
+                                <li><strong>Windows：</strong>Windowsレジストリに保存<br><strong>Linux/macOS：</strong>ユーザー設定ファイルに保存 — 自動的に読み込まれます</li>
                 <li>いつでもメニュー → 設定 → 言語の変更 から変更できます</li>
                 <li>新しい言語設定を適用するには再起動が必要です</li>
             </ul>
             <h4>📂 フォルダ設定</h4>
             <p>初回実行時に、プログラムは以下を作成します。</p>
             <ul>
-                <li>C:\Users\[あなたの名前]\Documents\ATK-Pro\output\ （処理済みファイル）</li>
-                <li>C:\Users\[あなたの名前]\Documents\ATK-Pro\input\ （オプション、入力ファイル用）</li>
+                <li><strong>Windows：</strong><code>C:\Users\[ユーザー名]\Documents\ATK-Pro\output\</code>（処理済みファイル）</li>
+                <li><strong>Linux/macOS：</strong><code>~/Documents/ATK-Pro/output/</code>（処理済みファイル）</li>
+                <li>対応する<code>input/</code>フォルダ（オプション）</li>
             </ul>
             <p>処理中に、ダウンロードされたタイルのためのテンポラリフォルダ（tiles_canvas_X/）が作成されます。
             </p>
@@ -877,12 +893,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. サービスメニュー - 将来の機能</h3>
+            <h3>8. サービスメニュー</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>将来の開発のためのプレースホルダー</h4>
-            <p>「サービス」メニューには6つのボタンがあり、「機能開発中」と表示されます。</p>
-            <p>これらは、ATK-Pro の将来のバージョンで計画されている機能のために予約されたプレースホルダーです。</p>
-            <p>予定されている6つの機能は以下の通りです。</p>
+            <h4>利用可能および計画中の機能</h4>
+            <p>「サービス」メニューには6つのボタンがあります。<strong>2つの機能はすでにv2.0から利用可能</strong>で、残りの4つは将来のバージョンに予定されています。
+            </p>
+            <p>6つの機能：</p>
             <h4>1️⃣ AntenatiポータルAPI連携</h4>
             <p>ポルターレ・アンテナティとの「APIレベル」統合</p>
             <ul>
@@ -891,24 +907,26 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>中央リポジトリとのデータ同期</li>
             </ul>
             <p><strong>ステータス：</strong> 将来のリリース向けに計画済み</p>
-            <h4>2️⃣ 画像表示</h4>
-            <p>ダウンロードした画像のビューア</p>
+            <h4>2️⃣ 画像表示 ✅</h4>
+            <p>統合画像ビューア：</p>
             <ul>
-                <li>ポルターレ・アンテナティからダウンロードした画像の表示</li>
-                <li>ATK-Proによって生成されたPDFの表示</li>
-                <li>インタラクティブなズーム/パン</li>
-                <li>注釈とマーカー</li>
+                <li>対応フォーマット: JPG、PNG、TIFF（ATK-Proで再構成した画像）</li>
+                <li>インタラクティブなズームとパン</li>
+                <li>ウィンドウフィットモード（Fit Window）と1:1表示</li>
+                <li>同一レコードのCanvas間ナビゲーション</li>
+                <li>関連するJSONサイドカーファイルの表示（EXIFメタデータ）</li>
             </ul>
-            <p><strong>ステータス：</strong> 将来のリリース向けに計画済み</p>
-            <h4>3️⃣ JSONメタデータの視覚化</h4>
-            <p>構造化データビューア</p>
+            <p><strong>ステータス：</strong> ✅ v2.0から利用可能</p>
+            <h4>3️⃣ JSONメタデータの視覚化 ✅</h4>
+            <p>構造化データのツリー表示：</p>
             <ul>
-                <li>IIIFマニフェストの元のJSON</li>
-                <li>系図メタデータ</li>
-                <li>技術メタデータ（解像度、フォーマット、サイズ）</li>
-                <li>画像からのEXIFメタデータ</li>
+                <li>ノードの展開/折りたたみができるインタラクティブなJSONツリー</li>
+                <li><code>_genealogico.json</code>ファイル：日付、場所、名前、家族関係</li>
+                <li><code>_tecnico.json</code>ファイル：解像度、フォーマット、寸法、品質</li>
+                <li>再構成された画像のEXIFメタデータ</li>
+                <li>画像ビューアと連携した統合表示</li>
             </ul>
-            <p><strong>ステータス：</strong> 将来のリリース向けに計画済み</p>
+            <p><strong>ステータス：</strong> ✅ v2.0から利用可能</p>
             <h4>4️⃣ 高度OCR</h4>
             <p>高度なOCR処理</p>
             <ul>

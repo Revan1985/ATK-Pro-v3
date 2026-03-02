@@ -351,7 +351,7 @@
             <h3>5. 图片处理与下载</h3>
             <h3>6. 登记册和文件的PDF格式</h3>
             <h3>7. 多语言本地化</h3>
-            <h3>8. 服务菜单 - 未来功能</h3>
+            <h3>8. 服务菜单</h3>
             <h3>9. 输出文件夹和文件</h3>
             <h3>10. 文档菜单 - 访问资源和支持</h3>
             <h3>11. 项目关闭与项目支持</h3>
@@ -362,29 +362,44 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>操作系统</h4>
             <ul>
-                <li>Windows 10 或更高版本（专业版、家庭版、服务器版）</li>
-                <li>64位必需</li>
+                <li><strong>Windows：</strong>Windows 10或更高版本（64位）— Professional、Home、Server</li>
+                <li><strong>Linux：</strong>Ubuntu 20.04+或兼容发行版（.deb包或.tar.gz压缩包）</li>
+                <li><strong>macOS：</strong>macOS 11 Big Sur或更高版本 — .dmg分发（实机测试进行中）</li>
+                <li>所有平台均需64位</li>
                 <li>至少 2 GB 的可用内存（批量处理建议使用 4 GB）</li>
                 <li>1 GB 磁盘可用空间</li>
             </ul>
             <h4>安装</h4>
-            <h3>1. 下载：ATK-Pro-Setup-v2.0.exe 来自官方仓库</h3>
-            <h3>2. 双击安装文件</h3>
-            <h3>3. 选择“以管理员身份运行”，如果出现提示</h3>
-            <h3>4. 按照设置向导操作（下一步 → 下一步 → 安装）</h3>
-            <h3>5. 安装过程中，将要求选择语言：</h3>
-            <ul>
-                <li>从20种可用选项中选择您想要的语言</li>
-                <li>此语言存储在 Windows 注册表中</li>
-                <li>程序启动时自动加载</li>
-            </ul>
-            <h3>6. 最后，勾选“启动 ATK-Pro”以启动程序</h3>
-            <h3>7. 接受任何 Windows 防火墙/Defender 的警告</h3>
+            <h4>🪟 Windows</h4>
+            <ol>
+                <li>下载：从官方仓库获取<code>ATK-Pro-Setup-v2.0.exe</code></li>
+                <li>双击安装文件</li>
+                <li>如需要，选择"以管理员身份运行"</li>
+                <li>按照安装向导操作（下一步 → 下一步 → 安装）</li>
+                <li>安装过程中从20个选项中选择语言</li>
+                <li>最后勾选"启动ATK-Pro"</li>
+                <li>接受Windows防火墙/Defender的通知</li>
+            </ol>
+            <h4>🐧 Linux</h4>
+            <ol>
+                <li>下载：<code>ATK-Pro-v2.0.deb</code>（或<code>.tar.gz</code>）</li>
+                <li><code>.deb</code>：<code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li><code>.tar.gz</code>：解压到<code>/opt/ATK-Pro/</code>并执行<code>./ATK-Pro</code></li>
+                <li>首次启动时从20个选项中选择语言</li>
+            </ol>
+            <h4>🍎 macOS</h4>
+            <ol>
+                <li>下载：<code>ATK-Pro-v2.0.dmg</code></li>
+                <li>打开<code>.dmg</code>并将<code>ATK-Pro.app</code>拖到<em>应用程序</em>文件夹</li>
+                <li>首次启动：右键 → 打开，接受Gatekeeper警告</li>
+                <li>从20个选项中选择语言</li>
+            </ol>
             <h4>默认位置</h4>
             <ul>
-                <li>程序：C:\Program Files\ATK-Pro\</li>
-                <li>用户输出：C:\Users\[你的名字]\Documents\ATK-Pro\output\</li>
-                <li>输入（可选）：C:\Users\[你的名字]\Documents\ATK-Pro\input\</li>
+            <li><strong>Windows：</strong>程序：<code>C:\Program Files\ATK-Pro\</code></li>
+            <li><strong>Windows：</strong>输出：<code>C:\Users\[用户名]\Documents\ATK-Pro\output\</code></li>
+            <li><strong>Linux：</strong>程序：<code>/opt/ATK-Pro/</code> — 输出：<code>~/Documents/ATK-Pro/output/</code></li>
+            <li><strong>macOS：</strong>程序：<code>/Applications/ATK-Pro.app</code> — 输出：<code>~/Documents/ATK-Pro/output/</code></li>
             </ul>
             <h4>网络要求</h4>
             <ul>
@@ -426,15 +441,16 @@
             <p>根据截至 2025 年底的可用数据，预计将覆盖约 98% 的意大利后裔以及散布在世界各地的意大利或意大利语社区。</p>
             <ul>
                 <li>语言在安装过程中选择（它是安装程序过程的一部分）</li>
-                <li>它存储在Windows注册表中并自动加载</li>
+                                <li><strong>Windows：</strong>存储在Windows注册表中<br><strong>Linux/macOS：</strong>存储在用户配置文件中 — 自动加载</li>
                 <li>可随时通过“菜单”→“设置”→“更改语言”进行更改</li>
                 <li>程序需要重启才能应用新选择的语言</li>
             </ul>
             <h4>📂 文件夹配置</h4>
             <p>首次执行时，程序会创建：</p>
             <ul>
-                <li>C:\Users\[你的名字]\Documents\ATK-Pro\output\     (已处理文件)</li>
-                <li>C:\Users\[你的名字]\Documents\ATK-Pro\input\ （可选，用于输入文件）</li>
+                <li><strong>Windows：</strong><code>C:\Users\[用户名]\Documents\ATK-Pro\output\</code>（已处理文件）</li>
+                <li><strong>Linux/macOS：</strong><code>~/Documents/ATK-Pro/output/</code>（已处理文件）</li>
+                <li>对应的<code>input/</code>文件夹（可选）</li>
             </ul>
             <p>在处理过程中，会为下载的瓦片创建临时文件夹（tiles_canvas_X/）。
             </p>
@@ -877,12 +893,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. 服务菜单 - 未来功能</h3>
+            <h3>8. 服务菜单</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>占位符，供未来开发使用</h4>
-            <p>“服务”菜单包含 6 个按钮，显示“功能开发中”。</p>
-            <p>这些是为 ATK-Pro 未来版本计划的功能保留的占位符。</p>
-            <p>计划的 6 项功能是：</p>
+            <h4>可用及计划中的功能</h4>
+            <p>"服务"菜单包含6个按钮。<strong>2项功能已从v2.0起可用</strong>，其余4项计划在未来版本中推出。
+            </p>
+            <p>6个功能：</p>
             <h4>1️⃣ ANTENATI门户 API 集成</h4>
             <p>集成“API级别”与祖先门户：</p>
             <ul>
@@ -891,24 +907,26 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>数据同步至中央存储库</li>
             </ul>
             <p><strong>状态：</strong> 计划用于未来版本</p>
-            <h4>2️⃣ 图像可视化</h4>
-            <p>下载的图片查看器：</p>
+            <h4>2️⃣ 图像可视化 ✅</h4>
+            <p>集成图像查看器：</p>
             <ul>
-                <li>祖先门户网站下载的图像视图</li>
-                <li>ATK-Pro 生成的 PDF 视图</li>
-                <li>交互式缩放/平移</li>
-                <li>注释和标记</li>
+                <li>支持格式：JPG、PNG、TIFF（ATK-Pro重建的图像）</li>
+                <li>交互式缩放和平移</li>
+                <li>适合窗口模式（Fit Window）和1:1显示</li>
+                <li>同一档案Canvas间导航</li>
+                <li>显示关联的JSON辅助文件（EXIF元数据）</li>
             </ul>
-            <p><strong>状态：</strong> 计划用于未来版本</p>
-            <h4>3️⃣ JSON 元数据可视化</h4>
-            <p>结构化数据查看器：</p>
+            <p><strong>状态：</strong> ✅ 自v2.0起可用</p>
+            <h4>3️⃣ JSON 元数据可视化 ✅</h4>
+            <p>结构化数据的树形视图：</p>
             <ul>
-                <li>来自 Manifest IIIF 的原始 JSON</li>
-                <li>家谱元数据</li>
-                <li>技术元数据（分辨率、格式、大小）</li>
-                <li>图片 EXIF 元数据</li>
+                <li>可展开/折叠节点的交互式JSON树</li>
+                <li><code>_genealogico.json</code>文件：日期、地点、姓名、家庭关系</li>
+                <li><code>_tecnico.json</code>文件：分辨率、格式、尺寸、质量</li>
+                <li>重建图像的EXIF元数据</li>
+                <li>与图像查看器集成的联动显示</li>
             </ul>
-            <p><strong>状态：</strong> 计划用于未来版本</p>
+            <p><strong>状态：</strong> ✅ 自v2.0起可用</p>
             <h4>4️⃣ 高级光学字符识别</h4>
             <p>高级OCR处理：</p>
             <ul>

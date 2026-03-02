@@ -362,29 +362,56 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>SISTEMA OPERATIVO</h4>
             <ul>
-                <li>Windows 10 o successivo (Professional, Home, Server)</li>
-                <li>64-bit obbligatorio</li>
+                <li><strong>Windows:</strong> Windows 10 o successivo (64-bit) — Professional, Home, Server</li>
+                <li><strong>Linux:</strong> Ubuntu 20.04+ o distribuzioni compatibili (pacchetto .deb o archivio .tar.gz)</li>
+                <li><strong>macOS:</strong> macOS 11 Big Sur o successivo — distribuzione .dmg (test su hardware reale in corso)</li>
+                <li>64-bit obbligatorio su tutte le piattaforme</li>
                 <li>Almeno 2 GB di RAM disponibili (4 GB consigliati per elaborazione batch)</li>
                 <li>1 GB di spazio libero su disco</li>
             </ul>
             <h4>INSTALLAZIONE</h4>
-            <h3>1. Scarica: ATK-Pro-Setup-v2.0.exe dai repository ufficiali</h3>
-            <h3>2. Fai doppio click sul file installer</h3>
-            <h3>3. Seleziona "Esegui con privilegi di amministratore", se richiesto</h3>
-            <h3>4. Segui la procedura guidata (Next → Next → Install)</h3>
-            <h3>5. Durante l'installazione, verrà richiesta la selezione della lingua:</h3>
-            <ul>
-                <li>Scegli la lingua desiderata da 20 opzioni disponibili</li>
-                <li>Questa lingua viene memorizzata nel Registro di Windows</li>
-                <li>Viene caricata automaticamente a ogni avvio del programma</li>
-            </ul>
-            <h3>6. Al termine, spunta "Avvia ATK-Pro" per avviare il programma</h3>
-            <h3>7. Accetta eventuali avvisi di Windows Firewall/Defender</h3>
+            <p><strong>🪟 Windows</strong></p>
+            <ol>
+                <li>Scarica <code>ATK-Pro-Setup-v2.0.x.exe</code> dalla pagina Release ufficiale</li>
+                <li>Fai doppio click sul file installer</li>
+                <li>Seleziona "Esegui con privilegi di amministratore", se richiesto</li>
+                <li>Segui la procedura guidata (Next → Next → Install)</li>
+                <li>Durante l'installazione verrà richiesta la selezione della lingua (20 disponibili)</li>
+                <li>Al termine, spunta "Avvia ATK-Pro" per avviare il programma</li>
+                <li>Accetta eventuali avvisi di Windows Firewall/Defender</li>
+            </ol>
+            <p><strong>🐧 Linux</strong></p>
+            <ol>
+                <li>Scarica <code>ATK-Pro-v2.0.x.deb</code> (Debian/Ubuntu) o <code>.tar.gz</code> dalla pagina Release</li>
+                <li><strong>Pacchetto .deb:</strong> <code>sudo dpkg -i ATK-Pro-v2.0.x.deb</code> oppure doppio click in Nautilus/Files</li>
+                <li><strong>Archivio .tar.gz:</strong> estrai e avvia <code>./ATK-Pro</code> dalla cartella estratta</li>
+                <li>La lingua viene selezionata al primo avvio e salvata nel file di configurazione utente</li>
+            </ol>
+            <p><strong>🍎 macOS</strong></p>
+            <ol>
+                <li>Scarica <code>ATK-Pro-v2.0.x.dmg</code> dalla pagina Release</li>
+                <li>Apri il file .dmg e trascina ATK-Pro nella cartella Applicazioni</li>
+                <li>Al primo avvio: clic destro → Apri (necessario per applicazioni non notarizzate)</li>
+                <li>La lingua viene selezionata al primo avvio e salvata nel file di configurazione utente</li>
+            </ol>
             <h4>POSIZIONI DI DEFAULT</h4>
+            <p><strong>🪟 Windows</strong></p>
             <ul>
-                <li>Programma: C:\Program Files\ATK-Pro\</li>
-                <li>Output utente: C:\Users\[TuoNome]\Documents\ATK-Pro\output\</li>
-                <li>Input (opzionale): C:\Users\[TuoNome]\Documents\ATK-Pro\input\</li>
+                <li>Programma: <code>C:\Program Files\ATK-Pro\</code></li>
+                <li>Output utente: <code>C:\Users\[TuoNome]\Documents\ATK-Pro\output\</code></li>
+                <li>Input (opzionale): <code>C:\Users\[TuoNome]\Documents\ATK-Pro\input\</code></li>
+            </ul>
+            <p><strong>🐧 Linux</strong></p>
+            <ul>
+                <li>Programma: <code>/opt/ATK-Pro/</code> (deb) oppure cartella estratta (.tar.gz)</li>
+                <li>Output utente: <code>~/Documents/ATK-Pro/output/</code></li>
+                <li>Input (opzionale): <code>~/Documents/ATK-Pro/input/</code></li>
+            </ul>
+            <p><strong>🍎 macOS</strong></p>
+            <ul>
+                <li>Programma: <code>/Applications/ATK-Pro.app</code></li>
+                <li>Output utente: <code>~/Documents/ATK-Pro/output/</code></li>
+                <li>Input (opzionale): <code>~/Documents/ATK-Pro/input/</code></li>
             </ul>
             <h4>REQUISITI DI RETE</h4>
             <ul>
@@ -425,16 +452,18 @@
             </ul>
             <p>con le quali, in base ai dati disponibili a fine 2025, si stima di poter coprire circa il 98% dei discendenti da italiani e delle comunità italiane o italofone sparse per il mondo.</p>
             <ul>
-                <li>La lingua viene scelta DURANTE l'installazione (è parte del processo dell'installer)</li>
-                <li>Viene memorizzata nel Registro di Windows e caricata automaticamente</li>
+                <li>Su <strong>Windows</strong>: la lingua viene scelta durante l'installer e memorizzata nel Registro di Windows</li>
+                <li>Su <strong>Linux/macOS</strong>: la lingua viene selezionata al primo avvio e salvata nel file di configurazione utente</li>
+                <li>In entrambi i casi viene caricata automaticamente a ogni avvio</li>
                 <li>Può essere cambiata in qualsiasi momento tramite Menu → Impostazioni → Cambia lingua</li>
                 <li>Il programma richiede un riavvio per applicare la nuova lingua selezionata</li>
             </ul>
             <h4>📂 CONFIGURAZIONE CARTELLE</h4>
             <p>Alla prima esecuzione, il programma crea:</p>
             <ul>
-                <li>C:\Users\[TuoNome]\Documents\ATK-Pro\output\     (file elaborati)</li>
-                <li>C:\Users\[TuoNome]\Documents\ATK-Pro\input\      (opzionale, per input file)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TuoNome]\Documents\ATK-Pro\output\</code> (file elaborati)</li>
+                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (file elaborati)</li>
+                <li>Cartella <code>input\</code> analoga (opzionale, per input file)</li>
             </ul>
             <p>Durante l'elaborazione vengono create cartelle temporanee per i tile scaricati (tiles_canvas_X/).
             </p>
@@ -873,16 +902,14 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Lingue RTL (Arabo, Ebreo) cambiano layout (menu/controlli allineati a destra)</li>
                 <li>Font UTF-8 multi-lingue garantisce corretta visualizzazione</li>
-                <li>Se vedi caratteri corrotti, aggiorna Windows 10+ (issue rara)</li>
+                <li>Se vedi caratteri corrotti su Windows, aggiorna a Windows 10+ (issue rara)</li>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. MENU SERVIZI - FUNZIONI FUTURE</h3>
+            <h3>8. MENU SERVIZI</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>PLACEHOLDER PER SVILUPPI FUTURI</h4>
-            <p>Il menu "Servizi" contiene 6 pulsanti che visualizzano "Funzione in sviluppo".</p>
-            <p>Questi sono placeholder riservati per funzionalità pianificate nelle versioni future di ATK-Pro.</p>
-            <p>Le 6 funzioni pianificate sono:</p>
+            <h4>FUNZIONALITÀ DISPONIBILI E PIANIFICATE</h4>
+            <p>Il menu "Servizi" contiene 6 funzioni: 2 già disponibili dalla v2.0, 4 pianificate per versioni future.</p>
             <h4>1️⃣ INTEGRAZIONE API PORTALE ANTENATI</h4>
             <p>Integrazione "API level" con il Portale Antenati:</p>
             <ul>
@@ -891,24 +918,25 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Sincronizzazione dati con archivi centrali</li>
             </ul>
             <p><strong>Status:</strong> Pianificato per versioni future</p>
-            <h4>2️⃣ VISUALIZZAZIONE IMMAGINI</h4>
-            <p>Viewer per immagini scaricate:</p>
+            <h4>2️⃣ VISUALIZZAZIONE IMMAGINI ✅</h4>
+            <p>Viewer integrato per immagini genealogiche:</p>
             <ul>
-                <li>Visualizzazione immagini scaricate dal Portale Antenati</li>
-                <li>Visualizzazione PDF generati da ATK-Pro</li>
-                <li>Zoom/Pan interattivi</li>
-                <li>Annotazioni e marcatori</li>
+                <li>Formati supportati: JPG, PNG, TIFF (inclusi TIFF multi-pagina con navigazione avanti/indietro)</li>
+                <li>Zoom con rotella del mouse e pulsanti dedicati</li>
+                <li>Pan con trascinamento del mouse</li>
+                <li>Modalità "Adatta alla finestra" e "1:1 pixel"</li>
+                <li>Sidecar JSON affiancato all'immagine (EXIF e metadati tecnici)</li>
             </ul>
-            <p><strong>Status:</strong> Pianificato per versioni future</p>
-            <h4>3️⃣ VISUALIZZAZIONE METADATI JSON</h4>
-            <p>Viewer per dati strutturati:</p>
+            <p><strong>Status:</strong> ✅ Disponibile da v2.0</p>
+            <h4>3️⃣ VISUALIZZAZIONE METADATI JSON ✅</h4>
+            <p>Viewer ad albero per metadati strutturati:</p>
             <ul>
-                <li>JSON originali dal Manifest IIIF</li>
-                <li>Metadati genealogici</li>
-                <li>Metadati tecnici (risoluzione, formati, dimensioni)</li>
-                <li>Metadati EXIF dalle immagini</li>
+                <li>Apertura diretta di file <code>_genealogico.json</code> e <code>_tecnico.json</code></li>
+                <li>Visualizzazione ad albero espandibile</li>
+                <li>Sezioni: dati genealogici, metadati tecnici, EXIF dalle immagini</li>
+                <li>Anteprima immagine abbinata affiancata al pannello metadati</li>
             </ul>
-            <p><strong>Status:</strong> Pianificato per versioni future</p>
+            <p><strong>Status:</strong> ✅ Disponibile da v2.0</p>
             <h4>4️⃣ OCR AVANZATO</h4>
             <p>Trattamento OCR avanzato:</p>
             <ul>
@@ -1083,7 +1111,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">OPZIONE 2:</span> Pulsante X in alto a destra (finestra)</p>
             <h3>1. Clicca la X nella barra titolo della finestra</h3>
             <h3>2. Si apre la stessa finestra "Sostieni il progetto"</h3>
-            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">OPZIONE 3:</span> Alt+F4 (shortcut Windows standard)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">OPZIONE 3:</span> Alt+F4 su Windows / Ctrl+Q su Linux e macOS</p>
             <h3>1. Premi Alt+F4 sulla tastiera</h3>
             <h3>2. Prima che il programma si chiuda completamente, si apre la finestra "Sostieni il progetto"</h3>
             <h4>💰 FINESTRA "SOSTIENI IL PROGETTO"</h4>
@@ -1141,7 +1169,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>1. Connessione Internet: apri browser e accedi a https://www.google.com</h3>
             <h3>2. URL corretto: copia direttamente da browser</h3>
             <h3>3. Firewall: ATK-Pro deve essere consentito (dovrebbe chiedere al primo avvio)</h3>
-            <h3>4. Se in rete aziendale con proxy: configura proxy nelle impostazioni di rete Windows</h3>
+            <h3>4. Se in rete aziendale con proxy: configura proxy nelle impostazioni di rete del sistema operativo</h3>
             <p>Se problema persiste, prova con URL diverso per testare connessione IIIF</p>
             <h4>🔵 P: "File non trovato (404)" - cosa significa?</h4>
             <p><strong>R:</strong> L'URL del manifest non è raggiungibile. Cause:</p>
@@ -1194,7 +1222,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Tutti i record vengono salvati nelle cartelle che hai scelto al PASSO 2.</p>
             <p>NON devi ricominciare l'elaborazione per ogni record.</p>
             <h4>🔵 P: File si salvano dove esattamente?</h4>
-            <p><strong>R:</strong> Path default: C:\Users\[TuoUtente]\Documents\ATK-Pro\output\ Puoi cambiare cartella per ogni elaborazione (Menu → Output → Seleziona cartella output).</p>
+            <p><strong>R:</strong> Percorso default:</p>
+            <ul>
+                <li><strong>Windows:</strong> <code>C:\Users\[TuoUtente]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code></li>
+            </ul>
+            <p>Puoi cambiare cartella per ogni elaborazione (Menu → Output → Seleziona cartella output).</p>
             <p>Cartella è creata automaticamente al primo run se non esiste.</p>
             <h4>🔵 P: Posso spostare file output dopo elaborazione?</h4>
             <p><strong>R:</strong> Si, file sono indipendenti.</p>
@@ -1204,7 +1237,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>3. Se vuoi rielaborare lo stesso record, tieni manifest.json</h3>
             <h4>🔵 P: Crashes improvvisi - cosa fare?</h4>
             <p><strong>R:</strong> Se il programma crasha:</p>
-            <h3>1. Controlla Log: Documents\ATK-Pro\output\logs\*</h3>
+            <h3>1. Controlla Log:
+                <ul>
+                    <li><strong>Windows:</strong> <code>Documents\ATK-Pro\output\logs\*</code></li>
+                    <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/logs/*</code></li>
+                </ul>
+            </h3>
             <h3>2. Copia messaggio errore (CTRL+C sul messaggio)</h3>
             <h3>3. Riavvia programma (spesso risolve)</h3>
             <h3>4. Se crash ripetuto, prova su record IIIF diverso (potrebbe essere problema del manifest, non di ATK-Pro)</h3>
@@ -1236,7 +1274,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                     <tr>
                         <td>"Permission denied"</td>
                         <td>Cartella protetta/Read-only</td>
-                        <td>Esegui "Run as admin"</td>
+                        <td>Windows: "Run as admin" / Linux-macOS: <code>sudo</code></td>
                     </tr>
                     <tr>
                         <td>"URL not found (404)"</td>
@@ -1257,7 +1295,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Email: antenati.toolkit.pro@gmail.com Includi:</p>
             <ul>
                 <li>Versione ATK-Pro (menu Documenti → Informazioni)</li>
-                <li>Sistema operativo (Windows 10/11, versione build)</li>
+                <li>Sistema operativo e versione (es. Windows 10/11, Ubuntu 22.04, macOS 13)</li>
                 <li>URL IIIF che causa problema</li>
                 <li>Screenshot dell'errore (se visualizzato)</li>
             </ul>

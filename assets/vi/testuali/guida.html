@@ -351,7 +351,7 @@
             <h3>5. Xử lý và Tải xuống Hình ảnh</h3>
             <h3>6. PDF dành cho Sổ đăng ký và Tài liệu</h3>
             <h3>7. Bản địa hóa đa ngôn ngữ</h3>
-            <h3>8. Menu Dịch vụ - Các chức năng trong tương lai</h3>
+            <h3>8. Menu Dịch vụ</h3>
             <h3>9. Thư mục và Tệp Đầu ra</h3>
             <h3>10. Menu Tài liệu - Truy cập Tài nguyên và Hỗ trợ</h3>
             <h3>11. Kết thúc Chương trình và Hỗ trợ Dự án</h3>
@@ -362,29 +362,42 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>HỆ ĐIỀU HÀNH</h4>
             <ul>
-                <li>Windows 10 trở lên (Professional, Home, Server)</li>
-                <li>Bắt buộc 64-bit</li>
-                <li>Ít nhất 2 GB RAM khả dụng (khuyến nghị 4 GB cho xử lý hàng loạt)</li>
-                <li>1 GB dung lượng trống trên ổ đĩa</li>
+                <li><strong>Windows:</strong> Windows 10 hoặc mới hơn (64-bit) — Professional, Home, Server</li>
+                <li><strong>Linux:</strong> Ubuntu 20.04+ hoặc các bản phân phối tương thích (gói .deb hoặc tệp .tar.gz)</li>
+                <li><strong>macOS:</strong> macOS 11 Big Sur hoặc mới hơn — phân phối .dmg (đang thử nghiệm trên phần cứng thực tế)</li>
+                <li>Bắt buộc 64-bit trên tất cả các nền tảng</li>
             </ul>
             <h4>CÀI ĐẶT</h4>
-            <h3>1. Tải xuống: ATK-Pro-Setup-v2.0.exe từ kho lưu trữ chính thức</h3>
-            <h3>2. Nhấp đúp vào tệp cài đặt</h3>
-            <h3>3. Chọn "Chạy với quyền quản trị viên", nếu được yêu cầu</h3>
-            <h3>4. Làm theo trình hướng dẫn (Next → Next → Install)</h3>
-            <h3>5. Trong quá trình cài đặt, bạn sẽ được yêu cầu chọn ngôn ngữ:</h3>
-            <ul>
-                <li>Chọn ngôn ngữ mong muốn từ 20 tùy chọn có sẵn</li>
-                <li>Ngôn ngữ này được lưu trữ trong Registry của Windows</li>
-                <li>Được tải tự động mỗi khi chương trình khởi động</li>
-            </ul>
-            <h3>6. Cuối cùng, chọn "Khởi động ATK-Pro" để khởi chạy chương trình</h3>
-            <h3>7. Chấp nhận mọi cảnh báo của Tường lửa/Bảo vệ Windows</h3>
+            <h4>🪟 Windows</h4>
+            <ol>
+                <li>Tải xuống: <code>ATK-Pro-Setup-v2.0.exe</code> từ các kho lưu trữ chính thức</li>
+                <li>Nhấp đúp vào tệp cài đặt</li>
+                <li>Chọn "Chạy với tư cách Quản trị viên" nếu được yêu cầu</li>
+                <li>Làm theo trình hướng dẫn (Tiếp theo → Tiếp theo → Cài đặt)</li>
+                <li>Trong quá trình cài đặt, chọn ngôn ngữ từ 20 tùy chọn</li>
+                <li>Ở cuối: đánh dấu vào "Khởi động ATK-Pro"</li>
+                <li>Chấp nhận các thông báo từ Tường lửa/Defender Windows</li>
+            </ol>
+            <h4>🐧 Linux</h4>
+            <ol>
+                <li>Tải xuống: <code>ATK-Pro-v2.0.deb</code> (hoặc <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li><code>.tar.gz</code>: Giải nén vào <code>/opt/ATK-Pro/</code> và chạy <code>./ATK-Pro</code></li>
+                <li>Chọn ngôn ngữ ở lần khởi động đầu tiên từ 20 tùy chọn</li>
+            </ol>
+            <h4>🍎 macOS</h4>
+            <ol>
+                <li>Tải xuống: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Mở <code>.dmg</code> và kéo <code>ATK-Pro.app</code> vào thư mục <em>Ứng dụng</em></li>
+                <li>Ở lần khởi động đầu tiên: nhấp chuột phải → Mở, chấp nhận cảnh báo Gatekeeper</li>
+                <li>Chọn ngôn ngữ từ 20 tùy chọn</li>
+            </ol>
             <h4>VỊ TRÍ MẶC ĐỊNH</h4>
             <ul>
-                <li>Chương trình: C:\Program Files\ATK-Pro\</li>
-                <li>C:\Users\[TênCủaBạn]\Documents\ATK-Pro\output\</li>
-                <li>Đầu vào (tùy chọn): C:\Users\[TênCủaBạn]\Documents\ATK-Pro\input\</li>
+            <li><strong>Windows:</strong> Chương trình: <code>C:\Program Files\ATK-Pro\</code></li>
+            <li><strong>Windows:</strong> Đầu ra: <code>C:\Users\[TênCủaBạn]\Documents\ATK-Pro\output\</code></li>
+            <li><strong>Linux:</strong> Chương trình: <code>/opt/ATK-Pro/</code> — Đầu ra: <code>~/Documents/ATK-Pro/output/</code></li>
+            <li><strong>macOS:</strong> Chương trình: <code>/Applications/ATK-Pro.app</code> — Đầu ra: <code>~/Documents/ATK-Pro/output/</code></li>
             </ul>
             <h4>YÊU CẦU MẠNG</h4>
             <ul>
@@ -426,15 +439,16 @@
             <p>với những dữ liệu có sẵn vào cuối năm 2025, ước tính có thể bao phủ khoảng 98% số người gốc Ý và các cộng đồng Ý hoặc nói tiếng Ý trên khắp thế giới.</p>
             <ul>
                 <li>Ngôn ngữ được chọn TRONG QUÁ TRÌNH cài đặt (đây là một phần của quy trình cài đặt)</li>
-                <li>Được lưu trữ trong Registry của Windows và tự động tải lên</li>
+                                <li><strong>Windows:</strong> Được lưu trong Windows Registry<br><strong>Linux/macOS:</strong> Được lưu trong tệp cấu hình người dùng — được tải tự động</li>
                 <li>Có thể thay đổi bất cứ lúc nào thông qua Menu → Cài đặt → Thay đổi ngôn ngữ</li>
                 <li>Chương trình yêu cầu khởi động lại để áp dụng ngôn ngữ mới đã chọn</li>
             </ul>
             <h4>📂 CẤU HÌNH THƯ MỤC</h4>
             <p>Khi thực thi lần đầu, chương trình sẽ tạo ra:</p>
             <ul>
-                <li>C:\Users\[TênCủaBạn]\Documents\ATK-Pro\output\ (tệp đã xử lý)</li>
-                <li>C:\Users\[TênCủaBạn]\Documents\ATK-Pro\input\ (tùy chọn, cho tệp đầu vào)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TênCủaBạn]\Documents\ATK-Pro\output\</code> (các tệp đã xử lý)</li>
+                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (các tệp đã xử lý)</li>
+                <li>Thư mục <code>input/</code> tương ứng (tùy chọn)</li>
             </ul>
             <p>Trong quá trình xử lý, các thư mục tạm thời được tạo cho các ô đã tải xuống (tiles_canvas_X/).
             </p>
@@ -879,12 +893,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. MENU DỊCH VỤ - TÍNH NĂNG TƯƠNG LAI</h3>
+            <h3>8. MENU DỊCH VỤ</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>CHỖ ĐỂ DÀNH CHO CÁC PHÁT TRIỂN TRONG TƯƠNG LAI</h4>
-            <p>Menu "Dịch vụ" chứa 6 nút hiển thị "Chức năng đang phát triển".</p>
-            <p>Đây là những trình giữ chỗ dành riêng cho các chức năng dự kiến trong các phiên bản tương lai của ATK-Pro.</p>
-            <p>6 chức năng được lên kế hoạch là:</p>
+            <h4>TÍNH NĂNG CÓ SẴN VÀ ĐÃ ĐƯỢC LÊN KẾ HOẠCH</h4>
+            <p>Menu "Dịch vụ" chứa 6 nút. <strong>2 tính năng đã có sẵn từ v2.0</strong>, 4 tính năng còn lại được lên kế hoạch cho các phiên bản tương lai.
+            </p>
+            <p>6 tính năng:</p>
             <h4>1️⃣ TÍCH HỢP API CỔNG THÔNG TIN ANTENATI</h4>
             <p>Tích hợp "API level" với Cổng thông tin Antenati:</p>
             <ul>
@@ -893,24 +907,26 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Đồng bộ hóa dữ liệu với kho lưu trữ trung tâm</li>
             </ul>
             <p><strong>Trạng thái:</strong> Đã lên kế hoạch cho các phiên bản tương lai</p>
-            <h4>2️⃣ HIỂN THỊ HÌNH ẢNH</h4>
-            <p>Trình xem cho hình ảnh đã tải xuống:</p>
+            <h4>2️⃣ HIỂN THỊ HÌNH ẢNH ✅</h4>
+            <p>Trình xem hình ảnh tích hợp:</p>
             <ul>
-                <li>Hiển thị hình ảnh đã tải xuống từ Cổng thông tin Antenati</li>
-                <li>Xem PDF được tạo bởi ATK-Pro</li>
-                <li>Phóng to/Di chuyển tương tác</li>
-                <li>Ghi chú và đánh dấu</li>
+                <li>Định dạng hỗ trợ: JPG, PNG, TIFF (hình ảnh được ATK-Pro tái tạo)</li>
+                <li>Thu phóng và di chuyển tương tác</li>
+                <li>Chế độ vừa cửa sổ (Fit Window) và hiển thị 1:1</li>
+                <li>Điều hướng giữa các Canvas của cùng một bản ghi</li>
+                <li>Hiển thị tệp JSON sidecar liên kết (siêu dữ liệu EXIF)</li>
             </ul>
-            <p><strong>Trạng thái:</strong> Đã lên kế hoạch cho các phiên bản tương lai</p>
-            <h4>3️⃣ HIỂN THỊ SIÊU DỮ LIỆU JSON</h4>
-            <p>Trình xem dữ liệu có cấu trúc:</p>
+            <p><strong>Trạng thái:</strong> ✅ Có sẵn từ v2.0</p>
+            <h4>3️⃣ HIỂN THỊ SIÊU DỮ LIỆU JSON ✅</h4>
+            <p>Chế độ xem dạng cây của dữ liệu có cấu trúc:</p>
             <ul>
-                <li>JSON gốc từ Manifest IIIF</li>
-                <li>Siêu dữ liệu phả hệ</li>
-                <li>Siêu dữ liệu kỹ thuật (độ phân giải, định dạng, kích thước)</li>
-                <li>Si tratta di metadati EXIF dalle immagini</li>
+                <li>Cây JSON tương tác với mở rộng/thu gọn các nút</li>
+                <li>Tệp <code>_genealogico.json</code>: ngày tháng, địa điểm, tên, quan hệ gia đình</li>
+                <li>Tệp <code>_tecnico.json</code>: độ phân giải, định dạng, kích thước, chất lượng</li>
+                <li>Siêu dữ liệu EXIF của hình ảnh được tái tạo</li>
+                <li>Hiển thị tích hợp được kết nối với Trình xem Hình ảnh</li>
             </ul>
-            <p><strong>Trạng thái:</strong> Đã lên kế hoạch cho các phiên bản tương lai</p>
+            <p><strong>Trạng thái:</strong> ✅ Có sẵn từ v2.0</p>
             <h4>4️⃣ OCR NÂNG CAO</h4>
             <p>Xử lý OCR nâng cao:</p>
             <ul>

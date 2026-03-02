@@ -351,7 +351,7 @@
             <h3>5. Görüntü İşleme ve İndirme</h3>
             <h3>6. Kayıtlar ve Belgeler için PDF</h3>
             <h3>7. Çok Dilli Yerelleştirme</h3>
-            <h3>8. Hizmet Menüsü - Gelecek Fonksiyonlar</h3>
+            <h3>8. Hizmet Menüsü</h3>
             <h3>9. Klasörler ve Çıktı Dosyaları</h3>
             <h3>10. Belgeler Menüsü - Kaynaklara ve Desteğe Erişim</h3>
             <h3>11. Programın Kapatılması ve Proje Desteği</h3>
@@ -362,29 +362,44 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>İŞLETİM SİSTEMİ</h4>
             <ul>
-                <li>Windows 10 veya sonrası (Professional, Home, Server)</li>
-                <li>64 bit zorunlu</li>
+                <li><strong>Windows:</strong> Windows 10 veya üzeri (64 bit) — Professional, Home, Server</li>
+                <li><strong>Linux:</strong> Ubuntu 20.04+ veya uyumlu dağıtımlar (.deb paketi veya .tar.gz arşivi)</li>
+                <li><strong>macOS:</strong> macOS 11 Big Sur veya üzeri — .dmg dağıtımı (gerçek donanımda testler devam ediyor)</li>
+                <li>Tüm platformlarda 64 bit zorunludur</li>
                 <li>En az 2 GB RAM kullanılabilir (toplu işleme için 4 GB önerilir)</li>
                 <li>1 GB boş disk alanı</li>
             </ul>
             <h4>KURULUM</h4>
-            <h3>1. Resmi depolardan ATK-Pro-Setup-v2.0.exe'yi indirin</h3>
-            <h3>2. Yükleyici dosyasına çift tıklayın</h3>
-            <h3>3. İstenirse "Yönetici olarak çalıştır" seçeneğini seçin</h3>
-            <h3>4. Kurulum sihirbazını izleyin (İleri → İleri → Kur)</h3>
-            <h3>5. Kurulum sırasında dil seçimi istenecektir:</h3>
-            <ul>
-                <li>Mevcut 20 seçenek arasından istediğiniz dili seçin</li>
-                <li>Bu dil Windows Kayıt Defteri'ne kaydedilir</li>
-                <li>Program her başlatıldığında otomatik olarak yüklenir</li>
-            </ul>
-            <h3>6. Sonunda, programı başlatmak için "ATK-Pro'yu Başlat" seçeneğini işaretleyin</h3>
-            <h3>7. Windows Güvenlik Duvarı/Defender uyarılarını kabul edin</h3>
+            <h4>🪟 Windows</h4>
+            <ol>
+                <li>İndir: Resmi depolardan <code>ATK-Pro-Setup-v2.0.exe</code></li>
+                <li>Kurulum dosyasına çift tıklayın</li>
+                <li>Gerekirse "Yönetici olarak çalıştır"ı seçin</li>
+                <li>Sihirbazı takip edin (İleri → İleri → Yükle)</li>
+                <li>Kurulum sırasında 20 seçenek arasından dil seçin</li>
+                <li>Sonunda "ATK-Pro'yu Başlat"ı işaretleyin</li>
+                <li>Windows Güvenlik Duvarı/Defender bildirimlerini kabul edin</li>
+            </ol>
+            <h4>🐧 Linux</h4>
+            <ol>
+                <li>İndir: <code>ATK-Pro-v2.0.deb</code> (veya <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li><code>.tar.gz</code>: <code>/opt/ATK-Pro/</code> içine çıkartın ve <code>./ATK-Pro</code> çalıştırın</li>
+                <li>İlk başlatmada 20 seçenek arasından dil seçin</li>
+            </ol>
+            <h4>🍎 macOS</h4>
+            <ol>
+                <li>İndir: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li><code>.dmg</code>'yi açın ve <code>ATK-Pro.app</code>'ı <em>Uygulamalar</em> klasörüne sürükleyin</li>
+                <li>İlk başlatmada: sağ tık → Aç, Gatekeeper uyarısını kabul edin</li>
+                <li>20 seçenek arasından dil seçin</li>
+            </ol>
             <h4>VARSAYILAN KONUMLAR</h4>
             <ul>
-                <li>Program: C:\Program Files\ATK-Pro\</li>
-                <li>Kullanıcı çıktısı: C:\Users\[TuoNome]\Documents\ATK-Pro\output\</li>
-                <li>Girdi (isteğe bağlı): C:\Users\[TuoNome]\Documents\ATK-Pro\input\</li>
+            <li><strong>Windows:</strong> Program: <code>C:\Program Files\ATK-Pro\</code></li>
+            <li><strong>Windows:</strong> Çıktı: <code>C:\Users\[KullanıcıAdı]\Documents\ATK-Pro\output\</code></li>
+            <li><strong>Linux:</strong> Program: <code>/opt/ATK-Pro/</code> — Çıktı: <code>~/Documents/ATK-Pro/output/</code></li>
+            <li><strong>macOS:</strong> Program: <code>/Applications/ATK-Pro.app</code> — Çıktı: <code>~/Documents/ATK-Pro/output/</code></li>
             </ul>
             <h4>AĞ GEREKSİNİMLERİ</h4>
             <ul>
@@ -426,15 +441,16 @@
             <p>mevcut verilere göre 2025 sonu itibarıyla dünyanın dört bir yanına yayılmış İtalyan kökenlilerin ve İtalyan veya İtalyanca konuşan toplulukların yaklaşık %98'ini kapsayacağı tahmin edilmektedir.</p>
             <ul>
                 <li>Dil, kurulum SIRASINDA seçilir (kurulum sürecinin bir parçasıdır)</li>
-                <li>Windows Kaydı'na kaydedilir ve otomatik olarak yüklenir</li>
+                                <li><strong>Windows:</strong> Windows Kayıt Defteri'ne kaydedilir<br><strong>Linux/macOS:</strong> Kullanıcı yapılandırma dosyasına kaydedilir — otomatik olarak yüklenir</li>
                 <li>İstediğiniz zaman Menü → Ayarlar → Dil Değiştir aracılığıyla değiştirilebilir</li>
                 <li>Programın seçilen yeni dili uygulaması için yeniden başlatılması gerekiyor</li>
             </ul>
             <h4>📂 KLASÖR YAPILANDIRMASI</h4>
             <p>İlk çalıştırmada program şunları oluşturur:</p>
             <ul>
-                <li>C:\Users\[TuoNome]\Documents\ATK-Pro\output\     (işlenmiş dosyalar)</li>
-                <li>C:\Users\[Adınız]\Documents\ATK-Pro\input\ (isteğe bağlı, giriş dosyası için)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[KullanıcıAdı]\Documents\ATK-Pro\output\</code> (işlenmiş dosyalar)</li>
+                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (işlenmiş dosyalar)</li>
+                <li>Karşılık gelen <code>input/</code> klasörü (isteğe bağlı)</li>
             </ul>
             <p>İşleme sırasında indirilen döşemeler için geçici klasörler oluşturulur (tiles_canvas_X/).
             </p>
@@ -877,12 +893,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. HİZMET MENÜSÜ - GELECEKTEKİ FONKSİYONLAR</h3>
+            <h3>8. HİZMET MENÜSÜ</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>GELECEKTEKİ GELİŞMELER İÇİN YER TUTUCU</h4>
-            <p>"Hizmetler" menüsünde "Geliştirilmekte olan fonksiyon" gösteren 6 düğme bulunmaktadır.</p>
-            <p>Bunlar, ATK-Pro'nun gelecekteki sürümlerinde planlanan özellikler için ayrılmış yer tutuculardır.</p>
-            <p>Planlanan 6 işlev şunlardır:</p>
+            <h4>MEVCUT VE PLANLANAN FONKSİYONLAR</h4>
+            <p>"Hizmetler" menüsü 6 buton içerir. <strong>v2.0'dan itibaren 2 fonksiyon zaten kullanılabilir</strong>, diğer 4'ü gelecekteki sürümler için planlanmıştır.
+            </p>
+            <p>6 fonksiyon:</p>
             <h4>1️⃣ ANTENATI PORTALI API ENTEGRASYONU</h4>
             <p>Portal Antenati ile "API seviyesi" entegrasyonu:</p>
             <ul>
@@ -891,24 +907,26 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Merkezi arşivlerle veri senkronizasyonu</li>
             </ul>
             <p><strong>Durum:</strong> Gelecek sürümler için planlandı</p>
-            <h4>2️⃣ GÖRÜNTÜ GÖRSELLEŞTİRME</h4>
-            <p>İndirilen resimler için Görüntüleyici:</p>
+            <h4>2️⃣ GÖRÜNTÜ GÖRSELLEŞTİRME ✅</h4>
+            <p>Entegre görüntü görüntüleyici:</p>
             <ul>
-                <li>Antenati Portalı'ndan İndirilen Görüntülerin Görüntülenmesi</li>
-                <li>ATK-Pro Tarafından Oluşturulan PDF Görüntüleyicisi</li>
-                <li>Etkileşimli Yakınlaştırma/Kaydırma</li>
-                <li>Notlar ve işaretleyiciler</li>
+                <li>Desteklenen formatlar: JPG, PNG, TIFF (ATK-Pro tarafından yeniden oluşturulan görüntüler)</li>
+                <li>Etkileşimli yakınlaştırma ve kaydırma</li>
+                <li>Pencere uyum modu (Fit Window) ve 1:1 görünüm</li>
+                <li>Aynı kayıttaki Canvas'lar arasında gezinme</li>
+                <li>İlişkili JSON sidecar dosyasının görüntülenmesi (EXIF meta verileri)</li>
             </ul>
-            <p><strong>Durum:</strong> Gelecek sürümler için planlandı</p>
-            <h4>3️⃣ JSON METADATA GÖRSELLEŞTİRME</h4>
-            <p>Yapılandırılmış veriler için görüntüleyici:</p>
+            <p><strong>Durum:</strong> ✅ v2.0'dan itibaren mevcut</p>
+            <h4>3️⃣ JSON METADATA GÖRSELLEŞTİRME ✅</h4>
+            <p>Yapılandırılmış verilerin ağaç görünümü:</p>
             <ul>
-                <li>IIIF Manifest'ten orijinal JSON</li>
-                <li>Soybilimsel meta veriler</li>
-                <li>Teknik meta veriler (çözünürlük, formatlar, boyutlar)</li>
-                <li>Resimlerden EXIF meta verileri</li>
+                <li>Düğümleri genişletme/daraltma özelliğine sahip etkileşimli JSON ağacı</li>
+                <li><code>_genealogico.json</code> dosyası: tarihler, yerler, isimler, aile ilişkileri</li>
+                <li><code>_tecnico.json</code> dosyası: çözünürlük, formatlar, boyutlar, kalite</li>
+                <li>Yeniden oluşturulan görüntülerin EXIF meta verileri</li>
+                <li>Görüntü Görüntüleyicisiyle birleştirilmiş entegre görünüm</li>
             </ul>
-            <p><strong>Durum:</strong> Gelecek sürümler için planlandı</p>
+            <p><strong>Durum:</strong> ✅ v2.0'dan itibaren mevcut</p>
             <h4>4️⃣ GELİŞMİŞ OCR</h4>
             <p>Gelişmiş OCR İşleme:</p>
             <ul>

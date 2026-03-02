@@ -351,7 +351,7 @@
             <h3>5. Verwerking en downloaden van afbeeldingen</h3>
             <h3>6. PDF voor registers en documenten</h3>
             <h3>7. Meertalige Lokalisatie</h3>
-            <h3>8. Dienstenmenu - Toekomstige Functies</h3>
+            <h3>8. Dienstenmenu</h3>
             <h3>9. Output Mappen en Bestanden</h3>
             <h3>10. Documentenmenu - Toegang tot Bronnen en Ondersteuning</h3>
             <h3>11. Programma-afsluiting en Projectondersteuning</h3>
@@ -362,29 +362,44 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>BESTURINGSSYSTEEM</h4>
             <ul>
-                <li>Windows 10 of hoger (Professional, Home, Server)</li>
-                <li>64-bits verplicht</li>
+                <li><strong>Windows:</strong> Windows 10 of hoger (64 bits) — Professional, Home, Server</li>
+                <li><strong>Linux:</strong> Ubuntu 20.04+ of compatibele distributies (.deb-pakket of .tar.gz-archief)</li>
+                <li><strong>macOS:</strong> macOS 11 Big Sur of hoger — .dmg-distributie (tests op echte hardware lopen)</li>
+                <li>64 bits verplicht op alle platformen</li>
                 <li>Minstens 2 GB RAM beschikbaar (4 GB aanbevolen voor batchverwerking)</li>
                 <li>1 GB vrije schijfruimte</li>
             </ul>
             <h4>INSTALLATIE</h4>
-            <h3>1. Download: ATK-Pro-Setup-v2.0.exe van de officiële repositories</h3>
-            <h3>2. Dubbelklik op het installatiebestand</h3>
-            <h3>3. Selecteer "Uitvoeren als administrator", indien gevraagd</h3>
-            <h3>4. Volg de wizard (Next → Next → Install)</h3>
-            <h3>5. Tijdens de installatie wordt u gevraagd de taal te selecteren:</h3>
-            <ul>
-                <li>Kies de gewenste taal uit 20 beschikbare opties</li>
-                <li>Deze taal wordt opgeslagen in het Windows-register</li>
-                <li>Wordt automatisch geladen bij elke programma-opstart</li>
-            </ul>
-            <h3>6. Vink aan het einde "ATK-Pro starten" aan om het programma te starten</h3>
-            <h3>7. Accepteer eventuele meldingen van Windows Firewall/Defender</h3>
+            <h4>🪟 Windows</h4>
+            <ol>
+                <li>Downloaden: <code>ATK-Pro-Setup-v2.0.exe</code> uit de officiële repositories</li>
+                <li>Dubbelklikken op het installatiebestand</li>
+                <li>Selecteer "Als administrator uitvoeren" indien gevraagd</li>
+                <li>Volg de wizard (Volgende → Volgende → Installeren)</li>
+                <li>Kies tijdens de installatie uw taal uit 20 beschikbare opties</li>
+                <li>Aan het einde: vink "ATK-Pro starten" aan</li>
+                <li>Accepteer meldingen van Windows Firewall/Defender</li>
+            </ol>
+            <h4>🐧 Linux</h4>
+            <ol>
+                <li>Downloaden: <code>ATK-Pro-v2.0.deb</code> (of <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li><code>.tar.gz</code>: uitpakken naar <code>/opt/ATK-Pro/</code> en uitvoeren: <code>./ATK-Pro</code></li>
+                <li>Kies de taal bij de eerste start uit 20 opties</li>
+            </ol>
+            <h4>🍎 macOS</h4>
+            <ol>
+                <li>Downloaden: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Open de <code>.dmg</code> en sleep <code>ATK-Pro.app</code> naar de map <em>Programma's</em></li>
+                <li>Bij eerste start: rechtermuisknop → Openen, Gatekeeper-waarschuwing accepteren</li>
+                <li>Kies de taal uit 20 opties</li>
+            </ol>
             <h4>STANDAARD POSITIES</h4>
             <ul>
-                <li>Programma: C:\Program Files\ATK-Pro\</li>
-                <li>Gebruikersuitvoer: C:\Users\[UwNaam]\Documents\ATK-Pro\output\</li>
-                <li>Input (optioneel): C:\Users\[JouwNaam]\Documents\ATK-Pro\input\</li>
+            <li><strong>Windows:</strong> Programma: <code>C:\Program Files\ATK-Pro\</code></li>
+            <li><strong>Windows:</strong> Uitvoer: <code>C:\Users\[UwNaam]\Documents\ATK-Pro\output\</code></li>
+            <li><strong>Linux:</strong> Programma: <code>/opt/ATK-Pro/</code> — Uitvoer: <code>~/Documents/ATK-Pro/output/</code></li>
+            <li><strong>macOS:</strong> Programma: <code>/Applications/ATK-Pro.app</code> — Uitvoer: <code>~/Documents/ATK-Pro/output/</code></li>
             </ul>
             <h4>NETWERKVEREISTEN</h4>
             <ul>
@@ -426,15 +441,16 @@
             <p>waarmee, op basis van de beschikbare gegevens eind 2025, naar schatting ongeveer 98% van de afstammelingen van Italianen en Italiaanse of Italiaanstalige gemeenschappen verspreid over de wereld kan worden gedekt.</p>
             <ul>
                 <li>De taal wordt GEKOZEN TIJDENS de installatie (het is onderdeel van het installatieproces)</li>
-                <li>Wordt opgeslagen in het Windows-register en automatisch geladen</li>
+                                <li><strong>Windows:</strong> Opgeslagen in het Windows-register<br><strong>Linux/macOS:</strong> Opgeslagen in het gebruikersconfiguratiebeetand — automatisch geladen</li>
                 <li>Kan op elk moment worden gewijzigd via Menu → Instellingen → Taal wijzigen</li>
                 <li>Het programma vereist een herstart om de nieuw geselecteerde taal toe te passen</li>
             </ul>
             <h4>📂 MAPCONFIGURATIE</h4>
             <p>Bij de eerste uitvoering maakt het programma:</p>
             <ul>
-                <li>C:\Users\[UwNaam]\Documents\ATK-Pro\output\     (verwerkte bestanden)</li>
-                <li>C:\Users\[UwNaam]\Documents\ATK-Pro\input\ (optioneel, voor invoerbestand)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[UwNaam]\Documents\ATK-Pro\output\</code> (verwerkte bestanden)</li>
+                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (verwerkte bestanden)</li>
+                <li>Bijbehorende map <code>input/</code> (optioneel)</li>
             </ul>
             <p>Tijdens de verwerking worden tijdelijke mappen aangemaakt voor gedownloade tegels (tiles_canvas_X/).
             </p>
@@ -877,12 +893,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. DIENSTENMENU - TOEKOMSTIGE FUNCTIES</h3>
+            <h3>8. DIENSTENMENU</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>PLAATSVERVANGER VOOR TOEKOMSTIGE ONTWIKKELINGEN</h4>
-            <p>Het menu "Diensten" bevat 6 knoppen die "Functie in ontwikkeling" weergeven.</p>
-            <p>Dit zijn gereserveerde placeholders voor functionaliteiten die gepland zijn voor toekomstige versies van ATK-Pro.</p>
-            <p>De 6 geplande functies zijn:</p>
+            <h4>BESCHIKBARE EN GEPLANDE FUNCTIES</h4>
+            <p>Het menu "Diensten" bevat 6 knoppen. <strong>2 functies zijn al beschikbaar vanaf v2.0</strong>, de andere 4 zijn gepland voor toekomstige versies.
+            </p>
+            <p>De 6 functies zijn:</p>
             <h4>1️⃣ API-INTEGRATIE PORTAAL ANTENATI</h4>
             <p>Integratie "API-niveau" met de Antenati-portal:</p>
             <ul>
@@ -891,24 +907,26 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Synchronisatie van gegevens met centrale archieven</li>
             </ul>
             <p><strong>Status:</strong> Gepland voor toekomstige versies</p>
-            <h4>2️⃣ BEELDVISUALISATIE</h4>
-            <p>Afbeeldingsviewer voor gedownloade afbeeldingen:</p>
+            <h4>2️⃣ BEELDVISUALISATIE ✅</h4>
+            <p>Geïntegreerde beeldviewer:</p>
             <ul>
-                <li>Afbeeldingen weergeven gedownload van het Antenati-portaal</li>
-                <li>PDF-weergave gegenereerd door ATK-Pro</li>
-                <li>Interactieve zoom/pannen</li>
-                <li>Annotaties en markeringen</li>
+                <li>Ondersteunde formaten: JPG, PNG, TIFF (afbeeldingen gereconstrueerd door ATK-Pro)</li>
+                <li>Interactief zoomen en pannen</li>
+                <li>Vensterpassing-modus (Fit Window) en 1:1-weergave</li>
+                <li>Navigatie tussen de Canvas van hetzelfde register</li>
+                <li>Weergave van het geassocieerde JSON sidecar-bestand (EXIF-metadata)</li>
             </ul>
-            <p><strong>Status:</strong> Gepland voor toekomstige versies</p>
-            <h4>3️⃣ JSON METADATA VISUALISATIE</h4>
-            <p>Gestructureerde gegevensviewer:</p>
+            <p><strong>Status:</strong> ✅ Beschikbaar vanaf v2.0</p>
+            <h4>3️⃣ JSON METADATA VISUALISATIE ✅</h4>
+            <p>Boomstructuurweergave van gestructureerde gegevens:</p>
             <ul>
-                <li>Originele JSON's van het Manifest IIIF</li>
-                <li>Genealogische metadata</li>
-                <li>Technische metadata (resolutie, formaten, afmetingen)</li>
-                <li>EXIF-metadata van afbeeldingen</li>
+                <li>Interactieve JSON-boomstructuur met uitvouwen/samenvouwen van knooppunten</li>
+                <li>Bestand <code>_genealogico.json</code>: datums, locaties, namen, familierelaties</li>
+                <li>Bestand <code>_tecnico.json</code>: resolutie, formaten, afmetingen, kwaliteit</li>
+                <li>EXIF-metadata van gereconstrueerde afbeeldingen</li>
+                <li>Geïntegreerde weergave gekoppeld aan de Beeldviewer</li>
             </ul>
-            <p><strong>Status:</strong> Gepland voor toekomstige versies</p>
+            <p><strong>Status:</strong> ✅ Beschikbaar vanaf v2.0</p>
             <h4>4️⃣ GEAVANCEERDE OCR</h4>
             <p>Geavanceerde OCR-verwerking:</p>
             <ul>

@@ -351,7 +351,7 @@
             <h3>5. Billedbehandling og download</h3>
             <h3>6. PDF til registre og dokumenter</h3>
             <h3>7. Flersproget lokalisering</h3>
-            <h3>8. Service Menu - Fremtidige Funktioner</h3>
+            <h3>8. Service Menu</h3>
             <h3>9. Outputmapper og filer</h3>
             <h3>10. Dokumentmenu - Adgang til ressourcer og support</h3>
             <h3>11. Programafslutning og Projektstøtte</h3>
@@ -362,29 +362,44 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>OPERATIVSYSTEM</h4>
             <ul>
-                <li>Windows 10 eller nyere (Professional, Home, Server)</li>
-                <li>64-bit påkrævet</li>
+                <li><strong>Windows:</strong> Windows 10 eller nyere (64 bit) — Professional, Home, Server</li>
+                <li><strong>Linux:</strong> Ubuntu 20.04+ eller kompatible distributioner (.deb-pakke eller .tar.gz-arkiv)</li>
+                <li><strong>macOS:</strong> macOS 11 Big Sur eller nyere — .dmg-distribution (tests på rigtig hardware er i gang)</li>
+                <li>64 bit obligatorisk på alle platforme</li>
                 <li>Mindst 2 GB RAM tilgængelig (4 GB anbefales til batchbehandling)</li>
                 <li>1 GB ledig diskplads</li>
             </ul>
             <h4>INSTALLATION</h4>
-            <h3>1. Download: ATK-Pro-Setup-v2.0.exe fra de officielle arkiver</h3>
-            <h3>2. Dobbeltklik på installationsfilen</h3>
-            <h3>3. Vælg "Kør som administrator", hvis det kræves</h3>
-            <h3>4. Følg guiden (Næste → Næste → Installer)</h3>
-            <h3>5. Under installationen vil du blive bedt om at vælge sprog:</h3>
-            <ul>
-                <li>Vælg det ønskede sprog blandt 20 tilgængelige muligheder</li>
-                <li>Dette sprog gemmes i Windows-registreret</li>
-                <li>Indlæses automatisk ved hver programstart</li>
-            </ul>
-            <h3>6. Til sidst skal du vælge "Start ATK-Pro" for at starte programmet</h3>
-            <h3>7. Accepter eventuelle advarsler fra Windows Firewall/Defender</h3>
+            <h4>🪟 Windows</h4>
+            <ol>
+                <li>Download: <code>ATK-Pro-Setup-v2.0.exe</code> fra de officielle repositories</li>
+                <li>Dobbeltklik på installationsfilen</li>
+                <li>Vælg "Kør som administrator" hvis det er nødvendigt</li>
+                <li>Følg guiden (Næste → Næste → Installer)</li>
+                <li>Vælg sprog under installationen blandt 20 tilgængelige muligheder</li>
+                <li>Til sidst: sæt kryds ved "Start ATK-Pro"</li>
+                <li>Accepter advarsler fra Windows Firewall/Defender</li>
+            </ol>
+            <h4>🐧 Linux</h4>
+            <ol>
+                <li>Download: <code>ATK-Pro-v2.0.deb</code> (eller <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li><code>.tar.gz</code>: Udpak til <code>/opt/ATK-Pro/</code> og kør <code>./ATK-Pro</code></li>
+                <li>Vælg sprog ved første start blandt 20 muligheder</li>
+            </ol>
+            <h4>🍎 macOS</h4>
+            <ol>
+                <li>Download: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Åbn <code>.dmg</code> og træk <code>ATK-Pro.app</code> til mappen <em>Programmer</em></li>
+                <li>Ved første start: højreklik → Åbn, accepter Gatekeeper-advarsel</li>
+                <li>Vælg sprog blandt 20 muligheder</li>
+            </ol>
             <h4>STANDARDPOSITIONER</h4>
             <ul>
-                <li>Program: C:\Program Files\ATK-Pro\</li>
-                <li>Brugeroutput: C:\Users\[DitNavn]\Documents\ATK-Pro\output\</li>
-                <li>Input (valgfrit): C:\Users\[DitNavn]\Documents\ATK-Pro\input\</li>
+            <li><strong>Windows:</strong> Program: <code>C:\Program Files\ATK-Pro\</code></li>
+            <li><strong>Windows:</strong> Output: <code>C:\Users\[DitNavn]\Documents\ATK-Pro\output\</code></li>
+            <li><strong>Linux:</strong> Program: <code>/opt/ATK-Pro/</code> — Output: <code>~/Documents/ATK-Pro/output/</code></li>
+            <li><strong>macOS:</strong> Program: <code>/Applications/ATK-Pro.app</code> — Output: <code>~/Documents/ATK-Pro/output/</code></li>
             </ul>
             <h4>NETVURSKRAV</h4>
             <ul>
@@ -426,15 +441,16 @@
             <p>med hvilke, baseret på de tilgængelige data ved udgangen af 2025, man anslår at kunne dække omkring 98% af efterkommere af italienere og italienske eller italiensktalende samfund spredt ud over verden.</p>
             <ul>
                 <li>Sproget vælges UNDER installationen (det er en del af installationsprocessen)</li>
-                <li>Gemmes i Windows-registeret og indlæses automatisk</li>
+                                <li><strong>Windows:</strong> Gemt i Windows-registreringsdatabasen<br><strong>Linux/macOS:</strong> Gemt i brugerens konfigurationsfil — indlæses automatisk</li>
                 <li>Kan ændres når som helst via Menu → Indstillinger → Skift sprog</li>
                 <li>Programmet kræver en genstart for at anvende det nyvalgte sprog</li>
             </ul>
             <h4>📂 MAPPEKONFIGURATION</h4>
             <p>Ved første kørsel opretter programmet:</p>
             <ul>
-                <li>C:\Brugere\[DitNavn]\Dokumenter\ATK-Pro\output\     (behandlede filer)</li>
-                <li>C:\Users\[DitNavn]\Documents\ATK-Pro\input\      (valgfrit, til inputfil)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DitNavn]\Documents\ATK-Pro\output\</code> (behandlede filer)</li>
+                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (behandlede filer)</li>
+                <li>Tilsvarende <code>input/</code>-mappe (valgfrit)</li>
             </ul>
             <p>Under behandlingen oprettes der midlertidige mapper til de downloadede fliser (tiles_canvas_X/).
             </p>
@@ -877,12 +893,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. TJENESTEMENU - FREMTIDIGE FUNKTIONER</h3>
+            <h3>8. TJENESTEMENU</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>PLADSHOLDER TIL FREMTIDIG UDVIKLING</h4>
-            <p>Menuen "Tjenester" indeholder 6 knapper, der viser "Funktion under udvikling".</p>
-            <p>Disse er pladsholdere reserveret til funktioner, der er planlagt i fremtidige versioner af ATK-Pro.</p>
-            <p>De 6 planlagte funktioner er:</p>
+            <h4>TILGÆNGELIGE OG PLANLAGTE FUNKTIONER</h4>
+            <p>Menuen "Tjenester" indeholder 6 knapper. <strong>2 funktioner er allerede tilgængelige fra v2.0</strong>, de resterende 4 er planlagt til fremtidige versioner.
+            </p>
+            <p>De 6 funktioner er:</p>
             <h4>1️⃣ INTEGRATION AF ANTENATI PORTAL API</h4>
             <p>Integration af "API-niveau" med Antenati-portalen:</p>
             <ul>
@@ -891,24 +907,26 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Datasynkronisering med centrale arkiver</li>
             </ul>
             <p><strong>Status:</strong> Planlagt til fremtidige versioner</p>
-            <h4>2️⃣ BILLEDVISNING</h4>
-            <p>Visning af downloadede billeder:</p>
+            <h4>2️⃣ BILLEDVISNING ✅</h4>
+            <p>Integreret billedvisning:</p>
             <ul>
-                <li>Visning af billeder downloadet fra Antenati-portalen</li>
-                <li>PDF-visning genereret af ATK-Pro</li>
-                <li>Interaktiv zoom/panorering</li>
-                <li>Noter og markører</li>
+                <li>Understøttede formater: JPG, PNG, TIFF (billeder rekonstrueret af ATK-Pro)</li>
+                <li>Interaktiv zoom og panorering</li>
+                <li>Tilpasset vinduestilstand (Fit Window) og 1:1-visning</li>
+                <li>Navigation mellem Canvas i samme post</li>
+                <li>Visning af tilknyttet JSON sidecar-fil (EXIF-metadata)</li>
             </ul>
-            <p><strong>Status:</strong> Planlagt til fremtidige versioner</p>
-            <h4>3️⃣ VISUALISERING AF JSON METADATA</h4>
-            <p>Viewer til strukturerede data:</p>
+            <p><strong>Status:</strong> ✅ Tilgængelig fra v2.0</p>
+            <h4>3️⃣ VISUALISERING AF JSON METADATA ✅</h4>
+            <p>Trævisning af strukturerede data:</p>
             <ul>
-                <li>Oprindelige JSON'er fra Manifest IIIF</li>
-                <li>Slægtsmetadata</li>
-                <li>Tekniske metadata (opløsning, formater, størrelser)</li>
-                <li>EXIF-metadata fra billeder</li>
+                <li>Interaktivt JSON-træ med udvidelse/sammenklappning af noder</li>
+                <li>Fil <code>_genealogico.json</code>: datoer, steder, navne, familierelationer</li>
+                <li>Fil <code>_tecnico.json</code>: opløsning, formater, dimensioner, kvalitet</li>
+                <li>EXIF-metadata for rekonstruerede billeder</li>
+                <li>Integreret visning koblet til Billedviseren</li>
             </ul>
-            <p><strong>Status:</strong> Planlagt til fremtidige versioner</p>
+            <p><strong>Status:</strong> ✅ Tilgængelig fra v2.0</p>
             <h4>4️⃣ AVANCERET OCR</h4>
             <p>Avanceret OCR-behandling:</p>
             <ul>

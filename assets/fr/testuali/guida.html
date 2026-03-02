@@ -351,7 +351,7 @@
             <h3>5. Traitement et téléchargement d'images</h3>
             <h3>6. PDF pour les registres et les documents</h3>
             <h3>7. Localisation multilingue</h3>
-            <h3>8. Menu Services - Fonctions Futures</h3>
+            <h3>8. Menu Services</h3>
             <h3>9. Dossiers et Fichiers de Sortie</h3>
             <h3>10. Menu Documents - Accès aux ressources et au support</h3>
             <h3>11. Clôture du Programme et Soutien au Projet</h3>
@@ -362,29 +362,44 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>SYSTÈME D'EXPLOITATION</h4>
             <ul>
-                <li>Windows 10 ou version ultérieure (Professional, Home, Server)</li>
-                <li>64 bits obligatoire</li>
+                <li><strong>Windows :</strong> Windows 10 ou version ultérieure (64 bits) — Professional, Home, Server</li>
+                <li><strong>Linux :</strong> Ubuntu 20.04+ ou distributions compatibles (paquet .deb ou archive .tar.gz)</li>
+                <li><strong>macOS :</strong> macOS 11 Big Sur ou version ultérieure — distribution .dmg (tests sur matériel réel en cours)</li>
+                <li>64 bits obligatoire sur toutes les plateformes</li>
                 <li>Au moins 2 Go de RAM disponibles (4 Go recommandés pour le traitement par lots)</li>
                 <li>1 Go d'espace disque libre</li>
             </ul>
             <h4>INSTALLATION</h4>
-            <h3>1. Télécharger : ATK-Pro-Setup-v2.0.exe depuis les dépôts officiels</h3>
-            <h3>2. Double-cliquez sur le fichier d'installation</h3>
-            <h3>3. Sélectionnez « Exécuter en tant qu'administrateur », si demandé</h3>
-            <h3>4. Suivez l'assistant (Suivant → Suivant → Installer)</h3>
-            <h3>5. Pendant l'installation, la sélection de la langue vous sera demandée :</h3>
-            <ul>
-                <li>Choisissez la langue souhaitée parmi 20 options disponibles</li>
-                <li>Cette langue est stockée dans le Registre Windows</li>
-                <li>Elle est chargée automatiquement à chaque démarrage du programme</li>
-            </ul>
-            <h3>6. À la fin, cochez « Démarrer ATK-Pro » pour lancer le programme</h3>
-            <h3>7. Acceptez les éventuels avertissements du Pare-feu/Défenseur Windows</h3>
+            <h4>🪟 Windows</h4>
+            <ol>
+                <li>Télécharger : <code>ATK-Pro-Setup-v2.0.exe</code> depuis les dépôts officiels</li>
+                <li>Double-cliquer sur le fichier d'installation</li>
+                <li>Sélectionner « Exécuter en tant qu'administrateur » si demandé</li>
+                <li>Suivre l'assistant (Suivant → Suivant → Installer)</li>
+                <li>Pendant l'installation, choisir la langue parmi 20 options disponibles</li>
+                <li>À la fin, cocher « Démarrer ATK-Pro »</li>
+                <li>Accepter les avertissements du Pare-feu/Défenseur Windows</li>
+            </ol>
+            <h4>🐧 Linux</h4>
+            <ol>
+                <li>Télécharger : <code>ATK-Pro-v2.0.deb</code> (ou <code>.tar.gz</code>)</li>
+                <li><code>.deb</code> : <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li><code>.tar.gz</code> : Décompresser dans <code>/opt/ATK-Pro/</code> et exécuter <code>./ATK-Pro</code></li>
+                <li>Choisir la langue au premier démarrage parmi 20 options</li>
+            </ol>
+            <h4>🍎 macOS</h4>
+            <ol>
+                <li>Télécharger : <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Ouvrir le <code>.dmg</code> et glisser <code>ATK-Pro.app</code> dans le dossier <em>Applications</em></li>
+                <li>Au premier démarrage : clic droit → Ouvrir, accepter l'avertissement Gatekeeper</li>
+                <li>Choisir la langue parmi 20 options</li>
+            </ol>
             <h4>POSITIONS PAR DÉFAUT</h4>
             <ul>
-                <li>Programme : C:\Program Files\ATK-Pro\</li>
-                <li>Sortie utilisateur : C:\Users\[VotreNom]\Documents\ATK-Pro\output\</li>
-                <li>C:\Users\[TonNom]\Documents\ATK-Pro\input\</li>
+            <li><strong>Windows :</strong> Programme : <code>C:\Program Files\ATK-Pro\</code></li>
+            <li><strong>Windows :</strong> Sortie : <code>C:\Users\[VotreNom]\Documents\ATK-Pro\output\</code></li>
+            <li><strong>Linux :</strong> Programme : <code>/opt/ATK-Pro/</code> — Sortie : <code>~/Documents/ATK-Pro/output/</code></li>
+            <li><strong>macOS :</strong> Programme : <code>/Applications/ATK-Pro.app</code> — Sortie : <code>~/Documents/ATK-Pro/output/</code></li>
             </ul>
             <h4>EXIGENCES RÉSEAU</h4>
             <ul>
@@ -426,15 +441,16 @@
             <p>avec lesquelles, sur la base des données disponibles fin 2025, on estime pouvoir couvrir environ 98 % des descendants d'Italiens et des communautés italiennes ou italophones dispersées dans le monde.</p>
             <ul>
                 <li>La langue est choisie PENDANT l'installation (elle fait partie du processus d'installation)</li>
-                <li>Elle est stockée dans le Registre Windows et chargée automatiquement</li>
+                                <li><strong>Windows :</strong> Stockée dans le Registre Windows<br><strong>Linux/macOS :</strong> Stockée dans le fichier de configuration utilisateur — chargée automatiquement</li>
                 <li>Peut être modifiée à tout moment via Menu → Paramètres → Changer de langue</li>
                 <li>Le programme nécessite un redémarrage pour appliquer la nouvelle langue sélectionnée</li>
             </ul>
             <h4>📂 CONFIGURATION DES DOSSIERS</h4>
             <p>Lors de la première exécution, le programme crée :</p>
             <ul>
-                <li>C:\Users\[TonNom]\Documents\ATK-Pro\output\     (fichiers traités)</li>
-                <li>C:\Users\[VotreNom]\Documents\ATK-Pro\input\      (facultatif, pour le fichier d'entrée)</li>
+                <li><strong>Windows :</strong> <code>C:\Users\[VotreNom]\Documents\ATK-Pro\output\</code> (fichiers traités)</li>
+                <li><strong>Linux/macOS :</strong> <code>~/Documents/ATK-Pro/output/</code> (fichiers traités)</li>
+                <li>Dossier <code>input/</code> correspondant (facultatif)</li>
             </ul>
             <p>Pendant le traitement, des dossiers temporaires sont créés pour les tuiles téléchargées (tiles_canvas_X/).
             </p>
@@ -877,12 +893,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. MENU SERVICES - FONCTIONNALITÉS FUTURES</h3>
+            <h3>8. MENU SERVICES</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>PLACEHOLDER POUR DES DÉVELOPPEMENTS FUTURS</h4>
-            <p>Le menu « Services » contient 6 boutons qui affichent « Fonction en cours de développement ».</p>
-            <p>Ce sont des espaces réservés pour des fonctionnalités prévues dans les futures versions d'ATK-Pro.</p>
-            <p>Les 6 fonctions prévues sont :</p>
+            <h4>FONCTIONNALITÉS DISPONIBLES ET PLANIFIÉES</h4>
+            <p>Le menu « Services » contient 6 boutons. <strong>2 fonctions sont déjà disponibles à partir de la v2.0</strong>, les 4 autres sont prévues pour les futures versions.
+            </p>
+            <p>Les 6 fonctions sont :</p>
             <h4>1️⃣ INTÉGRATION API PORTAIL ANTENATI</h4>
             <p>Intégration du « niveau d'API » avec le portail Antenati :</p>
             <ul>
@@ -891,24 +907,26 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Synchronisation des données avec les archives centrales</li>
             </ul>
             <p><strong>Statut :</strong> Prévu pour les futures versions</p>
-            <h4>2️⃣ VISUALISATION DES IMAGES</h4>
-            <p>Visionneuse d'images téléchargées :</p>
+            <h4>2️⃣ VISUALISATION DES IMAGES ✅</h4>
+            <p>Visionneuse d'images intégrée :</p>
             <ul>
-                <li>Visualisation des images téléchargées depuis le portail Antenati</li>
-                <li>Visualisation des PDF générés par ATK-Pro</li>
-                <li>Zoom/Pan interactifs</li>
-                <li>Annotations et marqueurs</li>
+                <li>Formats supportés : JPG, PNG, TIFF (images reconstruites par ATK-Pro)</li>
+                <li>Zoom et défilement interactifs</li>
+                <li>Mode ajustement fenêtre (Fit Window) et affichage 1:1</li>
+                <li>Navigation entre les Canvas du même enregistrement</li>
+                <li>Affichage du fichier JSON sidecar associé (métadonnées EXIF)</li>
             </ul>
-            <p><strong>Statut :</strong> Prévu pour les futures versions</p>
-            <h4>3️⃣ VISUALISATION DES MÉTADONNÉES JSON</h4>
-            <p>Visualiseur de données structurées :</p>
+            <p><strong>Statut :</strong> ✅ Disponible à partir de v2.0</p>
+            <h4>3️⃣ VISUALISATION DES MÉTADONNÉES JSON ✅</h4>
+            <p>Visualiseur de données structurées en arborescence :</p>
             <ul>
-                <li>JSON originaux du Manifeste IIIF</li>
-                <li>Métadonnées généalogiques</li>
-                <li>Métadonnées techniques (résolution, formats, tailles)</li>
-                <li>Métadonnées EXIF des images</li>
+                <li>Arborescence JSON interactive avec expansion/réduction des nœuds</li>
+                <li>Fichier <code>_genealogico.json</code> : dates, lieux, noms, relations familiales</li>
+                <li>Fichier <code>_tecnico.json</code> : résolution, formats, dimensions, qualité</li>
+                <li>Métadonnées EXIF des images reconstruites</li>
+                <li>Visualisation intégrée couplée à la Visionneuse d'Images</li>
             </ul>
-            <p><strong>Statut :</strong> Prévu pour les futures versions</p>
+            <p><strong>Statut :</strong> ✅ Disponible à partir de v2.0</p>
             <h4>4️⃣ OCR AVANCÉ</h4>
             <p>Traitement OCR avancé :</p>
             <ul>

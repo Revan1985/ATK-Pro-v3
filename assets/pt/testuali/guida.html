@@ -351,7 +351,7 @@
             <h3>5. Processamento e Download de Imagens</h3>
             <h3>6. PDF para Registos e Documentos</h3>
             <h3>7. Localização Multilíngue</h3>
-            <h3>8. Menu Serviços - Funções Futuras</h3>
+            <h3>8. Menu Serviços</h3>
             <h3>9. Pastas e Arquivos de Saída</h3>
             <h3>10. Menu Documentos - Acesso a Recursos e Suporte</h3>
             <h3>11. Encerramento do Programa e Suporte ao Projeto</h3>
@@ -362,29 +362,44 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>SISTEMA OPERACIONAL</h4>
             <ul>
-                <li>Windows 10 ou posterior (Professional, Home, Server)</li>
-                <li>64 bits obrigatório</li>
+                <li><strong>Windows:</strong> Windows 10 ou posterior (64 bits) — Professional, Home, Server</li>
+                <li><strong>Linux:</strong> Ubuntu 20.04+ ou distribuições compatíveis (pacote .deb ou arquivo .tar.gz)</li>
+                <li><strong>macOS:</strong> macOS 11 Big Sur ou posterior — distribuição .dmg (testes em hardware real em andamento)</li>
+                <li>64 bits obrigatório em todas as plataformas</li>
                 <li>Pelo menos 2 GB de RAM disponíveis (4 GB recomendados para processamento em lote)</li>
                 <li>1 GB de espaço livre em disco</li>
             </ul>
             <h4>INSTALAÇÃO</h4>
-            <h3>1. Baixar: ATK-Pro-Setup-v2.0.exe dos repositórios oficiais</h3>
-            <h3>2. Clique duas vezes no arquivo instalador</h3>
-            <h3>3. Selecione "Executar como administrador", se solicitado</h3>
-            <h3>4. Siga o assistente (Next → Next → Install)</h3>
-            <h3>5. Durante a instalação, será solicitada a seleção do idioma:</h3>
-            <ul>
-                <li>Escolha o idioma desejado entre 20 opções disponíveis</li>
-                <li>Esta língua é armazenada no Registro do Windows</li>
-                <li>É carregado automaticamente a cada inicialização do programa</li>
-            </ul>
-            <h3>6. No final, selecione "Iniciar ATK-Pro" para iniciar o programa</h3>
-            <h3>7. Aceite quaisquer avisos do Firewall/Windows Defender</h3>
+            <h4>🪟 Windows</h4>
+            <ol>
+                <li>Baixar: <code>ATK-Pro-Setup-v2.0.exe</code> dos repositórios oficiais</li>
+                <li>Clicar duas vezes no arquivo instalador</li>
+                <li>Selecionar "Executar como administrador" se solicitado</li>
+                <li>Seguir o assistente (Avançar → Avançar → Instalar)</li>
+                <li>Durante a instalação, escolher o idioma entre 20 opções disponíveis</li>
+                <li>No final, marcar "Iniciar ATK-Pro"</li>
+                <li>Aceitar avisos do Firewall/Windows Defender</li>
+            </ol>
+            <h4>🐧 Linux</h4>
+            <ol>
+                <li>Baixar: <code>ATK-Pro-v2.0.deb</code> (ou <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li><code>.tar.gz</code>: Descompactar em <code>/opt/ATK-Pro/</code> e executar <code>./ATK-Pro</code></li>
+                <li>Escolher o idioma no primeiro início entre 20 opções</li>
+            </ol>
+            <h4>🍎 macOS</h4>
+            <ol>
+                <li>Baixar: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Abrir o <code>.dmg</code> e arrastar <code>ATK-Pro.app</code> para a pasta <em>Aplicativos</em></li>
+                <li>No primeiro início: clique com o botão direito → Abrir, aceitar aviso do Gatekeeper</li>
+                <li>Escolher o idioma entre 20 opções</li>
+            </ol>
             <h4>POSIÇÕES PADRÃO</h4>
             <ul>
-                <li>Programa: C:\Program Files\ATK-Pro\</li>
-                <li>Saída do usuário: C:\Users\[SeuNome]\Documents\ATK-Pro\output\</li>
-                <li>Entrada (opcional): C:\Users\[SeuNome]\Documents\ATK-Pro\input\</li>
+            <li><strong>Windows:</strong> Programa: <code>C:\Program Files\ATK-Pro\</code></li>
+            <li><strong>Windows:</strong> Saída: <code>C:\Users\[SeuNome]\Documents\ATK-Pro\output\</code></li>
+            <li><strong>Linux:</strong> Programa: <code>/opt/ATK-Pro/</code> — Saída: <code>~/Documents/ATK-Pro/output/</code></li>
+            <li><strong>macOS:</strong> Programa: <code>/Applications/ATK-Pro.app</code> — Saída: <code>~/Documents/ATK-Pro/output/</code></li>
             </ul>
             <h4>REQUISITOS DE REDE</h4>
             <ul>
@@ -426,15 +441,16 @@
             <p>com as quais, com base nos dados disponíveis no final de 2025, estima-se que se possa cobrir cerca de 98% dos descendentes de italianos e das comunidades italianas ou italófonas espalhadas pelo mundo.</p>
             <ul>
                 <li>A língua é escolhida DURANTE a instalação (faz parte do processo do instalador)</li>
-                <li>É armazenado no Registro do Windows e carregado automaticamente</li>
+                                <li><strong>Windows:</strong> Armazenado no Registro do Windows<br><strong>Linux/macOS:</strong> Armazenado no arquivo de configuração do usuário — carregado automaticamente</li>
                 <li>Pode ser alterada a qualquer momento através de Menu → Configurações → Alterar idioma</li>
                 <li>O programa requer uma reinicialização para aplicar o novo idioma selecionado</li>
             </ul>
             <h4>📂 CONFIGURAÇÃO DE PASTAS</h4>
             <p>Na primeira execução, o programa cria:</p>
             <ul>
-                <li>C:\Users\[SeuNome]\Documents\ATK-Pro\output\     (arquivos processados)</li>
-                <li>C:\Users\[SeuNome]\Documents\ATK-Pro\input\ (opcional, para arquivo de entrada)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[SeuNome]\Documents\ATK-Pro\output\</code> (arquivos processados)</li>
+                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (arquivos processados)</li>
+                <li>Pasta <code>input/</code> correspondente (opcional)</li>
             </ul>
             <p>Durante o processamento, são criadas pastas temporárias para os blocos descarregados (tiles_canvas_X/).
             </p>
@@ -877,12 +893,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. MENU SERVIÇOS - FUNÇÕES FUTURAS</h3>
+            <h3>8. MENU SERVIÇOS</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>MARCADOR PARA DESENVOLVIMENTOS FUTUROS</h4>
-            <p>O menu "Serviços" contém 6 botões que exibem "Função em desenvolvimento".</p>
-            <p>Estes são espaços reservados para funcionalidades planeadas em futuras versões do ATK-Pro.</p>
-            <p>As 6 funções planejadas são:</p>
+            <h4>FUNCIONALIDADES DISPONÍVEIS E PLANEJADAS</h4>
+            <p>O menu "Serviços" contém 6 botões. <strong>2 funções já estão disponíveis a partir da v2.0</strong>, as outras 4 estão previstas para versões futuras.
+            </p>
+            <p>As 6 funções são:</p>
             <h4>1️⃣ INTEGRAÇÃO API PORTAL ANTENATI</h4>
             <p>Integração "nível API" com o Portal Antenati:</p>
             <ul>
@@ -891,24 +907,26 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Sincronização de dados com arquivos centrais</li>
             </ul>
             <p><strong>Status:</strong> Planejado para versões futuras</p>
-            <h4>2️⃣ VISUALIZAÇÃO DE IMAGENS</h4>
-            <p>Visualizador de imagens baixadas:</p>
+            <h4>2️⃣ VISUALIZAÇÃO DE IMAGENS ✅</h4>
+            <p>Visualizador de imagens integrado:</p>
             <ul>
-                <li>Visualização de imagens baixadas do Portal Antenati</li>
-                <li>Visualização de PDFs gerados pelo ATK-Pro</li>
-                <li>Zoom/Pan interativos</li>
-                <li>Anotações e marcadores</li>
+                <li>Formatos suportados: JPG, PNG, TIFF (imagens reconstruídas pelo ATK-Pro)</li>
+                <li>Zoom e panorâmica interativos</li>
+                <li>Modo ajuste de janela (Fit Window) e visualização 1:1</li>
+                <li>Navegação entre os Canvas do mesmo registro</li>
+                <li>Exibição do arquivo JSON sidecar associado (metadados EXIF)</li>
             </ul>
-            <p><strong>Status:</strong> Planejado para versões futuras</p>
-            <h4>3️⃣ VISUALIZAÇÃO DE METADADOS JSON</h4>
-            <p>Visualizador de dados estruturados:</p>
+            <p><strong>Status:</strong> ✅ Disponível a partir da v2.0</p>
+            <h4>3️⃣ VISUALIZAÇÃO DE METADADOS JSON ✅</h4>
+            <p>Visualizador de dados estruturados em árvore:</p>
             <ul>
-                <li>JSON originais do Manifest IIIF</li>
-                <li>Metadados genealógicos</li>
-                <li>Metadados técnicos (resolução, formatos, tamanhos)</li>
-                <li>Metadados EXIF de imagens</li>
+                <li>Árvore JSON interativa com expansão/recolhimento de nós</li>
+                <li>Arquivo <code>_genealogico.json</code>: datas, locais, nomes, relações familiares</li>
+                <li>Arquivo <code>_tecnico.json</code>: resolução, formatos, dimensões, qualidade</li>
+                <li>Metadados EXIF das imagens reconstruídas</li>
+                <li>Visualização integrada acoplada ao Visualizador de Imagens</li>
             </ul>
-            <p><strong>Status:</strong> Planejado para versões futuras</p>
+            <p><strong>Status:</strong> ✅ Disponível a partir da v2.0</p>
             <h4>4️⃣ OCR AVANÇADO</h4>
             <p>Tratamento OCR avançado:</p>
             <ul>

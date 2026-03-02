@@ -351,7 +351,7 @@
             <h3>5. Prelucrare și Descărcare Imagini</h3>
             <h3>6. PDF pentru registre și documente</h3>
             <h3>7. Localizare multilingvă</h3>
-            <h3>8. Meniu Servicii - Funcții Viitoare</h3>
+            <h3>8. Meniu Servicii</h3>
             <h3>9. Dosare și Fișiere de Ieșire</h3>
             <h3>10. Meniu Documente - Acces la Resurse și Suport</h3>
             <h3>11. Încheierea Programului și Suport pentru Proiect</h3>
@@ -362,29 +362,44 @@
             <p>────────────────────────────────────────────────────────────────────────────────</p>
             <h4>SISTEM OPERATIV</h4>
             <ul>
-                <li>Windows 10 sau ulterior (Professional, Home, Server)</li>
-                <li>64-bit obligatoriu</li>
+                <li><strong>Windows:</strong> Windows 10 sau o versiune ulterioară (64 biți) — Professional, Home, Server</li>
+                <li><strong>Linux:</strong> Ubuntu 20.04+ sau distribuții compatibile (pachet .deb sau arhivă .tar.gz)</li>
+                <li><strong>macOS:</strong> macOS 11 Big Sur sau o versiune ulterioară — distribuție .dmg (testele pe hardware real sunt în curs)</li>
+                <li>64 de biți obligatoriu pe toate platformele</li>
                 <li>Cel puțin 2 GB de RAM disponibili (4 GB recomandați pentru procesare în lot)</li>
                 <li>1 GB spațiu liber pe disc</li>
             </ul>
             <h4>INSTALARE</h4>
-            <h3>1. Descarcă: ATK-Pro-Setup-v2.0.exe din depozitele oficiale</h3>
-            <h3>2. Faceți dublu clic pe fișierul de instalare</h3>
-            <h3>3. Selectați „Executare ca administrator”, dacă este necesar</h3>
-            <h3>4. Urmați expertul (Next → Next → Install)</h3>
-            <h3>5. În timpul instalării, vi se va solicita să selectați limba:</h3>
-            <ul>
-                <li>Alegeți limba dorită din cele 20 de opțiuni disponibile</li>
-                <li>Această limbă este memorată în registrul Windows</li>
-                <li>Se încarcă automat la fiecare pornire a programului</li>
-            </ul>
-            <h3>6. La final, apăsați „Start ATK-Pro” pentru a porni programul</h3>
-            <h3>7. Acceptați orice avertisment al Windows Firewall/Defender</h3>
+            <h4>🪟 Windows</h4>
+            <ol>
+                <li>Descarcă: <code>ATK-Pro-Setup-v2.0.exe</code> din depozitele oficiale</li>
+                <li>Faceți dublu clic pe fișierul de instalare</li>
+                <li>Selectați „Executare ca administrator" dacă este necesar</li>
+                <li>Urmați asistentul (Următorul → Următorul → Instalare)</li>
+                <li>Alegeți limba în timpul instalării din 20 de opțiuni disponibile</li>
+                <li>La final, bifați „Pornire ATK-Pro"</li>
+                <li>Acceptați notificările de la Paravanul de protecție Windows/Defender</li>
+            </ol>
+            <h4>🐧 Linux</h4>
+            <ol>
+                <li>Descarcă: <code>ATK-Pro-v2.0.deb</code> (sau <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li><code>.tar.gz</code>: Dezarhivați în <code>/opt/ATK-Pro/</code> și rulați <code>./ATK-Pro</code></li>
+                <li>Alegeți limba la prima pornire din 20 de opțiuni</li>
+            </ol>
+            <h4>🍎 macOS</h4>
+            <ol>
+                <li>Descarcă: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Deschideți <code>.dmg</code> și trageți <code>ATK-Pro.app</code> în folderul <em>Aplicații</em></li>
+                <li>La prima pornire: clic dreapta → Deschidere, acceptați avertismentul Gatekeeper</li>
+                <li>Alegeți limba din 20 de opțiuni</li>
+            </ol>
             <h4>POZIȚII IMPLICITE</h4>
             <ul>
-                <li>Program: C:\Program Files\ATK-Pro\</li>
-                <li>Ieșire utilizator: C:\Users\[NumeleTău]\Documents\ATK-Pro\output\</li>
-                <li>Intrare (opțional): C:\Users\[NumeleTău]\Documents\ATK-Pro\input\</li>
+            <li><strong>Windows:</strong> Program: <code>C:\Program Files\ATK-Pro\</code></li>
+            <li><strong>Windows:</strong> Ieșire: <code>C:\Users\[NumeleTău]\Documents\ATK-Pro\output\</code></li>
+            <li><strong>Linux:</strong> Program: <code>/opt/ATK-Pro/</code> — Ieșire: <code>~/Documents/ATK-Pro/output/</code></li>
+            <li><strong>macOS:</strong> Program: <code>/Applications/ATK-Pro.app</code> — Ieșire: <code>~/Documents/ATK-Pro/output/</code></li>
             </ul>
             <h4>CERINȚE DE REȚEA</h4>
             <ul>
@@ -426,15 +441,16 @@
             <p>cu care, pe baza datelor disponibile la sfârșitul anului 2025, se estimează că se va putea acoperi aproximativ 98% dintre descendenții italieni și comunitățile italiene sau italofone răspândite în lume.</p>
             <ul>
                 <li>Limba este aleasă ÎN TIMPUL instalării (este parte a procesului de instalare)</li>
-                <li>Este stocată în registrul Windows și încărcată automat</li>
+                                <li><strong>Windows:</strong> Stocat în Registrul Windows<br><strong>Linux/macOS:</strong> Stocat în fișierul de configurare al utilizatorului — încărcat automat</li>
                 <li>Poate fi schimbată oricând prin Meniu → Setări → Schimbă limba</li>
                 <li>Programul necesită o repornire pentru a aplica noua limbă selectată</li>
             </ul>
             <h4>📂 CONFIGURARE FOLDERE</h4>
             <p>La prima execuție, programul creează:</p>
             <ul>
-                <li>C:\Users\[NumeleTău]\Documents\ATK-Pro\output\     (fișiere procesate)</li>
-                <li>C:\Users\[NumeleTău]\Documents\ATK-Pro\input\ (opțional, pentru fișierul de intrare)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[NumeleTău]\Documents\ATK-Pro\output\</code> (fișiere procesate)</li>
+                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (fișiere procesate)</li>
+                <li>Dosarul <code>input/</code> corespunzător (opțional)</li>
             </ul>
             <p>În timpul procesării, sunt create foldere temporare pentru plăcile descărcate (tiles_canvas_X/).
             </p>
@@ -877,12 +893,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
             </div>
             <div class="section-box">
-            <h3>8. MENIU SERVICII - FUNCȚII VIITOARE</h3>
+            <h3>8. MENIU SERVICII</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>REZERVAT PENTRU DEZVOLTĂRI VIITOARE</h4>
-            <p>Meniul „Servicii” conține 6 butoane care afișează „Funcție în curs de dezvoltare”.</p>
-            <p>Acestea sunt spații rezervate pentru funcționalități planificate în versiunile viitoare ale ATK-Pro.</p>
-            <p>Cele 6 funcții planificate sunt:</p>
+            <h4>FUNCȚIONALITĂȚI DISPONIBILE ȘI PLANIFICATE</h4>
+            <p>Meniul „Servicii" conține 6 butoane. <strong>2 funcții sunt deja disponibile din v2.0</strong>, celelalte 4 sunt planificate pentru versiunile viitoare.
+            </p>
+            <p>Cele 6 funcții sunt:</p>
             <h4>1️⃣ INTEGRARE API PORTAL ANTENATI</h4>
             <p>Integrare „nivel API” cu Portalul Antenati:</p>
             <ul>
@@ -891,24 +907,26 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Sincronizarea datelor cu arhivele centrale</li>
             </ul>
             <p><strong>Status:</strong> Planificat pentru versiuni viitoare</p>
-            <h4>2️⃣ VIZUALIZARE IMAGINI</h4>
-            <p>Vizualizator pentru imagini descărcate:</p>
+            <h4>2️⃣ VIZUALIZARE IMAGINI ✅</h4>
+            <p>Vizualizator de imagini integrat:</p>
             <ul>
-                <li>Vizualizare imagini descărcate de pe Portalul Antenati</li>
-                <li>Vizualizare PDF generată de ATK-Pro</li>
-                <li>Zoom/Pan interactiv</li>
-                <li>Adnotări și marcaje</li>
+                <li>Formate suportate: JPG, PNG, TIFF (imagini reconstruite de ATK-Pro)</li>
+                <li>Zoom și panoramare interactive</li>
+                <li>Mod ajustare fereastră (Fit Window) și vizualizare 1:1</li>
+                <li>Navigare între Canvas-urile aceluiași registru</li>
+                <li>Afișarea fișierului JSON sidecar asociat (metadate EXIF)</li>
             </ul>
-            <p><strong>Status:</strong> Planificat pentru versiuni viitoare</p>
-            <h4>3️⃣ VIZUALIZARE METADATE JSON</h4>
-            <p>Vizualizator pentru date structurate:</p>
+            <p><strong>Status:</strong> ✅ Disponibil de la v2.0</p>
+            <h4>3️⃣ VIZUALIZARE METADATE JSON ✅</h4>
+            <p>Vizualizare arborescentă a datelor structurate:</p>
             <ul>
-                <li>JSON-uri originale din Manifestul IIIF</li>
-                <li>Metadate genealogice</li>
-                <li>Metadate tehnice (rezoluție, formate, dimensiuni)</li>
-                <li>Metadate EXIF din imagini</li>
+                <li>Arbore JSON interactiv cu extindere/restrângere de noduri</li>
+                <li>Fișier <code>_genealogico.json</code>: date, locuri, nume, relații de familie</li>
+                <li>Fișier <code>_tecnico.json</code>: rezoluție, formate, dimensiuni, calitate</li>
+                <li>Metadate EXIF ale imaginilor reconstruite</li>
+                <li>Vizualizare integrată cuplată cu Vizualizatorul de Imagini</li>
             </ul>
-            <p><strong>Status:</strong> Planificat pentru versiuni viitoare</p>
+            <p><strong>Status:</strong> ✅ Disponibil de la v2.0</p>
             <h4>4️⃣ OCR AVANSAT</h4>
             <p>Tratament OCR avansat:</p>
             <ul>
