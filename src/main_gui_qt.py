@@ -2295,40 +2295,27 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path,
                         url = raw if raw.startswith("http") else None
                         if url:
                             logging.debug(f"Apro PayPal URL: {url}")
-                            import platform, subprocess
+                            # webbrowser.open è il metodo più affidabile su tutte
+                            # le piattaforme: Python gestisce internamente xdg-open
+                            # con l'ambiente di sessione corretto (DBUS incluso).
+                            # subprocess.Popen(["xdg-open",...]) può fallire
+                            # silenziosamente se DBUS_SESSION_BUS_ADDRESS non è
+                            # ereditato, e non permette di rilevare il fallimento
+                            # (Popen ritorna subito con exit 0 anche se xdg-open poi
+                            # non riesce ad aprire nulla).
+                            import webbrowser
                             opened = False
-                            # Linux: xdg-open PRIMA (QDesktopServices può
-                            # restituire True anche quando non apre nulla
-                            # in ambienti senza DISPLAY/WAYLAND_DISPLAY)
-                            if platform.system() == "Linux":
-                                try:
-                                    env = os.environ.copy()
-                                    # Assicura che DISPLAY o WAYLAND_DISPLAY siano impostati
-                                    if not env.get("DISPLAY") and not env.get("WAYLAND_DISPLAY"):
-                                        env["DISPLAY"] = ":0"
-                                    subprocess.Popen(
-                                        ["xdg-open", url],
-                                        env=env,
-                                        stdout=subprocess.DEVNULL,
-                                        stderr=subprocess.DEVNULL
-                                    )
-                                    opened = True
-                                    logging.debug("PayPal: aperto con xdg-open")
-                                except Exception as e:
-                                    logging.debug(f"xdg-open fallito: {e}")
-                            # Windows/macOS (o Linux se xdg-open fallisce): QDesktopServices
+                            try:
+                                webbrowser.open(url)
+                                opened = True
+                                logging.debug("PayPal: aperto con webbrowser.open")
+                            except Exception as e:
+                                logging.debug(f"webbrowser.open fallito: {e}")
+                            # Fallback: QDesktopServices
                             if not opened:
                                 try:
                                     opened = QDesktopServices.openUrl(QUrl(url))
                                     logging.debug(f"PayPal: QDesktopServices -> {opened}")
-                                except Exception as e:
-                                    logging.debug(f"QDesktopServices fallito: {e}")
-                            # Fallback universale
-                            if not opened:
-                                import webbrowser
-                                try:
-                                    webbrowser.open(url)
-                                    logging.debug("PayPal: aperto con webbrowser")
                                 except Exception as e:
                                     logging.warning(f"Impossibile aprire URL PayPal: {e}")
 
@@ -2434,6 +2421,20 @@ def main():
                 lingua = scegli_lingua(glossario_data_tmp, "en")
                 _write_config_language(lingua)
                 logging.debug(f"Linux/macOS primo avvio: lingua scelta: {lingua}")
+
+        # Installazione GUI (.deb via GDebi/GNOME Software/etc.): il preinst
+        # scrive il flag pending-disclaimer e non mostra nulla sullo schermo.
+        # Al primo avvio qui forziamo la selezione lingua esplicita da parte
+        # dell'utente, indipendentemente dal default di sistema impostato dal postinst.
+        _PENDING_FLAG_EARLY = "/var/lib/atk-pro/pending-disclaimer"
+        if (not primo_avvio
+                and sys.platform == "linux"
+                and os.path.exists(_PENDING_FLAG_EARLY)):
+            logging.debug("Pending-disclaimer flag rilevato: forzo selezione lingua prima del disclaimer")
+            glossario_data_tmp = carica_glossario(lingua)
+            lingua = scegli_lingua(glossario_data_tmp, lingua)
+            _write_config_language(lingua)
+            logging.debug(f"Lingua scelta dopo installazione GUI: {lingua}")
 
     else:
         # Modalità sviluppo: stessa logica Linux/macOS (config file per primo avvio)
