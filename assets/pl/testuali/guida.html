@@ -1222,7 +1222,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>3. Jeśli chcesz ponownie przetworzyć ten sam rekord, zachowaj plik manifest.json</h3>
             <h4>🔵 P: Nagłe awarie - co robić?</h4>
             <p><strong>R:</strong> Jeśli program się zawiesza:</p>
-            <h3>1. Sprawdź Logi: Documents\ATK-Pro\output\logs\*</h3>
+            <h3>1. Sprawdź Logi:
+                <ul>
+                    <li><strong>Windows:</strong> <code>Documents\ATK-Pro\output\logs\*</code></li>
+                    <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/logs/*</code></li>
+                </ul>
+            </h3>
             <h3>2. Skopiuj komunikat o błędzie (CTRL+C na komunikacie)</h3>
             <h3>3. Uruchom ponownie program (często rozwiązuje problem)</h3>
             <h3>4. Jeśli awarie się powtarzają, spróbuj na innym rekordzie IIIF (może to być problem z manifestem, a nie z ATK-Pro)</h3>

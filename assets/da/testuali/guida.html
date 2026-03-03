@@ -1222,7 +1222,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>3. Hvis du vil omarbejde den samme post, skal du beholde manifest.json</h3>
             <h4>🔵 Pludselige nedbrud - hvad skal man gøre?</h4>
             <p><strong>R:</strong> Hvis programmet crasher:</p>
-            <h3>1. Tjek logfiler: Documents\ATK-Pro\output\logs\*</h3>
+            <h3>1. Tjek logfiler:
+                <ul>
+                    <li><strong>Windows:</strong> <code>Documents\ATK-Pro\output\logs\*</code></li>
+                    <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/logs/*</code></li>
+                </ul>
+            </h3>
             <h3>2. Kopier fejlmeddelelse (CTRL+C på meddelelsen)</h3>
             <h3>3. Genstart programmet (løser ofte problemet)</h3>
             <h3>4. Hvis crashet gentager sig, prøv en anden IIIF-record (det kan være et problem med manifestet, ikke med ATK-Pro)</h3>
