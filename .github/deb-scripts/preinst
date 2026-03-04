@@ -4,28 +4,30 @@ set -e
 # -----------------------------------------------------------------------
 # Strategia disclaimer:
 #
-# 1. PERCORSO NORMALE (debconf disponibile):
-#    Il file config ha gia' chiesto l'accettazione via debconf prima di
-#    arrivare qui. Se l'utente ha risposto "No" (o l'installer usa il
-#    frontend noninteractive, es. GNOME Software/PackageKit), il valore
-#    e' "false" e noi usciamo con exit 1 -> dpkg annulla l'installazione.
+# 1. PERCORSO INTERATTIVO (sudo dpkg -i, apt, GDebi):
+#    Il file config ha gia' chiesto lingua + accettazione via debconf.
+#    Se l'utente risponde "No" -> exit 1 -> dpkg annulla installazione.
 #
-#    - sudo dpkg -i / apt install  : prompt readline [S/n] su terminale
-#    - GDebi                       : dialog GTK Si'/No
-#    - GNOME Software (PackageKit) : noninteractive, default false -> FAIL
-#      (l'utente deve usare GDebi o terminale per installare)
+# 2. PERCORSO NONINTERACTIVE (Software Manager, Nemo double-click, etc.):
+#    Il config ha tentato zenity se DISPLAY disponibile.
+#    - Se l'utente ha accettato in zenity: accept-disclaimer=true -> OK
+#    - Se ha rifiutato, o non c'era display/zenity: rimane false -> exit 1
+#    -> In questo secondo caso il messaggio indica di usare il terminale.
 #
-# 2. FALLBACK (debconf non disponibile, caso rarissimo):
-#    Scrivi pending-disclaimer flag: al primo avvio l'app mostra
-#    il disclaimer e, se rifiutato, chiude senza lasciare configurazione.
+# 3. FALLBACK (debconf non disponibile, caso rarissimo):
+#    Scrivi pending-disclaimer flag (app mostra disclaimer al primo avvio).
 # -----------------------------------------------------------------------
 
 if [ "$1" = "install" ]; then
     if [ -f /usr/share/debconf/confmodule ]; then
         . /usr/share/debconf/confmodule
+
         db_get atk-pro/accept-disclaimer || RET="false"
-        if [ "$RET" != "true" ]; then
-            # Leggi la lingua scelta da config (fallback: en)
+        _ACCEPTED="$RET"
+
+        if [ "$_ACCEPTED" != "true" ]; then
+            # Disclaimer non accettato (rifiuto esplicito o noninteractive senza zenity).
+            # Blocca in tutti i casi: l'installazione non deve procedere.
             _LANG="en"
             if [ -f /tmp/atk-pro-install-lang ]; then
                 _LANG="$(cat /tmp/atk-pro-install-lang)"
@@ -128,14 +130,14 @@ if [ "$1" = "install" ]; then
                     echo "  Hashtemsh be-'sudo dpkg -i atk-pro_*.deb' o GDebi lehashlem." >&2
                     ;;
                 *)  # en e fallback
-                    echo "  ATK-Pro: installation cancelled." >&2
-                    echo "  You must accept the legal disclaimer to install ATK-Pro." >&2
-                    echo "  Use 'sudo dpkg -i atk-pro_*.deb' or GDebi to complete the installation." >&2
-                    ;;
-            esac
-            echo "" >&2
-            exit 1
-        fi
+                        echo "  ATK-Pro: installation cancelled." >&2
+                        echo "  You must accept the legal disclaimer to install ATK-Pro." >&2
+                        echo "  Use 'sudo dpkg -i atk-pro_*.deb' or GDebi to complete the installation." >&2
+                        ;;
+                esac
+                echo "" >&2
+                exit 1
+        fi  # end _ACCEPTED != true
     else
         # debconf non disponibile: fallback con pending flag
         mkdir -p /var/lib/atk-pro
