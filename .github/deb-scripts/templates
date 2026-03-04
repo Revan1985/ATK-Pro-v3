@@ -1,3 +1,22 @@
+Template: atk-pro/accept-disclaimer
+Type: boolean
+Default: false
+Description: Accettare il disclaimer legale di ATK-Pro?
+ ATK-Pro e' uno strumento di ricerca genealogica che accede al portale
+ Antenati del Ministero della Cultura italiano.
+ .
+ L'uso e' soggetto alle note legali del Ministero della Cultura:
+ https://antenati.cultura.gov.it/note-legali/
+ .
+ I documenti inclusi non hanno valore certificativo o legale.
+ L'interfaccia facilita la consultazione autonoma senza connessione
+ a servizi esterni.
+ .
+ Per il testo completo del disclaimer legale, vedere:
+ /usr/share/doc/atk-pro/disclaimer_legale_ATK-Pro.txt
+ .
+ Accetti il disclaimer legale e i termini di utilizzo di ATK-Pro?
+
 Template: atk-pro/language
 Type: select
 Choices: it, en, es, de, fr, pt, nl, ar, he, ru, da, el, ja, no, pl, ro, sv, tr, vi, zh

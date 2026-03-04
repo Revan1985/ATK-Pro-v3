@@ -2,28 +2,49 @@
 set -e
 
 # -----------------------------------------------------------------------
-# Strategia disclaimer e selezione lingua:
+# Strategia disclaimer:
 #
-# Il disclaimer e la selezione lingua vengono sempre mostrati al primo
-# avvio dell'applicazione tramite interfaccia grafica Qt nativa.
+# 1. PERCORSO NORMALE (debconf disponibile):
+#    Il file config ha gia' chiesto l'accettazione via debconf prima di
+#    arrivare qui. Se l'utente ha risposto "No" (o l'installer usa il
+#    frontend noninteractive, es. GNOME Software/PackageKit), il valore
+#    e' "false" e noi usciamo con exit 1 -> dpkg annulla l'installazione.
 #
-# Questo approccio garantisce il corretto funzionamento con qualsiasi
-# metodo di installazione:
-#   - GDebi, GNOME Software, Discover, Ubuntu Software Center
-#   - sudo dpkg -i / sudo apt install (terminale)
-#   - PackageKit, Synaptic, qualsiasi frontend APT
+#    - sudo dpkg -i / apt install  : prompt readline [S/n] su terminale
+#    - GDebi                       : dialog GTK Si'/No
+#    - GNOME Software (PackageKit) : noninteractive, default false -> FAIL
+#      (l'utente deve usare GDebi o terminale per installare)
 #
-# GDebi e altri installer GUI allocano una pseudo-TTY per gli script
-# di pacchetto: un approccio interattivo su /dev/tty risulterebbe
-# invisibile all'utente (visibile solo nel pannello "Dettagli").
+# 2. FALLBACK (debconf non disponibile, caso rarissimo):
+#    Scrivi pending-disclaimer flag: al primo avvio l'app mostra
+#    il disclaimer e, se rifiutato, chiude senza lasciare configurazione.
 # -----------------------------------------------------------------------
 
+if [ "$1" = "install" ]; then
+    if [ -f /usr/share/debconf/confmodule ]; then
+        . /usr/share/debconf/confmodule
+        db_get atk-pro/accept-disclaimer || RET="false"
+        if [ "$RET" != "true" ]; then
+            echo "" >&2
+            echo "  ATK-Pro: installazione annullata." >&2
+            echo "  E' necessario accettare il disclaimer legale per installare ATK-Pro." >&2
+            echo "  Usa 'sudo dpkg -i atk-pro_*.deb' oppure GDebi per completare l'installazione." >&2
+            echo "" >&2
+            exit 1
+        fi
+    else
+        # debconf non disponibile: fallback con pending flag
+        mkdir -p /var/lib/atk-pro
+        touch /var/lib/atk-pro/pending-disclaimer
+        chmod 0666 /var/lib/atk-pro/pending-disclaimer
+        chmod 0777 /var/lib/atk-pro
+    fi
+elif [ "$1" = "upgrade" ]; then
+    # Upgrade: non richiedere di nuovo l'accettazione
+    :
+fi
+
+# Lingua di default per postinst (l'utente sceglie al primo avvio)
 if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
-    # Scrivi flag: al primo avvio l'app mostra disclaimer e selezione lingua.
-    mkdir -p /var/lib/atk-pro
-    touch /var/lib/atk-pro/pending-disclaimer
-    chmod 0666 /var/lib/atk-pro/pending-disclaimer
-    chmod 0777 /var/lib/atk-pro
-    # Lingua di default per il postinst (l'utente potra cambiarla al primo avvio)
     printf 'en' > /tmp/atk-pro-install-lang
 fi

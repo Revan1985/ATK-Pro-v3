@@ -1,3 +1,12 @@
 #!/bin/sh
-# debconf config stub — interactive dialogs handled directly in preinst
-exit 0
+# debconf config: viene eseguito da dpkg PRIMA di preinst.
+# Chiede l'accettazione del disclaimer via debconf (readline su terminale,
+# dialog GTK su GDebi, dialog Qt su KDE). Solo per nuove installazioni.
+set -e
+. /usr/share/debconf/confmodule
+db_version 2.0
+
+if [ "$1" = "install" ]; then
+    db_input high atk-pro/accept-disclaimer || true
+    db_go || true
+fi
