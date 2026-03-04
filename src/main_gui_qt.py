@@ -2295,27 +2295,24 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path,
                         url = raw if raw.startswith("http") else None
                         if url:
                             logging.debug(f"Apro PayPal URL: {url}")
-                            # webbrowser.open è il metodo più affidabile su tutte
-                            # le piattaforme: Python gestisce internamente xdg-open
-                            # con l'ambiente di sessione corretto (DBUS incluso).
-                            # subprocess.Popen(["xdg-open",...]) può fallire
-                            # silenziosamente se DBUS_SESSION_BUS_ADDRESS non è
-                            # ereditato, e non permette di rilevare il fallimento
-                            # (Popen ritorna subito con exit 0 anche se xdg-open poi
-                            # non riesce ad aprire nulla).
-                            import webbrowser
+                            # QDesktopServices.openUrl è il metodo primario: usa la
+                            # piattaforma Qt nativa (xdg-open via D-Bus su Linux,
+                            # ShellExecute su Windows) e restituisce un bool affidabile.
+                            # webbrowser.open in bundle PyInstaller su Linux può
+                            # fallire silenziosamente perché non trova il browser
+                            # nell'ambiente del processo impacchettato.
                             opened = False
                             try:
-                                webbrowser.open(url)
-                                opened = True
-                                logging.debug("PayPal: aperto con webbrowser.open")
+                                opened = QDesktopServices.openUrl(QUrl(url))
+                                logging.debug(f"PayPal: QDesktopServices.openUrl -> {opened}")
                             except Exception as e:
-                                logging.debug(f"webbrowser.open fallito: {e}")
-                            # Fallback: QDesktopServices
+                                logging.debug(f"QDesktopServices fallito: {e}")
+                            # Fallback: webbrowser
                             if not opened:
                                 try:
-                                    opened = QDesktopServices.openUrl(QUrl(url))
-                                    logging.debug(f"PayPal: QDesktopServices -> {opened}")
+                                    import webbrowser
+                                    opened = bool(webbrowser.open(url))
+                                    logging.debug(f"PayPal: webbrowser.open -> {opened}")
                                 except Exception as e:
                                     logging.warning(f"Impossibile aprire URL PayPal: {e}")
 
@@ -2471,15 +2468,24 @@ def main():
     )
     if primo_avvio or _ha_flag_pendente:
         accettato = mostra_disclaimer(glossario_data, lingua)
-        if _ha_flag_pendente:
+        if _ha_flag_pendente and accettato:
+            # Rimuovi flag solo se accettato; se rifiutato rimane per il prossimo avvio
             try:
                 os.remove(_PENDING_FLAG)
                 logging.info("Flag pending-disclaimer rimosso dopo accettazione")
             except OSError as e:
                 logging.warning(f"Impossibile rimuovere flag pending-disclaimer: {e}")
-            if not accettato:
-                logging.warning("Disclaimer rifiutato → chiusura applicazione")
-                sys.exit(1)
+        if not accettato:
+            logging.warning("Disclaimer rifiutato → chiusura applicazione")
+            # Cancella lingua salvata: al prossimo avvio primo_avvio=True / flag ancora presente
+            try:
+                _cfg = _config_file_path()
+                if os.path.exists(_cfg):
+                    os.remove(_cfg)
+                    logging.info("Config lingua cancellata dopo rifiuto disclaimer")
+            except OSError as _e:
+                logging.warning(f"Impossibile cancellare config lingua: {_e}")
+            sys.exit(1)
 
     # Gestione chiusura con banner
     def on_close():
