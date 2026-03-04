@@ -25,10 +25,114 @@ if [ "$1" = "install" ]; then
         . /usr/share/debconf/confmodule
         db_get atk-pro/accept-disclaimer || RET="false"
         if [ "$RET" != "true" ]; then
+            # Leggi la lingua scelta da config (fallback: en)
+            _LANG="en"
+            if [ -f /tmp/atk-pro-install-lang ]; then
+                _LANG="$(cat /tmp/atk-pro-install-lang)"
+            fi
             echo "" >&2
-            echo "  ATK-Pro: installazione annullata." >&2
-            echo "  E' necessario accettare il disclaimer legale per installare ATK-Pro." >&2
-            echo "  Usa 'sudo dpkg -i atk-pro_*.deb' oppure GDebi per completare l'installazione." >&2
+            case "$_LANG" in
+                it)
+                    echo "  ATK-Pro: installazione annullata." >&2
+                    echo "  E' necessario accettare il disclaimer legale per installare ATK-Pro." >&2
+                    echo "  Usa 'sudo dpkg -i atk-pro_*.deb' oppure GDebi per completare l'installazione." >&2
+                    ;;
+                de)
+                    echo "  ATK-Pro: Installation abgebrochen." >&2
+                    echo "  Sie muessen den rechtlichen Haftungsausschluss akzeptieren, um ATK-Pro zu installieren." >&2
+                    echo "  Verwenden Sie 'sudo dpkg -i atk-pro_*.deb' oder GDebi, um die Installation abzuschliessen." >&2
+                    ;;
+                es)
+                    echo "  ATK-Pro: instalacion cancelada." >&2
+                    echo "  Debe aceptar el descargo de responsabilidad legal para instalar ATK-Pro." >&2
+                    echo "  Use 'sudo dpkg -i atk-pro_*.deb' o GDebi para completar la instalacion." >&2
+                    ;;
+                fr)
+                    echo "  ATK-Pro: installation annulee." >&2
+                    echo "  Vous devez accepter la clause de non-responsabilite pour installer ATK-Pro." >&2
+                    echo "  Utilisez 'sudo dpkg -i atk-pro_*.deb' ou GDebi pour completer l'installation." >&2
+                    ;;
+                pt)
+                    echo "  ATK-Pro: instalacao cancelada." >&2
+                    echo "  E necessario aceitar o aviso legal para instalar o ATK-Pro." >&2
+                    echo "  Use 'sudo dpkg -i atk-pro_*.deb' ou GDebi para concluir a instalacao." >&2
+                    ;;
+                nl)
+                    echo "  ATK-Pro: installatie geannuleerd." >&2
+                    echo "  U moet de juridische disclaimer accepteren om ATK-Pro te installeren." >&2
+                    echo "  Gebruik 'sudo dpkg -i atk-pro_*.deb' of GDebi om de installatie te voltooien." >&2
+                    ;;
+                ru)
+                    echo "  ATK-Pro: ustanovka otmenena." >&2
+                    echo "  Dlya ustanovki ATK-Pro neobkhodimo prinyat pravovuyu ogovorku." >&2
+                    echo "  Ispolzujte 'sudo dpkg -i atk-pro_*.deb' ili GDebi dlya zavershenia ustanovki." >&2
+                    ;;
+                da)
+                    echo "  ATK-Pro: installation annulleret." >&2
+                    echo "  Du skal acceptere den juridiske ansvarsfraskrivelse for at installere ATK-Pro." >&2
+                    echo "  Brug 'sudo dpkg -i atk-pro_*.deb' eller GDebi til at fuldfoere installationen." >&2
+                    ;;
+                el)
+                    echo "  ATK-Pro: egkatastasi akyrothike." >&2
+                    echo "  Prepei na apodechteite tin anakoinosi apopoiseis eythynis gia egkatastasi." >&2
+                    echo "  Chrisimopoiiste 'sudo dpkg -i atk-pro_*.deb' i GDebi." >&2
+                    ;;
+                ja)
+                    echo "  ATK-Pro: installation ga chyushi saremashita." >&2
+                    echo "  ATK-Pro wo install suru niwa houteki menzetsu jiko wo douri shite kudasai." >&2
+                    echo "  'sudo dpkg -i atk-pro_*.deb' matawa GDebi wo shiyou shite kudasai." >&2
+                    ;;
+                no)
+                    echo "  ATK-Pro: installasjon avbrutt." >&2
+                    echo "  Du ma godta den juridiske ansvarsfraskrivelsen for a installere ATK-Pro." >&2
+                    echo "  Bruk 'sudo dpkg -i atk-pro_*.deb' eller GDebi for a fullfoere installasjonen." >&2
+                    ;;
+                pl)
+                    echo "  ATK-Pro: instalacja anulowana." >&2
+                    echo "  Aby zainstalowac ATK-Pro, nalezy zaakceptowac zastrzezenie prawne." >&2
+                    echo "  Uzyj 'sudo dpkg -i atk-pro_*.deb' lub GDebi, aby zakonczyc instalacje." >&2
+                    ;;
+                ro)
+                    echo "  ATK-Pro: instalare anulata." >&2
+                    echo "  Trebuie sa acceptati declaratia legala pentru a instala ATK-Pro." >&2
+                    echo "  Folositi 'sudo dpkg -i atk-pro_*.deb' sau GDebi pentru a finaliza instalarea." >&2
+                    ;;
+                sv)
+                    echo "  ATK-Pro: installation avbruten." >&2
+                    echo "  Du maste acceptera den juridiska ansvarsfriskrivningen for att installera ATK-Pro." >&2
+                    echo "  Anvand 'sudo dpkg -i atk-pro_*.deb' eller GDebi for att slutfora installationen." >&2
+                    ;;
+                tr)
+                    echo "  ATK-Pro: kurulum iptal edildi." >&2
+                    echo "  ATK-Pro kurulumu icin yasal sorumluluk reddini kabul etmeniz gerekiyor." >&2
+                    echo "  Kurulumu tamamlamak icin 'sudo dpkg -i atk-pro_*.deb' veya GDebi kullanin." >&2
+                    ;;
+                vi)
+                    echo "  ATK-Pro: cai dat bi huy." >&2
+                    echo "  Ban phai chap nhan tuyen bo mien trach nhiem phap ly de cai dat ATK-Pro." >&2
+                    echo "  Su dung 'sudo dpkg -i atk-pro_*.deb' hoac GDebi de hoan tat cai dat." >&2
+                    ;;
+                zh)
+                    echo "  ATK-Pro: an zhuang yi qu xiao." >&2
+                    echo "  nin xu yao jie shou fa lv mian ze sheng ming cai neng an zhuang ATK-Pro." >&2
+                    echo "  qing shi yong 'sudo dpkg -i atk-pro_*.deb' huo GDebi wan cheng an zhuang." >&2
+                    ;;
+                ar)
+                    echo "  ATK-Pro: tamma ilgha al-tathbit." >&2
+                    echo "  Yajib an tuwafiqa ala ikhla al-masouliyya al-qanuniyya lil-tathbit." >&2
+                    echo "  Istakhdim 'sudo dpkg -i atk-pro_*.deb' aw GDebi li-ikmal al-tathbit." >&2
+                    ;;
+                he)
+                    echo "  ATK-Pro: hahatkata butla." >&2
+                    echo "  Yesh lekabel et ktvat hahavtara hamishpatit kedei lehatkhin et ATK-Pro." >&2
+                    echo "  Hashtemsh be-'sudo dpkg -i atk-pro_*.deb' o GDebi lehashlem." >&2
+                    ;;
+                *)  # en e fallback
+                    echo "  ATK-Pro: installation cancelled." >&2
+                    echo "  You must accept the legal disclaimer to install ATK-Pro." >&2
+                    echo "  Use 'sudo dpkg -i atk-pro_*.deb' or GDebi to complete the installation." >&2
+                    ;;
+            esac
             echo "" >&2
             exit 1
         fi
@@ -44,7 +148,8 @@ elif [ "$1" = "upgrade" ]; then
     :
 fi
 
-# Lingua di default per postinst (l'utente sceglie al primo avvio)
-if [ "$1" = "install" ] || [ "$1" = "upgrade" ]; then
+# Lingua di default per postinst (scritta da config durante install;
+# durante upgrade impostiamo 'en' come fallback se il file non esiste)
+if [ "$1" = "upgrade" ] && [ ! -f /tmp/atk-pro-install-lang ]; then
     printf 'en' > /tmp/atk-pro-install-lang
 fi

@@ -1,12 +1,48 @@
 #!/bin/sh
 # debconf config: viene eseguito da dpkg PRIMA di preinst.
-# Chiede l'accettazione del disclaimer via debconf (readline su terminale,
-# dialog GTK su GDebi, dialog Qt su KDE). Solo per nuove installazioni.
+# 1. Chiede la lingua di installazione
+# 2. Imposta LANG/LC_ALL per quella lingua (debconf sceglie la Description localizzata)
+# 3. Chiede l'accettazione del disclaimer nella lingua selezionata
 set -e
 . /usr/share/debconf/confmodule
 db_version 2.0
 
 if [ "$1" = "install" ]; then
+    # --- Passo 1: scelta lingua ---
+    db_input high atk-pro/language || true
+    db_go || true
+
+    db_get atk-pro/language
+    LANG_CHOSEN="${RET:-en}"
+    # Salva la lingua per preinst e postinst
+    printf '%s' "$LANG_CHOSEN" > /tmp/atk-pro-install-lang
+
+    # --- Passo 2: imposta locale per traduzione disclaimer ---
+    case "$LANG_CHOSEN" in
+        ar)  export LANG=ar_SA.UTF-8 ;;
+        da)  export LANG=da_DK.UTF-8 ;;
+        de)  export LANG=de_DE.UTF-8 ;;
+        el)  export LANG=el_GR.UTF-8 ;;
+        es)  export LANG=es_ES.UTF-8 ;;
+        fr)  export LANG=fr_FR.UTF-8 ;;
+        he)  export LANG=he_IL.UTF-8 ;;
+        it)  export LANG=it_IT.UTF-8 ;;
+        ja)  export LANG=ja_JP.UTF-8 ;;
+        nl)  export LANG=nl_NL.UTF-8 ;;
+        no)  export LANG=nb_NO.UTF-8 ;;
+        pl)  export LANG=pl_PL.UTF-8 ;;
+        pt)  export LANG=pt_PT.UTF-8 ;;
+        ro)  export LANG=ro_RO.UTF-8 ;;
+        ru)  export LANG=ru_RU.UTF-8 ;;
+        sv)  export LANG=sv_SE.UTF-8 ;;
+        tr)  export LANG=tr_TR.UTF-8 ;;
+        vi)  export LANG=vi_VN.UTF-8 ;;
+        zh)  export LANG=zh_CN.UTF-8 ;;
+        *)   export LANG=en_US.UTF-8 ;;
+    esac
+    export LC_ALL="$LANG"
+
+    # --- Passo 3: mostra disclaimer nella lingua scelta ---
     db_input high atk-pro/accept-disclaimer || true
     db_go || true
 fi
