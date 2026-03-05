@@ -64,22 +64,45 @@ if [ "$1" = "install" ]; then
                 _LOGIN_USER=$(find /home -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1 | xargs basename 2>/dev/null)
             fi
 
-            # --- Rilevamento DISPLAY/XAUTHORITY ---
-            _DISP=""; _XAUTH=""
+            # --- Rilevamento DISPLAY/XAUTHORITY/DBUS/XDG_RUNTIME_DIR ---
+            _DISP=""; _XAUTH=""; _DBUS=""; _XDG_RT=""
 
-            # Da /proc: filtra per utente per evitare falsi positivi
+            # Da /proc: cerca per nome processo noto, estrae tutte le var di sessione
             if [ -n "$_LOGIN_USER" ]; then
-                for _prog in cinnamon gnome-shell plasmashell xfce4-session openbox kwin_x11 muffin; do
+                for _prog in cinnamon gnome-shell plasmashell xfce4-session openbox kwin_x11 muffin \
+                             cinnamon-session mate-session lxsession xfwm4 i3 sway openbox; do
                     _pid=$(pgrep -u "$_LOGIN_USER" -x "$_prog" 2>/dev/null | head -1)
                     [ -z "$_pid" ] && continue
                     _penv=$(tr '\0' '\n' < /proc/$_pid/environ 2>/dev/null)
-                    [ -z "$_DISP" ]  && _DISP=$(printf '%s\n' "$_penv"  | grep '^DISPLAY='    | head -1 | cut -d= -f2-)
-                    [ -z "$_XAUTH" ] && _XAUTH=$(printf '%s\n' "$_penv" | grep '^XAUTHORITY=' | head -1 | cut -d= -f2-)
+                    [ -z "$_DISP" ]   && _DISP=$(printf '%s\n' "$_penv"   | grep '^DISPLAY='                  | head -1 | cut -d= -f2-)
+                    [ -z "$_XAUTH" ]  && _XAUTH=$(printf '%s\n' "$_penv"  | grep '^XAUTHORITY='              | head -1 | cut -d= -f2-)
+                    [ -z "$_DBUS" ]   && _DBUS=$(printf '%s\n' "$_penv"   | grep '^DBUS_SESSION_BUS_ADDRESS=' | head -1 | cut -d= -f2-)
+                    [ -z "$_XDG_RT" ] && _XDG_RT=$(printf '%s\n' "$_penv" | grep '^XDG_RUNTIME_DIR='         | head -1 | cut -d= -f2-)
                     [ -n "$_DISP" ] && break
                 done
             fi
 
-            # Fallback: :0 (la grande maggioranza dei sistemi single-user Xorg)
+            # Fallback comprensivo: scan di tutti i processi dell'utente
+            if [ -z "$_DISP" ] && [ -n "$_LOGIN_USER" ]; then
+                _uid=$(id -u "$_LOGIN_USER" 2>/dev/null) || true
+                if [ -n "$_uid" ]; then
+                    for _pid in $(ls /proc 2>/dev/null | grep '^[0-9]'); do
+                        [ -f "/proc/$_pid/environ" ] || continue
+                        _owner=$(awk '/^Uid:/{print $2; exit}' /proc/$_pid/status 2>/dev/null) || continue
+                        [ "$_owner" = "$_uid" ] || continue
+                        _penv=$(tr '\0' '\n' < /proc/$_pid/environ 2>/dev/null) || continue
+                        _d=$(printf '%s\n' "$_penv" | grep '^DISPLAY=' | head -1 | cut -d= -f2-)
+                        [ -z "$_d" ] && continue
+                        _DISP="$_d"
+                        [ -z "$_XAUTH" ]  && _XAUTH=$(printf '%s\n' "$_penv"  | grep '^XAUTHORITY='              | head -1 | cut -d= -f2-)
+                        [ -z "$_DBUS" ]   && _DBUS=$(printf '%s\n' "$_penv"   | grep '^DBUS_SESSION_BUS_ADDRESS=' | head -1 | cut -d= -f2-)
+                        [ -z "$_XDG_RT" ] && _XDG_RT=$(printf '%s\n' "$_penv" | grep '^XDG_RUNTIME_DIR='         | head -1 | cut -d= -f2-)
+                        break
+                    done
+                fi
+            fi
+
+            # Fallback: :0
             [ -z "$_DISP" ] && _DISP=":0"
 
             # Fallback XAUTHORITY: ~/.Xauthority
@@ -88,13 +111,24 @@ if [ "$1" = "install" ]; then
                 [ -n "$_UHOME" ] && [ -f "$_UHOME/.Xauthority" ] && _XAUTH="$_UHOME/.Xauthority"
             fi
 
+            # Fallback DBUS e XDG_RUNTIME_DIR via UID
+            if [ -z "$_uid" ] && [ -n "$_LOGIN_USER" ]; then
+                _uid=$(id -u "$_LOGIN_USER" 2>/dev/null) || true
+            fi
+            if [ -n "$_uid" ]; then
+                [ -z "$_DBUS" ]   && [ -S "/run/user/$_uid/bus" ] && _DBUS="unix:path=/run/user/$_uid/bus"
+                [ -z "$_XDG_RT" ] && [ -d "/run/user/$_uid" ]    && _XDG_RT="/run/user/$_uid"
+            fi
+
             if [ -n "$_LOGIN_USER" ] && command -v zenity >/dev/null 2>&1; then
                 # ---- Selezione lingua utente (in noninteractive config l'ha saltata) ----
                 _TMPSH_LANG=$(mktemp /tmp/atk-pro-lang-XXXXXX.sh)
                 {
                     printf '#!/bin/sh\n'
                     printf 'export DISPLAY="%s"\n' "$_DISP"
-                    [ -n "$_XAUTH" ] && printf 'export XAUTHORITY="%s"\n' "$_XAUTH"
+                    [ -n "$_XAUTH" ]  && printf 'export XAUTHORITY="%s"\n'              "$_XAUTH"
+                    [ -n "$_DBUS" ]   && printf 'export DBUS_SESSION_BUS_ADDRESS="%s"\n' "$_DBUS"
+                    [ -n "$_XDG_RT" ] && printf 'export XDG_RUNTIME_DIR="%s"\n'         "$_XDG_RT"
                     printf 'exec zenity --list --radiolist'
                     printf ' --title="ATK-Pro - Select Language / Seleziona Lingua"'
                     printf ' --column="" --column="Code" --column="Language"'
@@ -190,7 +224,9 @@ if [ "$1" = "install" ]; then
                 {
                     printf '#!/bin/sh\n'
                     printf 'export DISPLAY="%s"\n' "$_DISP"
-                    [ -n "$_XAUTH" ] && printf 'export XAUTHORITY="%s"\n' "$_XAUTH"
+                    [ -n "$_XAUTH" ]  && printf 'export XAUTHORITY="%s"\n'              "$_XAUTH"
+                    [ -n "$_DBUS" ]   && printf 'export DBUS_SESSION_BUS_ADDRESS="%s"\n' "$_DBUS"
+                    [ -n "$_XDG_RT" ] && printf 'export XDG_RUNTIME_DIR="%s"\n'         "$_XDG_RT"
                     printf 'exec zenity --text-info'
                     printf ' --title="ATK-Pro Legal Disclaimer"'
                     printf ' --filename="%s"' "$_TMPDISC"
