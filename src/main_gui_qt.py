@@ -2292,29 +2292,61 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path,
                 def apri_paypal():
                     if os.path.exists(paypal_url_path):
                         raw = carica_testo_asset(paypal_url_path).strip()
-                        url = raw if raw.startswith("http") else None
-                        if url:
-                            logging.debug(f"Apro PayPal URL: {url}")
-                            # QDesktopServices.openUrl è il metodo primario: usa la
-                            # piattaforma Qt nativa (xdg-open via D-Bus su Linux,
-                            # ShellExecute su Windows) e restituisce un bool affidabile.
-                            # webbrowser.open in bundle PyInstaller su Linux può
-                            # fallire silenziosamente perché non trova il browser
-                            # nell'ambiente del processo impacchettato.
-                            opened = False
+                        # Supporta sia plain URL che formato INI Windows (.url)
+                        url = None
+                        for line in raw.splitlines():
+                            s = line.strip()
+                            if s.upper().startswith("URL="):
+                                url = s[4:].strip()
+                                break
+                        if not url and raw.startswith("http"):
+                            url = raw.split()[0]
+                        if not url:
+                            logging.warning("PayPal: URL non trovato nel file")
+                            return
+                        logging.debug(f"Apro PayPal URL: {url}")
+                        opened = False
+                        # Su Linux: subprocess con env pulito (PyInstaller sovrascrive
+                        # LD_LIBRARY_PATH; xdg-open ereditando le lib bundle può crashare).
+                        # PyInstaller salva il valore originale in LD_LIBRARY_PATH_ORIG.
+                        try:
+                            import platform
+                            import subprocess
+                            if platform.system() == "Linux":
+                                _env = dict(os.environ)
+                                _orig = _env.pop("LD_LIBRARY_PATH_ORIG", None)
+                                if _orig is not None:
+                                    _env["LD_LIBRARY_PATH"] = _orig
+                                else:
+                                    _env.pop("LD_LIBRARY_PATH", None)
+                                subprocess.Popen(
+                                    ["xdg-open", url], env=_env,
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                                )
+                                opened = True
+                            elif platform.system() == "Darwin":
+                                subprocess.Popen(
+                                    ["open", url],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                                )
+                                opened = True
+                        except Exception as e:
+                            logging.debug(f"PayPal subprocess fallito: {e}")
+                        # Fallback: QDesktopServices (Windows + fallback Linux)
+                        if not opened:
                             try:
                                 opened = QDesktopServices.openUrl(QUrl(url))
                                 logging.debug(f"PayPal: QDesktopServices.openUrl -> {opened}")
                             except Exception as e:
                                 logging.debug(f"QDesktopServices fallito: {e}")
-                            # Fallback: webbrowser
-                            if not opened:
-                                try:
-                                    import webbrowser
-                                    opened = bool(webbrowser.open(url))
-                                    logging.debug(f"PayPal: webbrowser.open -> {opened}")
-                                except Exception as e:
-                                    logging.warning(f"Impossibile aprire URL PayPal: {e}")
+                        # Fallback finale: webbrowser
+                        if not opened:
+                            try:
+                                import webbrowser
+                                opened = bool(webbrowser.open(url))
+                                logging.debug(f"PayPal: webbrowser.open -> {opened}")
+                            except Exception as e:
+                                logging.warning(f"Impossibile aprire URL PayPal: {e}")
 
                 # QPushButton flat: 'clicked' è un segnale Qt nativo e sempre
                 # affidabile (QLabel.mousePressEvent in PySide6 non intercetta
