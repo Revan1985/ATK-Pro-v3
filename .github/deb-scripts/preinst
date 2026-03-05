@@ -26,8 +26,72 @@ if [ "$1" = "install" ]; then
         _ACCEPTED="$RET"
 
         if [ "$_ACCEPTED" != "true" ]; then
-            # Disclaimer non accettato (rifiuto esplicito o noninteractive senza zenity).
-            # Blocca in tutti i casi: l'installazione non deve procedere.
+            # ----------------------------------------------------------------
+            # Il disclaimer non e' stato accettato via debconf (tipicamente
+            # perche' il frontend e' noninteractive: Software Manager, doppio
+            # click). Proviamo a mostrare zenity come utente della sessione
+            # desktop, rilevando DISPLAY/XAUTHORITY da /proc.
+            # ----------------------------------------------------------------
+            _ZENITY_ACCEPTED=0
+
+            # Trova l'utente loggato con sessione grafica
+            _LOGIN_USER=""
+            _u=$(who 2>/dev/null | grep '(:' | awk 'NR==1{print $1}')
+            [ -n "$_u" ] && _LOGIN_USER="$_u"
+            if [ -z "$_LOGIN_USER" ]; then
+                for _prog in cinnamon gnome-shell plasmashell xfce4-session openbox; do
+                    _pid=$(pgrep -x "$_prog" 2>/dev/null | head -1)
+                    [ -z "$_pid" ] && continue
+                    _uid=$(awk '/^Uid:/{print $2}' /proc/$_pid/status 2>/dev/null)
+                    [ -z "$_uid" ] && continue
+                    _LOGIN_USER=$(getent passwd "$_uid" 2>/dev/null | cut -d: -f1)
+                    [ -n "$_LOGIN_USER" ] && break
+                done
+            fi
+
+            # Trova DISPLAY e XAUTHORITY dai processi della sessione desktop
+            _DISP=""; _XAUTH=""
+            for _prog in cinnamon gnome-shell plasmashell xfce4-session openbox kwin_x11; do
+                _pid=$(pgrep -x "$_prog" 2>/dev/null | head -1)
+                [ -z "$_pid" ] && continue
+                _penv=$(tr '\0' '\n' < /proc/$_pid/environ 2>/dev/null)
+                [ -z "$_DISP" ]  && _DISP=$(printf '%s' "$_penv"  | grep '^DISPLAY='     | head -1 | cut -d= -f2-)
+                [ -z "$_XAUTH" ] && _XAUTH=$(printf '%s' "$_penv" | grep '^XAUTHORITY='  | head -1 | cut -d= -f2-)
+                [ -n "$_DISP" ] && break
+            done
+            # Fallback XAUTHORITY: ~/.Xauthority dell'utente
+            if [ -z "$_XAUTH" ] && [ -n "$_LOGIN_USER" ]; then
+                _UHOME=$(getent passwd "$_LOGIN_USER" 2>/dev/null | cut -d: -f6)
+                [ -n "$_UHOME" ] && [ -f "$_UHOME/.Xauthority" ] && _XAUTH="$_UHOME/.Xauthority"
+            fi
+
+            if [ -n "$_LOGIN_USER" ] && [ -n "$_DISP" ] && command -v zenity >/dev/null 2>&1; then
+                # Ottieni il testo del disclaimer da debconf e scrivilo su file temp
+                _TMPDISC=$(mktemp /tmp/atk-pro-disc-XXXXXX.txt)
+                db_metaget atk-pro/accept-disclaimer description          2>/dev/null \
+                    && printf '%s\n\n' "$RET" > "$_TMPDISC" || true
+                db_metaget atk-pro/accept-disclaimer extended_description  2>/dev/null \
+                    && printf '%s\n' "$RET" | sed 's/^ \.$//; s/^ //' >> "$_TMPDISC" || true
+                [ ! -s "$_TMPDISC" ] && printf 'ATK-Pro Legal Disclaimer\n\nSee:\nhttps://github.com/DanielePigoli/ATK-Pro-v2\n' > "$_TMPDISC"
+                chmod 644 "$_TMPDISC"
+
+                _ZENITY_CMD="DISPLAY='$_DISP'"
+                [ -n "$_XAUTH" ] && _ZENITY_CMD="$_ZENITY_CMD XAUTHORITY='$_XAUTH'"
+                _ZENITY_CMD="$_ZENITY_CMD zenity --text-info"
+                _ZENITY_CMD="$_ZENITY_CMD --title='ATK-Pro Legal Disclaimer'"
+                _ZENITY_CMD="$_ZENITY_CMD --filename='$_TMPDISC'"
+                _ZENITY_CMD="$_ZENITY_CMD --ok-label='Accept / Accetto'"
+                _ZENITY_CMD="$_ZENITY_CMD --cancel-label='Decline / Rifiuto'"
+                _ZENITY_CMD="$_ZENITY_CMD --width=750 --height=600"
+
+                if su "$_LOGIN_USER" -c "$_ZENITY_CMD" 2>/dev/null; then
+                    _ZENITY_ACCEPTED=1
+                fi
+                rm -f "$_TMPDISC"
+            fi
+
+            if [ "$_ZENITY_ACCEPTED" = "0" ]; then
+            # Disclaimer non accettato o impossibile mostrare: blocca installazione
             _LANG="en"
             if [ -f /tmp/atk-pro-install-lang ]; then
                 _LANG="$(cat /tmp/atk-pro-install-lang)"
@@ -137,6 +201,7 @@ if [ "$1" = "install" ]; then
                 esac
                 echo "" >&2
                 exit 1
+            fi  # end _ZENITY_ACCEPTED = 0
         fi  # end _ACCEPTED != true
     else
         # debconf non disponibile: fallback con pending flag

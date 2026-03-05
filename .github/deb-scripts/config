@@ -1,98 +1,48 @@
 #!/bin/sh
 # debconf config: viene eseguito da dpkg PRIMA di preinst.
-#
-# Frontend INTERATTIVO (sudo dpkg -i, apt, GDebi):
-#   1. Chiede lingua  2. Imposta LANG/LC_ALL  3. Mostra disclaimer localizzato
-#
-# Frontend NONINTERACTIVE (Linux Mint Software Manager, PackageKit, doppio click):
-#   Se DISPLAY e zenity disponibili -> finestra grafica di accettazione.
-#   Altrimenti -> lascia accept-disclaimer=false -> preinst blocca con exit 1.
+# Chiede lingua e disclaimer via debconf (funziona con terminale e GDebi).
+# Per frontend noninteractive (Software Manager / doppio click), le db_input
+# sono silenziosamente ignorate; preinst gestira' il disclaimer tramite zenity
+# rilevando DISPLAY direttamente dai processi della sessione desktop.
 set -e
 . /usr/share/debconf/confmodule
 db_version 2.0
 
-# Rileva il frontend corrente
-_FRONTEND="${DEBIAN_FRONTEND:-}"
-if [ -z "$_FRONTEND" ]; then
-    db_get debconf/frontend 2>/dev/null && _FRONTEND="${RET:-interactive}" || _FRONTEND="interactive"
-fi
-
 if [ "$1" = "install" ]; then
+    # Selezione lingua (silenziosa se frontend noninteractive)
+    db_input high atk-pro/language || true
+    db_go || true
 
-    if [ "$_FRONTEND" = "noninteractive" ]; then
-        # ----------------------------------------------------------------
-        # NONINTERACTIVE: il Software Manager non mostra dialog debconf.
-        # Tenta zenity se c'e' un display disponibile.
-        # ----------------------------------------------------------------
-        _HAS_DISPLAY=0
-        [ -n "${DISPLAY:-}" ]          && _HAS_DISPLAY=1
-        [ -n "${WAYLAND_DISPLAY:-}" ]  && _HAS_DISPLAY=1
+    db_get atk-pro/language
+    LANG_CHOSEN="${RET:-en}"
+    printf '%s' "$LANG_CHOSEN" > /tmp/atk-pro-install-lang
 
-        if [ "$_HAS_DISPLAY" = "1" ] && command -v zenity >/dev/null 2>&1; then
-            # Recupera il testo del disclaimer dai template debconf
-            db_metaget atk-pro/accept-disclaimer description         2>/dev/null && _TITLE="${RET}"  || _TITLE="ATK-Pro Legal Disclaimer"
-            db_metaget atk-pro/accept-disclaimer extended_description 2>/dev/null && _BODY="${RET}"   || _BODY=""
-            # Pulisce la formattazione debconf (righe con spazio iniziale, " ." -> riga vuota)
-            _CLEAN_BODY="$(printf '%s' "$_BODY" | sed 's/^ \.$/\n/; s/^ //')"
+    # Imposta locale per traduzione disclaimer debconf
+    case "$LANG_CHOSEN" in
+        ar)  export LANG=ar_SA.UTF-8 ;;
+        da)  export LANG=da_DK.UTF-8 ;;
+        de)  export LANG=de_DE.UTF-8 ;;
+        el)  export LANG=el_GR.UTF-8 ;;
+        es)  export LANG=es_ES.UTF-8 ;;
+        fr)  export LANG=fr_FR.UTF-8 ;;
+        he)  export LANG=he_IL.UTF-8 ;;
+        it)  export LANG=it_IT.UTF-8 ;;
+        ja)  export LANG=ja_JP.UTF-8 ;;
+        nl)  export LANG=nl_NL.UTF-8 ;;
+        no)  export LANG=nb_NO.UTF-8 ;;
+        pl)  export LANG=pl_PL.UTF-8 ;;
+        pt)  export LANG=pt_PT.UTF-8 ;;
+        ro)  export LANG=ro_RO.UTF-8 ;;
+        ru)  export LANG=ru_RU.UTF-8 ;;
+        sv)  export LANG=sv_SE.UTF-8 ;;
+        tr)  export LANG=tr_TR.UTF-8 ;;
+        vi)  export LANG=vi_VN.UTF-8 ;;
+        zh)  export LANG=zh_CN.UTF-8 ;;
+        *)   export LANG=en_US.UTF-8 ;;
+    esac
+    export LC_ALL="$LANG"
 
-            # Scrive su file temporaneo per zenity --text-info
-            _TMPDISC="$(mktemp /tmp/atk-pro-disclaimer-XXXXXX.txt)"
-            printf '%s\n\n%s' "$_TITLE" "$_CLEAN_BODY" > "$_TMPDISC"
-
-            if zenity --text-info \
-                --title="ATK-Pro - Legal Disclaimer" \
-                --filename="$_TMPDISC" \
-                --ok-label="Accept / Accetto" \
-                --cancel-label="Decline / Rifiuto" \
-                --width=750 --height=600 2>/dev/null; then
-                db_set atk-pro/accept-disclaimer true
-            fi
-            rm -f "$_TMPDISC"
-            # Se rifiutato o chiuso: rimane false -> preinst blocca con exit 1
-        fi
-        # Se no display o no zenity: rimane false -> preinst blocca
-        # con messaggio che indica di usare il terminale o GDebi
-
-    else
-        # ----------------------------------------------------------------
-        # INTERATTIVO: chiedi lingua, poi disclaimer localizzato
-        # ----------------------------------------------------------------
-
-        # --- Passo 1: scelta lingua ---
-        db_input high atk-pro/language || true
-        db_go || true
-
-        db_get atk-pro/language
-        LANG_CHOSEN="${RET:-en}"
-        printf '%s' "$LANG_CHOSEN" > /tmp/atk-pro-install-lang
-
-        # --- Passo 2: imposta locale per traduzione disclaimer ---
-        case "$LANG_CHOSEN" in
-            ar)  export LANG=ar_SA.UTF-8 ;;
-            da)  export LANG=da_DK.UTF-8 ;;
-            de)  export LANG=de_DE.UTF-8 ;;
-            el)  export LANG=el_GR.UTF-8 ;;
-            es)  export LANG=es_ES.UTF-8 ;;
-            fr)  export LANG=fr_FR.UTF-8 ;;
-            he)  export LANG=he_IL.UTF-8 ;;
-            it)  export LANG=it_IT.UTF-8 ;;
-            ja)  export LANG=ja_JP.UTF-8 ;;
-            nl)  export LANG=nl_NL.UTF-8 ;;
-            no)  export LANG=nb_NO.UTF-8 ;;
-            pl)  export LANG=pl_PL.UTF-8 ;;
-            pt)  export LANG=pt_PT.UTF-8 ;;
-            ro)  export LANG=ro_RO.UTF-8 ;;
-            ru)  export LANG=ru_RU.UTF-8 ;;
-            sv)  export LANG=sv_SE.UTF-8 ;;
-            tr)  export LANG=tr_TR.UTF-8 ;;
-            vi)  export LANG=vi_VN.UTF-8 ;;
-            zh)  export LANG=zh_CN.UTF-8 ;;
-            *)   export LANG=en_US.UTF-8 ;;
-        esac
-        export LC_ALL="$LANG"
-
-        # --- Passo 3: mostra disclaimer nella lingua scelta ---
-        db_input high atk-pro/accept-disclaimer || true
-        db_go || true
-    fi
+    # Disclaimer via debconf (silenzioso se noninteractive)
+    db_input high atk-pro/accept-disclaimer || true
+    db_go || true
 fi
