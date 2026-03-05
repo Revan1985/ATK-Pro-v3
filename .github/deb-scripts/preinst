@@ -126,9 +126,9 @@ if [ "$1" = "install" ]; then
 
                 _CHOSEN_LANG=""
                 if command -v runuser >/dev/null 2>&1; then
-                    _CHOSEN_LANG=$(runuser -u "$_LOGIN_USER" -- /bin/sh "$_TMPSH_LANG" 2>/dev/null)
+                    _CHOSEN_LANG=$(runuser -u "$_LOGIN_USER" -- /bin/sh "$_TMPSH_LANG" 2>/dev/null) || true
                 else
-                    _CHOSEN_LANG=$(su "$_LOGIN_USER" -s /bin/sh -- "$_TMPSH_LANG" 2>/dev/null)
+                    _CHOSEN_LANG=$(su "$_LOGIN_USER" -s /bin/sh -- "$_TMPSH_LANG" 2>/dev/null) || true
                 fi
                 rm -f "$_TMPSH_LANG"
 
