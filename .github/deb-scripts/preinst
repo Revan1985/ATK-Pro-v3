@@ -27,46 +27,69 @@ if [ "$1" = "install" ]; then
 
         if [ "$_ACCEPTED" != "true" ]; then
             # ----------------------------------------------------------------
-            # Il disclaimer non e' stato accettato via debconf (tipicamente
-            # perche' il frontend e' noninteractive: Software Manager, doppio
-            # click). Proviamo a mostrare zenity come utente della sessione
-            # desktop, rilevando DISPLAY/XAUTHORITY da /proc.
+            # Il disclaimer non e' stato accettato via debconf (frontend
+            # noninteractive: Software Manager, doppio click su .deb).
+            # Proviamo a mostrare zenity come utente della sessione desktop.
             # ----------------------------------------------------------------
             _ZENITY_ACCEPTED=0
 
-            # Trova l'utente loggato con sessione grafica
+            # --- Rilevamento utente ---
             _LOGIN_USER=""
-            _u=$(who 2>/dev/null | grep '(:' | awk 'NR==1{print $1}')
-            [ -n "$_u" ] && _LOGIN_USER="$_u"
+
+            # Metodo 1: loginctl (systemd, affidabile su Mint/Ubuntu moderni)
+            if command -v loginctl >/dev/null 2>&1; then
+                _LOGIN_USER=$(loginctl list-sessions --no-legend 2>/dev/null | \
+                    awk 'NF>=4 && $4!="root" && $4!="" {print $4; exit}')
+            fi
+
+            # Metodo 2: who
             if [ -z "$_LOGIN_USER" ]; then
-                for _prog in cinnamon gnome-shell plasmashell xfce4-session openbox; do
+                _LOGIN_USER=$(who 2>/dev/null | awk 'NR==1{print $1}')
+            fi
+
+            # Metodo 3: proprietario del processo compositor (filtra per utente)
+            if [ -z "$_LOGIN_USER" ]; then
+                for _prog in cinnamon gnome-shell plasmashell xfce4-session openbox muffin; do
                     _pid=$(pgrep -x "$_prog" 2>/dev/null | head -1)
                     [ -z "$_pid" ] && continue
                     _uid=$(awk '/^Uid:/{print $2}' /proc/$_pid/status 2>/dev/null)
-                    [ -z "$_uid" ] && continue
+                    [ -z "$_uid" ] || [ "$_uid" = "0" ] && continue
                     _LOGIN_USER=$(getent passwd "$_uid" 2>/dev/null | cut -d: -f1)
                     [ -n "$_LOGIN_USER" ] && break
                 done
             fi
 
-            # Trova DISPLAY e XAUTHORITY dai processi della sessione desktop
+            # Metodo 4: prima directory in /home
+            if [ -z "$_LOGIN_USER" ]; then
+                _LOGIN_USER=$(find /home -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1 | xargs basename 2>/dev/null)
+            fi
+
+            # --- Rilevamento DISPLAY/XAUTHORITY ---
             _DISP=""; _XAUTH=""
-            for _prog in cinnamon gnome-shell plasmashell xfce4-session openbox kwin_x11; do
-                _pid=$(pgrep -x "$_prog" 2>/dev/null | head -1)
-                [ -z "$_pid" ] && continue
-                _penv=$(tr '\0' '\n' < /proc/$_pid/environ 2>/dev/null)
-                [ -z "$_DISP" ]  && _DISP=$(printf '%s' "$_penv"  | grep '^DISPLAY='     | head -1 | cut -d= -f2-)
-                [ -z "$_XAUTH" ] && _XAUTH=$(printf '%s' "$_penv" | grep '^XAUTHORITY='  | head -1 | cut -d= -f2-)
-                [ -n "$_DISP" ] && break
-            done
-            # Fallback XAUTHORITY: ~/.Xauthority dell'utente
+
+            # Da /proc: filtra per utente per evitare falsi positivi
+            if [ -n "$_LOGIN_USER" ]; then
+                for _prog in cinnamon gnome-shell plasmashell xfce4-session openbox kwin_x11 muffin; do
+                    _pid=$(pgrep -u "$_LOGIN_USER" -x "$_prog" 2>/dev/null | head -1)
+                    [ -z "$_pid" ] && continue
+                    _penv=$(tr '\0' '\n' < /proc/$_pid/environ 2>/dev/null)
+                    [ -z "$_DISP" ]  && _DISP=$(printf '%s\n' "$_penv"  | grep '^DISPLAY='    | head -1 | cut -d= -f2-)
+                    [ -z "$_XAUTH" ] && _XAUTH=$(printf '%s\n' "$_penv" | grep '^XAUTHORITY=' | head -1 | cut -d= -f2-)
+                    [ -n "$_DISP" ] && break
+                done
+            fi
+
+            # Fallback: :0 (la grande maggioranza dei sistemi single-user Xorg)
+            [ -z "$_DISP" ] && _DISP=":0"
+
+            # Fallback XAUTHORITY: ~/.Xauthority
             if [ -z "$_XAUTH" ] && [ -n "$_LOGIN_USER" ]; then
                 _UHOME=$(getent passwd "$_LOGIN_USER" 2>/dev/null | cut -d: -f6)
                 [ -n "$_UHOME" ] && [ -f "$_UHOME/.Xauthority" ] && _XAUTH="$_UHOME/.Xauthority"
             fi
 
-            if [ -n "$_LOGIN_USER" ] && [ -n "$_DISP" ] && command -v zenity >/dev/null 2>&1; then
-                # Ottieni il testo del disclaimer da debconf e scrivilo su file temp
+            if [ -n "$_LOGIN_USER" ] && command -v zenity >/dev/null 2>&1; then
+                # Scrivi il testo disclaimer su file temp
                 _TMPDISC=$(mktemp /tmp/atk-pro-disc-XXXXXX.txt)
                 db_metaget atk-pro/accept-disclaimer description          2>/dev/null \
                     && printf '%s\n\n' "$RET" > "$_TMPDISC" || true
@@ -74,20 +97,32 @@ if [ "$1" = "install" ]; then
                     && printf '%s\n' "$RET" | sed 's/^ \.$//; s/^ //' >> "$_TMPDISC" || true
                 [ ! -s "$_TMPDISC" ] && printf 'ATK-Pro Legal Disclaimer\n\nSee:\nhttps://github.com/DanielePigoli/ATK-Pro-v2\n' > "$_TMPDISC"
                 chmod 644 "$_TMPDISC"
+                chown "$_LOGIN_USER" "$_TMPDISC" 2>/dev/null || true
 
-                _ZENITY_CMD="DISPLAY='$_DISP'"
-                [ -n "$_XAUTH" ] && _ZENITY_CMD="$_ZENITY_CMD XAUTHORITY='$_XAUTH'"
-                _ZENITY_CMD="$_ZENITY_CMD zenity --text-info"
-                _ZENITY_CMD="$_ZENITY_CMD --title='ATK-Pro Legal Disclaimer'"
-                _ZENITY_CMD="$_ZENITY_CMD --filename='$_TMPDISC'"
-                _ZENITY_CMD="$_ZENITY_CMD --ok-label='Accept / Accetto'"
-                _ZENITY_CMD="$_ZENITY_CMD --cancel-label='Decline / Rifiuto'"
-                _ZENITY_CMD="$_ZENITY_CMD --width=750 --height=600"
+                # Usa script temporaneo per evitare problemi di quoting con su/runuser
+                _TMPSH=$(mktemp /tmp/atk-pro-zen-XXXXXX.sh)
+                {
+                    printf '#!/bin/sh\n'
+                    printf 'export DISPLAY="%s"\n' "$_DISP"
+                    [ -n "$_XAUTH" ] && printf 'export XAUTHORITY="%s"\n' "$_XAUTH"
+                    printf 'exec zenity --text-info'
+                    printf ' --title="ATK-Pro Legal Disclaimer"'
+                    printf ' --filename="%s"' "$_TMPDISC"
+                    printf ' --ok-label="Accept / Accetto"'
+                    printf ' --cancel-label="Decline / Rifiuto"'
+                    printf ' --width=750 --height=600\n'
+                } > "$_TMPSH"
+                chmod 755 "$_TMPSH"
+                chown "$_LOGIN_USER" "$_TMPSH" 2>/dev/null || true
 
-                if su "$_LOGIN_USER" -c "$_ZENITY_CMD" 2>/dev/null; then
-                    _ZENITY_ACCEPTED=1
+                # Lancia come utente reale (runuser preferito su Debian/Ubuntu/Mint)
+                if command -v runuser >/dev/null 2>&1; then
+                    runuser -u "$_LOGIN_USER" -- /bin/sh "$_TMPSH" 2>/dev/null && _ZENITY_ACCEPTED=1
+                else
+                    su "$_LOGIN_USER" -s /bin/sh -- "$_TMPSH" 2>/dev/null && _ZENITY_ACCEPTED=1
                 fi
-                rm -f "$_TMPDISC"
+
+                rm -f "$_TMPDISC" "$_TMPSH"
             fi
 
             if [ "$_ZENITY_ACCEPTED" = "0" ]; then
