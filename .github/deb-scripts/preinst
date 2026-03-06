@@ -32,6 +32,8 @@ if [ "$1" = "install" ]; then
             # Proviamo a mostrare zenity come utente della sessione desktop.
             # ----------------------------------------------------------------
             _ZENITY_ACCEPTED=0
+            _DEBUG_LOG="/tmp/atk-pro-install.log"
+            printf '[preinst] avvio: %s\n' "$(date 2>/dev/null || echo '?')" > "$_DEBUG_LOG" 2>/dev/null || true
 
             # --- Rilevamento utente ---
             _LOGIN_USER=""
@@ -63,6 +65,14 @@ if [ "$1" = "install" ]; then
             if [ -z "$_LOGIN_USER" ]; then
                 _LOGIN_USER=$(find /home -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1 | xargs basename 2>/dev/null)
             fi
+
+            # UID/GID utente (necessari per systemd-run)
+            _uid=""; _gid=""
+            if [ -n "$_LOGIN_USER" ]; then
+                _uid=$(id -u "$_LOGIN_USER" 2>/dev/null) || true
+                _gid=$(id -g "$_LOGIN_USER" 2>/dev/null) || true
+            fi
+            printf '[preinst] LOGIN_USER=%s uid=%s\n' "$_LOGIN_USER" "$_uid" >> "$_DEBUG_LOG" 2>/dev/null || true
 
             # --- Rilevamento DISPLAY/XAUTHORITY/DBUS/XDG_RUNTIME_DIR ---
             _DISP=""; _XAUTH=""; _DBUS=""; _XDG_RT=""
@@ -120,6 +130,8 @@ if [ "$1" = "install" ]; then
                 [ -z "$_XDG_RT" ] && [ -d "/run/user/$_uid" ]    && _XDG_RT="/run/user/$_uid"
             fi
 
+            printf '[preinst] DISP=%s DBUS=%s XDG_RT=%s\n' "$_DISP" "$_DBUS" "$_XDG_RT" >> "$_DEBUG_LOG" 2>/dev/null || true
+
             if [ -n "$_LOGIN_USER" ] && command -v zenity >/dev/null 2>&1; then
                 # ---- Selezione lingua utente (in noninteractive config l'ha saltata) ----
                 _TMPSH_LANG=$(mktemp /tmp/atk-pro-lang-XXXXXX.sh)
@@ -159,10 +171,21 @@ if [ "$1" = "install" ]; then
                 chown "$_LOGIN_USER" "$_TMPSH_LANG" 2>/dev/null || true
 
                 _CHOSEN_LANG=""
-                if command -v runuser >/dev/null 2>&1; then
-                    _CHOSEN_LANG=$(runuser -u "$_LOGIN_USER" -- /bin/sh "$_TMPSH_LANG" 2>/dev/null) || true
+                # systemd-run avvia dal system manager (PID 1), fuori dal PrivateTmp
+                # di apt-daemon/PackageKit, con accesso al /tmp reale e alla socket X11.
+                if command -v systemd-run >/dev/null 2>&1 && [ -n "$_uid" ]; then
+                    printf '[preinst] lancio lingua via systemd-run\n' >> "$_DEBUG_LOG" 2>/dev/null || true
+                    _CHOSEN_LANG=$(systemd-run --uid="$_uid" --gid="${_gid:-$_uid}" \
+                        --wait --collect --quiet --pipe \
+                        -- /bin/sh "$_TMPSH_LANG" 2>>"$_DEBUG_LOG") || true
+                    printf '[preinst] lingua scelta: "%s"\n' "$_CHOSEN_LANG" >> "$_DEBUG_LOG" 2>/dev/null || true
                 else
-                    _CHOSEN_LANG=$(su "$_LOGIN_USER" -s /bin/sh -- "$_TMPSH_LANG" 2>/dev/null) || true
+                    # Fallback su sistemi senza systemd
+                    if command -v runuser >/dev/null 2>&1; then
+                        _CHOSEN_LANG=$(runuser -u "$_LOGIN_USER" -- /bin/sh "$_TMPSH_LANG" 2>>"$_DEBUG_LOG") || true
+                    else
+                        _CHOSEN_LANG=$(su "$_LOGIN_USER" -s /bin/sh -- "$_TMPSH_LANG" 2>>"$_DEBUG_LOG") || true
+                    fi
                 fi
                 rm -f "$_TMPSH_LANG"
 
@@ -237,11 +260,25 @@ if [ "$1" = "install" ]; then
                 chmod 755 "$_TMPSH"
                 chown "$_LOGIN_USER" "$_TMPSH" 2>/dev/null || true
 
-                # Lancia come utente reale (runuser preferito su Debian/Ubuntu/Mint)
-                if command -v runuser >/dev/null 2>&1; then
-                    runuser -u "$_LOGIN_USER" -- /bin/sh "$_TMPSH" 2>/dev/null && _ZENITY_ACCEPTED=1
+                # systemd-run: avvia fuori dal namespace di apt-daemon, la socket
+                # /tmp/.X11-unix/X0 e' visibile perche' il processo figlio usa il
+                # /tmp reale (non il PrivateTmp isolato di apt-daemon/PackageKit).
+                if command -v systemd-run >/dev/null 2>&1 && [ -n "$_uid" ]; then
+                    printf '[preinst] lancio disclaimer via systemd-run\n' >> "$_DEBUG_LOG" 2>/dev/null || true
+                    systemd-run --uid="$_uid" --gid="${_gid:-$_uid}" \
+                        --wait --collect --quiet \
+                        -- /bin/sh "$_TMPSH" >> "$_DEBUG_LOG" 2>&1 \
+                        && _ZENITY_ACCEPTED=1 || true
+                    printf '[preinst] systemd-run disclaimer accepted=%d\n' "$_ZENITY_ACCEPTED" >> "$_DEBUG_LOG" 2>/dev/null || true
                 else
-                    su "$_LOGIN_USER" -s /bin/sh -- "$_TMPSH" 2>/dev/null && _ZENITY_ACCEPTED=1
+                    # Fallback su sistemi senza systemd
+                    if command -v runuser >/dev/null 2>&1; then
+                        runuser -u "$_LOGIN_USER" -- /bin/sh "$_TMPSH" >> "$_DEBUG_LOG" 2>&1 \
+                            && _ZENITY_ACCEPTED=1 || true
+                    else
+                        su "$_LOGIN_USER" -s /bin/sh -- "$_TMPSH" >> "$_DEBUG_LOG" 2>&1 \
+                            && _ZENITY_ACCEPTED=1 || true
+                    fi
                 fi
 
                 rm -f "$_TMPDISC" "$_TMPSH"
