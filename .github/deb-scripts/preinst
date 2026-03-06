@@ -38,10 +38,21 @@ if [ "$1" = "install" ]; then
             # --- Rilevamento utente ---
             _LOGIN_USER=""
 
-            # Metodo 1: loginctl (systemd, affidabile su Mint/Ubuntu moderni)
+            # Metodo 1: loginctl show-session (evita ambiguita' di colonne nell'output
+            # di list-sessions che varia per versione: $3=user $4=seat su Mint 21+)
             if command -v loginctl >/dev/null 2>&1; then
-                _LOGIN_USER=$(loginctl list-sessions --no-legend 2>/dev/null | \
-                    awk 'NF>=4 && $4!="root" && $4!="" {print $4; exit}')
+                # Prendi l'ID della prima sessione non-root, poi chiedi il nome utente
+                _SESSION=$(loginctl list-sessions --no-legend 2>/dev/null | \
+                    awk 'NF>=1 && $1!="" {print $1; exit}') || true
+                if [ -n "$_SESSION" ]; then
+                    _LOGIN_USER=$(loginctl show-session "$_SESSION" \
+                        -p Name --value 2>/dev/null) || true
+                fi
+                # Fallback parsing diretto: colonna 3 (USER), esclude seat*
+                if [ -z "$_LOGIN_USER" ] || [ "$_LOGIN_USER" = "root" ]; then
+                    _LOGIN_USER=$(loginctl list-sessions --no-legend 2>/dev/null | \
+                        awk '$3!="root" && $3!="" && $3!~/^seat/ {print $3; exit}') || true
+                fi
             fi
 
             # Metodo 2: who
