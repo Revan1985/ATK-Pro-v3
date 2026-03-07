@@ -255,6 +255,30 @@ if [ "$1" = "install" ]; then
                 chown "$_LOGIN_USER" "$_TMPDISC" 2>/dev/null || true
 
                 # Usa script temporaneo per evitare problemi di quoting con su/runuser
+                # Etichette pulsanti localizzate per la lingua scelta
+                case "$_CHOSEN_LANG" in
+                    fr) _LBL_OK="Accepter";    _LBL_CANCEL="Refuser"     ;;
+                    it) _LBL_OK="Accetto";     _LBL_CANCEL="Rifiuto"     ;;
+                    de) _LBL_OK="Akzeptieren"; _LBL_CANCEL="Ablehnen"    ;;
+                    es) _LBL_OK="Aceptar";     _LBL_CANCEL="Rechazar"    ;;
+                    pt) _LBL_OK="Aceitar";     _LBL_CANCEL="Recusar"     ;;
+                    nl) _LBL_OK="Accepteren";  _LBL_CANCEL="Weigeren"    ;;
+                    ru) _LBL_OK="Принять";     _LBL_CANCEL="Отклонить"   ;;
+                    ar) _LBL_OK="قبول";        _LBL_CANCEL="رفض"         ;;
+                    he) _LBL_OK="אישור";       _LBL_CANCEL="דחייה"       ;;
+                    zh) _LBL_OK="接受";         _LBL_CANCEL="拒绝"         ;;
+                    ja) _LBL_OK="同意する";     _LBL_CANCEL="拒否する"     ;;
+                    da) _LBL_OK="Accepter";    _LBL_CANCEL="Afvis"       ;;
+                    no) _LBL_OK="Godta";       _LBL_CANCEL="Avslå"       ;;
+                    sv) _LBL_OK="Acceptera";   _LBL_CANCEL="Avvisa"      ;;
+                    pl) _LBL_OK="Akceptuj";    _LBL_CANCEL="Odrzuć"      ;;
+                    ro) _LBL_OK="Accept";      _LBL_CANCEL="Refuz"       ;;
+                    el) _LBL_OK="Αποδοχή";     _LBL_CANCEL="Απόρριψη"    ;;
+                    tr) _LBL_OK="Kabul Et";    _LBL_CANCEL="Reddet"      ;;
+                    vi) _LBL_OK="Chấp nhận";   _LBL_CANCEL="Từ chối"     ;;
+                    *)  _LBL_OK="Accept";      _LBL_CANCEL="Decline"     ;;
+                esac
+
                 _TMPSH=$(mktemp /var/tmp/atk-pro-zen-XXXXXX.sh)
                 {
                     printf '#!/bin/sh\n'
@@ -265,8 +289,8 @@ if [ "$1" = "install" ]; then
                     printf 'exec zenity --text-info'
                     printf ' --title="%s"' "$_DISC_TITLE"
                     printf ' --filename="%s"' "$_TMPDISC"
-                    printf ' --ok-label="Accept / Accetto"'
-                    printf ' --cancel-label="Decline / Rifiuto"'
+                    printf ' --ok-label="%s"' "$_LBL_OK"
+                    printf ' --cancel-label="%s"' "$_LBL_CANCEL"
                     printf ' --width=750 --height=600\n'
                 } > "$_TMPSH"
                 chmod 755 "$_TMPSH"
