@@ -2306,9 +2306,9 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path,
                             return
                         logging.debug(f"Apro PayPal URL: {url}")
                         opened = False
-                        # Su Linux: subprocess con env pulito (PyInstaller sovrascrive
-                        # LD_LIBRARY_PATH; xdg-open ereditando le lib bundle può crashare).
-                        # PyInstaller salva il valore originale in LD_LIBRARY_PATH_ORIG.
+                        # Su Linux: prova prima gio open (disponibile su GNOME/Cinnamon,
+                        # non dipende da LD_LIBRARY_PATH del bundle PyInstaller).
+                        # Fallback: xdg-open con env ripulito.
                         try:
                             import platform
                             import subprocess
@@ -2319,11 +2319,23 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path,
                                     _env["LD_LIBRARY_PATH"] = _orig
                                 else:
                                     _env.pop("LD_LIBRARY_PATH", None)
-                                subprocess.Popen(
-                                    ["xdg-open", url], env=_env,
-                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                                )
-                                opened = True
+                                # Prova gio open (GIO toolkit, sempre nel PATH di sistema)
+                                for _cmd in (
+                                    ["/usr/bin/gio", "open", url],
+                                    ["/usr/bin/xdg-open", url],
+                                    ["xdg-open", url],
+                                ):
+                                    try:
+                                        subprocess.Popen(
+                                            _cmd, env=_env,
+                                            stdout=subprocess.DEVNULL,
+                                            stderr=subprocess.DEVNULL
+                                        )
+                                        opened = True
+                                        logging.debug(f"PayPal: aperto con {_cmd[0]}")
+                                        break
+                                    except FileNotFoundError:
+                                        continue
                             elif platform.system() == "Darwin":
                                 subprocess.Popen(
                                     ["open", url],

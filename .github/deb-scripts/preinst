@@ -262,7 +262,7 @@ if [ "$1" = "install" ]; then
                     [ -n "$_DBUS" ]   && printf 'export DBUS_SESSION_BUS_ADDRESS="%s"\n' "$_DBUS"
                     [ -n "$_XDG_RT" ] && printf 'export XDG_RUNTIME_DIR="%s"\n'         "$_XDG_RT"
                     printf 'exec zenity --text-info'
-                    printf ' --title="ATK-Pro Legal Disclaimer"'
+                    printf ' --title="%s"' "$_DISC_TITLE"
                     printf ' --filename="%s"' "$_TMPDISC"
                     printf ' --ok-label="Accept / Accetto"'
                     printf ' --cancel-label="Decline / Rifiuto"'
