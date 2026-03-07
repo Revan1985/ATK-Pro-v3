@@ -1,4 +1,4 @@
-#!/bin/sh
+﻿#!/bin/sh
 set -e
 
 # -----------------------------------------------------------------------
@@ -32,7 +32,7 @@ if [ "$1" = "install" ]; then
             # Proviamo a mostrare zenity come utente della sessione desktop.
             # ----------------------------------------------------------------
             _ZENITY_ACCEPTED=0
-            _DEBUG_LOG="/tmp/atk-pro-install.log"
+            _DEBUG_LOG="/var/tmp/atk-pro-install.log"
             printf '[preinst] avvio: %s\n' "$(date 2>/dev/null || echo '?')" > "$_DEBUG_LOG" 2>/dev/null || true
 
             # --- Rilevamento utente ---
@@ -145,7 +145,7 @@ if [ "$1" = "install" ]; then
 
             if [ -n "$_LOGIN_USER" ] && command -v zenity >/dev/null 2>&1; then
                 # ---- Selezione lingua utente (in noninteractive config l'ha saltata) ----
-                _TMPSH_LANG=$(mktemp /tmp/atk-pro-lang-XXXXXX.sh)
+                _TMPSH_LANG=$(mktemp /var/tmp/atk-pro-lang-XXXXXX.sh)
                 {
                     printf '#!/bin/sh\n'
                     printf 'export DISPLAY="%s"\n' "$_DISP"
@@ -205,56 +205,57 @@ if [ "$1" = "install" ]; then
                     ar|da|de|el|en|es|fr|he|it|ja|nl|no|pl|pt|ro|ru|sv|tr|vi|zh) ;;
                     *) _CHOSEN_LANG=en ;;
                 esac
-                printf '%s' "$_CHOSEN_LANG" > /tmp/atk-pro-install-lang
+                printf '%s' "$_CHOSEN_LANG" > /var/tmp/atk-pro-install-lang
 
-                # Scrivi il testo disclaimer su file temp.
-                # db_metaget restituisce solo la prima riga via $RET (limite IPC);
-                # usiamo perl/debconf per leggere il testo completo multi-riga.
-                _TMPDISC=$(mktemp /tmp/atk-pro-disc-XXXXXX.txt)
+                # Leggi il testo disclaimer DIRETTAMENTE dal file templates,
+                # scoped alla sezione atk-pro/accept-disclaimer, nella lingua scelta.
+                # /var/tmp/ e' condiviso tra preinst (PrivateTmp isolato di apt-daemon)
+                # e il processo figlio di systemd-run: /tmp/ NON lo e'.
+                _TMPDISC=$(mktemp /var/tmp/atk-pro-disc-XXXXXX.txt)
+                _DISC_TITLE="ATK-Pro Legal Disclaimer"
 
-                # Titolo (prima riga di Description)
-                db_metaget atk-pro/accept-disclaimer description 2>/dev/null \
-                    && printf '%s\n\n' "$RET" > "$_TMPDISC" || true
-
-                # Corpo completo: perl legge dal database debconf senza il limite IPC
-                perl -e '
-                    use Debconf::Db;
-                    Debconf::Db->load;
-                    my $q = Debconf::Config->getInstance->question("atk-pro/accept-disclaimer");
-                    if ($q) {
-                        my $desc = $q->getfield("extended_description") // "";
-                        $desc =~ s/^ \.$//mg;
-                        $desc =~ s/^ //mg;
-                        print $desc, "\n";
-                    }
-                ' 2>/dev/null >> "$_TMPDISC" || true
-
-                # Fallback: se perl non ha prodotto output, leggi dal templates staged
-                if [ ! -s "$_TMPDISC" ]; then
-                    _SCRIPT_DIR=$(dirname "$(readlink -f "$0")" 2>/dev/null || dirname "$0")
-                    if [ -f "$_SCRIPT_DIR/templates" ]; then
-                        # Estrae il blocco extended_description dalla lingua di sistema
-                        awk '
-                            /^Template: atk-pro\/accept-disclaimer/{found=1; next}
-                            found && /^Description:/{body=1; next}
-                            found && body && /^ /{
-                                line=$0; sub(/^ \. *$/,"",line); sub(/^ /,"",line)
-                                print line
-                                next
-                            }
-                            found && body && /^[^ ]/{exit}
-                        ' "$_SCRIPT_DIR/templates" >> "$_TMPDISC" 2>/dev/null || true
+                _SCRIPT_DIR=$(dirname "$(readlink -f "$0")" 2>/dev/null || dirname "$0")
+                if [ -f "$_SCRIPT_DIR/templates" ]; then
+                    if [ "$_CHOSEN_LANG" = "en" ]; then
+                        _DISC_TAG="Description:"
+                    else
+                        _DISC_TAG="Description-${_CHOSEN_LANG}:"
                     fi
+                    awk -v tag="$_DISC_TAG" '
+                        /^Template: atk-pro\/accept-disclaimer/ { in_disc=1; next }
+                        in_disc && /^Template:/                 { exit }
+                        in_disc && !matched && index($0,tag)==1 {
+                            matched=1
+                            title=substr($0, length(tag)+2)
+                            print title; print ""; next
+                        }
+                        in_disc && matched && /^ / {
+                            line=$0
+                            sub(/^ \. *$/,"",line); sub(/^ /,"",line)
+                            print line; next
+                        }
+                        in_disc && matched && /^[^ ]/ { exit }
+                    ' "$_SCRIPT_DIR/templates" > "$_TMPDISC" 2>/dev/null || true
+
+                    [ -s "$_TMPDISC" ] && \
+                        _DISC_TITLE=$(head -1 "$_TMPDISC" 2>/dev/null) || true
                 fi
 
-                # Secondo fallback: URL del progetto
-                [ -s "$_TMPDISC" ] || printf 'ATK-Pro Legal Disclaimer\n\nhttps://github.com/DanielePigoli/ATK-Pro-v2\n' > "$_TMPDISC"
+                # Fallback se templates mancante o lingua non disponibile
+                [ -s "$_TMPDISC" ] || \
+                    printf 'ATK-Pro Legal Disclaimer\n\nhttps://github.com/DanielePigoli/ATK-Pro-v2\n' \
+                        > "$_TMPDISC"
+
+                printf '[preinst] lang=%s disc_title=%s disc_bytes=%s\n' \
+                    "$_CHOSEN_LANG" "$_DISC_TITLE" \
+                    "$(wc -c < "$_TMPDISC" 2>/dev/null || echo 0)" \
+                    >> "$_DEBUG_LOG" 2>/dev/null || true
 
                 chmod 644 "$_TMPDISC"
                 chown "$_LOGIN_USER" "$_TMPDISC" 2>/dev/null || true
 
                 # Usa script temporaneo per evitare problemi di quoting con su/runuser
-                _TMPSH=$(mktemp /tmp/atk-pro-zen-XXXXXX.sh)
+                _TMPSH=$(mktemp /var/tmp/atk-pro-zen-XXXXXX.sh)
                 {
                     printf '#!/bin/sh\n'
                     printf 'export DISPLAY="%s"\n' "$_DISP"
@@ -298,8 +299,8 @@ if [ "$1" = "install" ]; then
             if [ "$_ZENITY_ACCEPTED" = "0" ]; then
             # Disclaimer non accettato o impossibile mostrare: blocca installazione
             _LANG="en"
-            if [ -f /tmp/atk-pro-install-lang ]; then
-                _LANG="$(cat /tmp/atk-pro-install-lang)"
+            if [ -f /var/tmp/atk-pro-install-lang ]; then
+                _LANG="$(cat /var/tmp/atk-pro-install-lang)"
             fi
             echo "" >&2
             case "$_LANG" in
@@ -422,6 +423,6 @@ fi
 
 # Lingua di default per postinst (scritta da config durante install;
 # durante upgrade impostiamo 'en' come fallback se il file non esiste)
-if [ "$1" = "upgrade" ] && [ ! -f /tmp/atk-pro-install-lang ]; then
-    printf 'en' > /tmp/atk-pro-install-lang
+if [ "$1" = "upgrade" ] && [ ! -f /var/tmp/atk-pro-install-lang ]; then
+    printf 'en' > /var/tmp/atk-pro-install-lang
 fi

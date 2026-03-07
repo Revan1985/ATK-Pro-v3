@@ -2290,75 +2290,63 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path,
                            min(scaled.height() + pad_h, max_h + pad_h))
 
                 def apri_paypal():
-                    if os.path.exists(paypal_url_path):
-                        raw = carica_testo_asset(paypal_url_path).strip()
-                        # Supporta sia plain URL che formato INI Windows (.url)
-                        url = None
-                        for line in raw.splitlines():
-                            s = line.strip()
-                            if s.upper().startswith("URL="):
-                                url = s[4:].strip()
-                                break
-                        if not url and raw.startswith("http"):
-                            url = raw.split()[0]
-                        if not url:
-                            logging.warning("PayPal: URL non trovato nel file")
-                            return
-                        logging.debug(f"Apro PayPal URL: {url}")
-                        opened = False
-                        # Su Linux: prova prima gio open (disponibile su GNOME/Cinnamon,
-                        # non dipende da LD_LIBRARY_PATH del bundle PyInstaller).
-                        # Fallback: xdg-open con env ripulito.
+                    if not os.path.exists(paypal_url_path):
+                        logging.warning(f"PayPal: file non trovato: {paypal_url_path}")
+                        return
+                    raw = carica_testo_asset(paypal_url_path).strip()
+                    # Supporta sia plain URL che formato INI Windows (.url)
+                    url = None
+                    for line in raw.splitlines():
+                        s = line.strip()
+                        if s.upper().startswith("URL="):
+                            url = s[4:].strip()
+                            break
+                    if not url and raw.startswith("http"):
+                        url = raw.split()[0]
+                    if not url:
+                        logging.warning("PayPal: URL non trovato nel file")
+                        return
+                    logging.debug(f"Apro PayPal URL: {url}")
+                    opened = False
+                    # QProcess.startDetached non eredita LD_LIBRARY_PATH del bundle
+                    # PyInstaller: è il metodo corretto per aprire URL da app Qt.
+                    try:
+                        from PySide6.QtCore import QProcess
+                        import platform
+                        _sys = platform.system()
+                        if _sys == "Linux":
+                            for _prog, _args in [
+                                ("/usr/bin/gio", ["open", url]),
+                                ("/usr/bin/xdg-open", [url]),
+                                ("xdg-open", [url]),
+                            ]:
+                                if QProcess.startDetached(_prog, _args):
+                                    opened = True
+                                    logging.debug(f"PayPal: aperto con {_prog}")
+                                    break
+                        elif _sys == "Darwin":
+                            opened = QProcess.startDetached("open", [url])
+                            logging.debug(f"PayPal: open (macOS) -> {opened}")
+                        else:
+                            opened = QDesktopServices.openUrl(QUrl(url))
+                            logging.debug(f"PayPal: QDesktopServices -> {opened}")
+                    except Exception as e:
+                        logging.debug(f"PayPal QProcess fallito: {e}")
+                    # Fallback: QDesktopServices
+                    if not opened:
                         try:
-                            import platform
-                            import subprocess
-                            if platform.system() == "Linux":
-                                _env = dict(os.environ)
-                                _orig = _env.pop("LD_LIBRARY_PATH_ORIG", None)
-                                if _orig is not None:
-                                    _env["LD_LIBRARY_PATH"] = _orig
-                                else:
-                                    _env.pop("LD_LIBRARY_PATH", None)
-                                # Prova gio open (GIO toolkit, sempre nel PATH di sistema)
-                                for _cmd in (
-                                    ["/usr/bin/gio", "open", url],
-                                    ["/usr/bin/xdg-open", url],
-                                    ["xdg-open", url],
-                                ):
-                                    try:
-                                        subprocess.Popen(
-                                            _cmd, env=_env,
-                                            stdout=subprocess.DEVNULL,
-                                            stderr=subprocess.DEVNULL
-                                        )
-                                        opened = True
-                                        logging.debug(f"PayPal: aperto con {_cmd[0]}")
-                                        break
-                                    except FileNotFoundError:
-                                        continue
-                            elif platform.system() == "Darwin":
-                                subprocess.Popen(
-                                    ["open", url],
-                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-                                )
-                                opened = True
+                            opened = QDesktopServices.openUrl(QUrl(url))
+                            logging.debug(f"PayPal: QDesktopServices.openUrl -> {opened}")
                         except Exception as e:
-                            logging.debug(f"PayPal subprocess fallito: {e}")
-                        # Fallback: QDesktopServices (Windows + fallback Linux)
-                        if not opened:
-                            try:
-                                opened = QDesktopServices.openUrl(QUrl(url))
-                                logging.debug(f"PayPal: QDesktopServices.openUrl -> {opened}")
-                            except Exception as e:
-                                logging.debug(f"QDesktopServices fallito: {e}")
-                        # Fallback finale: webbrowser
-                        if not opened:
-                            try:
-                                import webbrowser
-                                opened = bool(webbrowser.open(url))
-                                logging.debug(f"PayPal: webbrowser.open -> {opened}")
-                            except Exception as e:
-                                logging.warning(f"Impossibile aprire URL PayPal: {e}")
+                            logging.debug(f"QDesktopServices fallito: {e}")
+                    # Fallback finale: webbrowser
+                    if not opened:
+                        try:
+                            import webbrowser
+                            opened = bool(webbrowser.open(url))
+                            logging.debug(f"PayPal: webbrowser.open -> {opened}")
+                        except Exception as e:
+                            logging.warning(f"Impossibile aprire URL PayPal: {e}")
 
                 # QPushButton flat: 'clicked' è un segnale Qt nativo e sempre
                 # affidabile (QLabel.mousePressEvent in PySide6 non intercetta
@@ -2553,7 +2541,7 @@ def main():
             logging.error(f"Nessun banner trovato nei path: {paths}")
         else:
             logging.info(f"Banner path selezionato: {banner_path}")
-        paypal_url_path = os.path.join(ASSET_COMMON, "testuali", "PayPal.me.url")
+        paypal_url_path = os.path.join(ASSET_COMMON, "testuali", "PayPal.Me.url")
         mostra_banner_chiusura(glossario_data, lingua_norm, banner_path, paypal_url_path, parent=window)
 
     app.aboutToQuit.connect(on_close)
