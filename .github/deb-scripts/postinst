@@ -4,10 +4,12 @@ set -e
 if [ "$1" = "configure" ]; then
 
     # Read language chosen by preinst
+    # Nota: preinst scrive in /var/tmp/ (non /tmp/) perche' apt-daemon ha
+    # PrivateTmp=yes e i file in /tmp/ non sono visibili al postinst.
     SELECTED_LANG="en"
-    if [ -f /tmp/atk-pro-install-lang ]; then
-        SELECTED_LANG=$(cat /tmp/atk-pro-install-lang)
-        rm -f /tmp/atk-pro-install-lang
+    if [ -f /var/tmp/atk-pro-install-lang ]; then
+        SELECTED_LANG=$(cat /var/tmp/atk-pro-install-lang)
+        rm -f /var/tmp/atk-pro-install-lang
     fi
 
     # Write system-wide config (fallback for all users / polkit installs)
