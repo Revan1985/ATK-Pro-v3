@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italiano): Fundamental para cidadãos residentes e novos expatriados.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Inglês): Língua ponte para EUA, Canadá, Austrália e Reino Unido.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Espanhol): Cobre a Argentina (o país com mais italianos no mundo), o Uruguai e a Espanha (destino preferido pelos jovens italianos em 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Espanhol): Cobre todos os países hispânicos das Américas, as Filipinas e a Espanha (destino preferido pelos jovens italianos em 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Francês): Para as históricas e vastas comunidades na França e na Bélgica.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Alemão): Para a Alemanha (quase 900.000 residentes italianos) e a Suíça.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Português): Indispensável para o Brasil (bacia de mais de 30 milhões de descendentes).</li>
@@ -446,10 +446,12 @@
                 <li>O programa requer uma reinicialização para aplicar o novo idioma selecionado</li>
             </ul>
             <h4>📂 CONFIGURAÇÃO DE PASTAS</h4>
-            <p>Na primeira execução, o programa cria:</p>
+            <p>Na primeira execução, o programa cria automaticamente as seguintes pastas:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[SeuNome]\Documents\ATK-Pro\output\</code> (arquivos processados)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (arquivos processados)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[SeuNome]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[SeuNome]\Documents\ATK-Pro\output\doc\</code> (padrão documentos)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[SeuNome]\Documents\ATK-Pro\output\reg\</code> (padrão registros)</li>
+                <li><strong>Linux/macOS:</strong> análogas em <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Pasta <code>input/</code> correspondente (opcional)</li>
             </ul>
             <p>Durante o processamento, são criadas pastas temporárias para os blocos descarregados (tiles_canvas_X/).
@@ -458,11 +460,7 @@
             </p>
             <p>Restam apenas os arquivos finais processados (imagens nos formatos escolhidos, PDF, manifestos e metadados).
             </p>
-            <p>Para alterar a pasta de saída:</p>
-            <ul>
-                <li>Use Menu → Configurações → "Selecionar pasta de saída"</li>
-                <li>A pasta escolhida permanece a padrão para processamentos subsequentes</li>
-            </ul>
+            <p>Para alterar as pastas de saída use Menu → Configurações → "Selecionar pastas de saída". As opções são guardadas e restauradas automaticamente na próxima sessão.</p>
             </div>
             <div class="section-box">
             <h3>3. INTERFACE PRINCIPAL</h3>
@@ -541,8 +539,13 @@
 │  └─ Selecione o idioma da interface (requer reinicialização)
 ├─ Selecionar formatos de imagem
 │  └─ Escolha entre PNG, JPG, TIFF (pelo menos 1 obrigatório)
-├─ Selecionar pasta de saída
-│  └─ Escolha a pasta onde salvar as imagens processadas
+│     Sua escolha é salva e pré-selecionada automaticamente na próxima sessão
+├─ Selecionar pastas de saída
+│  └─ Abre primeiro a seleção do modo de pasta e depois os diálogos de seleção:
+│     • Pasta única para todos        → uma pasta para documentos e registros
+│     • Pastas separadas doc/reg      → uma pasta para todos os doc, outra para os reg
+│     • Pasta por registro            → uma pasta distinta para cada registro
+│     O modo e as pastas são salvos e restaurados automaticamente na próxima sessão
 ├─ Exportar configuração
 │  └─ Salvar as configurações atuais em um arquivo
 ├─ Importar configuração
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>O fluxo de trabalho de processamento prevê 3 passos:</p>
             <h4>PASSO 1: SELECIONAR FORMATOS DE IMAGEM</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Clique em Menu → "Configurações" → "Selecionar formatos de imagem"</h3>
-            <h3>2. Abre-se uma janela de diálogo com 3 opções:</h3>
+            <h3>1. Carregue um arquivo de entrada (Arquivo entrada → Abrir entrada): a janela de formatos abre automaticamente</h3>
+            <h3>2. Clique em Menu → "Configurações" → "Selecionar formatos de imagem"</h3>
+            <h3>3. Abre-se uma janela de diálogo com 3 opções:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Formato sem perdas (lossless), melhor qualidade, arquivos maiores</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Formato comprimido (com perdas), bom compromisso qualidade/tamanho</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Formato de arquivo, qualidade máxima, arquivos muito grandes</p>
-            <h3>3. Selecione pelo menos um formato (você pode escolher mais de um)</h3>
-            <h3>4. Clique em "Confirmar"</h3>
-            <h3>5. O programa exibe uma mensagem com os formatos escolhidos</h3>
-            <h4>📝 CONSELHOS:</h4>
+            <h3>4. Selecione pelo menos um formato (você pode escolher mais de um)</h3>
+            <h3>5. Clique em "Confirmar"</h3>
+            <h3>6. O programa exibe uma mensagem com os formatos escolhidos</h3>
+                        <p>✅ <strong>Os formatos selecionados são salvos</strong> e pré-selecionados automaticamente na próxima vez que abrir o programa.</p>
+<h4>📝 CONSELHOS:</h4>
             <ul>
                 <li>Para pré-visualização/consulta: JPG (rápido de abrir, menor espaço)</li>
                 <li>Para arquivo conservador: PNG (sem perdas, compromisso de espaço) ou TIFF (qualidade máxima)</li>
                 <li>Para ambos: selecione PNG e TIFF</li>
             </ul>
-            <h4>PASSO 2: SELECIONAR PASTA DE SAÍDA</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. PRIMEIRO: Certifique-se de ter carregado um arquivo de entrada (Arquivo de entrada → Abrir entrada)</h3>
-            <h3>2. Clique em Menu → "Configurações" → "Selecionar pasta de saída"</h3>
-            <h3>3. O programa LÊ a entrada e CONTA quantos Documentos (D) e Registros (R):</h3>
-            <p>Exemplo: Se a entrada contiver "2 Documentos + 1 Registro"</p>
-            <h3>4. Para CADA Documento, abre-se uma caixa de diálogo:</h3>
-            <p>"Selecionar pasta para: Documento 1/2"</p>
-            <p>"Selecionar pasta para: Documento 2/2"</p>
-            <h3>5. Para CADA Registro, abre-se uma caixa de diálogo:</h3>
-            <p>"Selecione pasta para: Registro 1/1"</p>
-            <h3>6. Escolha pastas para cada registro (você pode usar pastas diferentes, iguais ou qualquer combinação)</h3>
-            <h3>7. No final, mostra um resumo de todas as pastas escolhidas</h3>
-            <h4>📌 IMPORTANTE:</h4>
+                        <h4>PASSO 2: SELECIONAR PASTAS DE SAÍDA</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. A janela de pastas abre automaticamente após a seleção dos formatos (quando você carrega um arquivo de entrada)</h3>
+            <h3>2. Em alternativa: Clique em Menu → "Configurações" → "Selecionar pastas de saída"</h3>
+            <h3>3. Escolha o MODO DE PASTAS:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Pasta única para todos</span> → uma pasta para todos os registros (documentos e registros)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Pastas separadas doc/reg</span> → uma pasta para todos os documentos, outra para todos os registros</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Pasta por registro</span> → uma pasta distinta para cada registro no arquivo de entrada</p>
+            <h3>4. Após escolher o modo, selecione as pastas necessárias (1, 2 ou N janelas de seleção)</h3>
+            <h3>5. No final exibe um resumo de todas as pastas selecionadas</h3>
+            <p>✅ <strong>O modo e as pastas são salvos</strong>. Na próxima vez que abrir um arquivo de entrada, são restaurados automaticamente se compatíveis com o número de registros.</p>
+            <p>⚠️ Se o novo arquivo de entrada tiver um número diferente de Documentos/Registros em relação às pastas salvas, aparece um aviso e a seleção é redefinida.</p>
+            <h4>📌 RESUMO DOS MODOS:</h4>
             <ul>
-                <li>Cada Documento (D) terá uma pasta separada</li>
-                <li>Cada Registro (R) terá uma pasta separada</li>
-                <li>Você pode escolher pastas diferentes para cada registro, a mesma para vários registros, ou qualquer combinação</li>
-                <li>Você pode escolher pastas em unidades diferentes</li>
+                <li><strong>Pasta única:</strong> Simples, tudo no mesmo lugar. Ideal para trabalhos rápidos ou testes</li>
+                <li><strong>Separate doc/reg:</strong> Organizado por tipo. Padrão: <code>output/doc/</code> e <code>output/reg/</code></li>
+                <li><strong>Por registro:</strong> Máxima flexibilidade. Pastas em drives diferentes, NAS, personalizadas</li>
             </ul>
-            <h4>PASSO 3: INICIAR PROCESSAMENTO</h4>
+<h4>PASSO 3: INICIAR PROCESSAMENTO</h4>
             <p>─────────────────────────────</p>
             <h3>1. Clique em Menu → "Saída" → "Processar"</h3>
             <h3>2. Verifique que:</h3>

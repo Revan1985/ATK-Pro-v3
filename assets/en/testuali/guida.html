@@ -431,7 +431,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italian): Essential for resident citizens and new expatriates.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (English): Bridge language for USA, Canada, Australia, and the United Kingdom.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spanish): It covers Argentina (the country with the most Italians in the world), Uruguay, and Spain (the preferred destination for young Italians in 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spanish): It covers all the Hispanic countries of the Americas, the Philippines, and Spain (the preferred destination for young Italians in 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (French): For the historic and vast communities in France and Belgium.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (German): For Germany (almost 900,000 Italian residents) and Switzerland.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portuguese): Essential for Brazil (basin of over 30 million descendants).</li>
@@ -459,10 +459,12 @@
                 <li>The program requires a restart to apply the newly selected language</li>
             </ul>
             <h4>📂 FOLDER CONFIGURATION</h4>
-            <p>Upon first execution, the program creates:</p>
+            <p>Upon first execution, the program automatically creates the following folders:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[YourName]\Documents\ATK-Pro\output\</code> (processed files)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (processed files)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[YourName]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[YourName]\Documents\ATK-Pro\output\doc\</code> (default for documents)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[YourName]\Documents\ATK-Pro\output\reg\</code> (default for registers)</li>
+                <li><strong>Linux/macOS:</strong> analogous under <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Analogous <code>input/</code> folder (optional)</li>
             </ul>
             <p>Temporary folders are created during processing for the downloaded tiles (tiles_canvas_X/).
@@ -471,11 +473,7 @@
             </p>
             <p>Only the final processed files remain (images in the chosen formats, PDFs, manifest, and metadata).
             </p>
-            <p>To change the output folder:</p>
-            <ul>
-                <li>Use Menu → Settings → "Select output folder"</li>
-                <li>The selected folder remains the default for subsequent processing</li>
-            </ul>
+            <p>To change output folders use Menu → Settings → "Select output folders". Your choices are saved and automatically restored in the next session.</p>
             </div>
             <div class="section-box">
             <h3>3. MAIN INTERFACE</h3>
@@ -554,8 +552,13 @@
 │  └─ Select the interface language (requires restart)
 ├─ Select image formats
 │  └─ Choose between PNG, JPG, TIFF (at least 1 required)
-├─ Select output folder
-│  └─ Choose the folder where to save the processed images
+│     Your choice is saved and pre-selected automatically in the next session
+├─ Select output folders
+│  └─ Opens folder mode selection, then folder picker dialogs:
+│     • Single folder for all       → one folder for both documents and registers
+│     • Separate doc/reg folders    → one folder for all docs, one for all registers
+│     • One folder per record       → a distinct folder for each record
+│     Mode and folders are saved and restored automatically in the next session
 ├─ Export configuration
 │  └─ Save the current settings to a file
 ├─ Import configuration
@@ -682,39 +685,38 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>The processing workflow involves 3 steps:</p>
             <h4>STEP 1: SELECT IMAGE FORMATS</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Click Menu → "Settings" → "Select image formats"</h3>
-            <h3>2. A dialog box opens with 3 options:</h3>
+            <h3>1. Load an input file (Input file → Open input): the format dialog opens automatically</h3>
+            <h3>2. Alternatively: Click Menu → "Settings" → "Select image formats"</h3>
+            <h3>3. A dialog box opens with 3 options:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Lossless format, better quality, larger files</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Compressed format (lossy), good quality/size compromise</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Archival format, maximum quality, very large files</p>
-            <h3>3. Select at least one format (you can choose more than one)</h3>
-            <h3>4. Click "Confirm"</h3>
-            <h3>5. The program displays a message with the selected formats</h3>
+            <h3>4. Select at least one format (you can choose more than one)</h3>
+            <h3>5. Click "Confirm"</h3>
+            <p>✅ <strong>The selected formats are saved</strong> and pre-selected automatically the next time you open the program.</p>
             <h4>📝 TIPS:</h4>
             <ul>
                 <li>For preview/consultation: JPG (quick to open, less space)</li>
                 <li>For archival purposes: PNG (lossless, space compromise) or TIFF (maximum quality)</li>
                 <li>For both: select both PNG and TIFF</li>
             </ul>
-            <h4>STEP 2: SELECT OUTPUT FOLDER</h4>
+            <h4>STEP 2: SELECT OUTPUT FOLDERS</h4>
             <p>──────────────────────────────────────</p>
-            <h3>1. FIRST: Make sure you have loaded an input file (Input file → Open input)</h3>
-            <h3>2. Click Menu → "Settings" → "Select output folder"</h3>
-            <h3>3. The program READS the input and COUNTS how many Documents (D) and Registers (R):</h3>
-            <p>Example: If input contains "2 Documents + 1 Register"</p>
-            <h3>4. For EACH Document, a dialog opens:</h3>
-            <p>Select folder for: Document 1/2</p>
-            <p>"Select folder for: Document 2/2"</p>
-            <h3>5. For EACH Record, a dialog opens:</h3>
-            <p>"Select folder for: Log 1/1"</p>
-            <h3>6. Choose folders for each record (you can use different folders, the same ones, or any combination)</h3>
-            <h3>7. At the end, show a summary of all selected folders</h3>
-            <h4>📌 IMPORTANT:</h4>
+            <h3>1. The folder dialog opens automatically after the format selection (when you load an input file)</h3>
+            <h3>2. Alternatively: Click Menu → "Settings" → "Select output folders"</h3>
+            <h3>3. Choose the FOLDER MODE:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Single folder for all</span> → one folder for all records (docs and registers)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Separate doc/reg folders</span> → one folder for all documents, one for all registers</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ One folder per record</span> → a distinct folder for each record in the input file</p>
+            <h3>4. After choosing the mode, select the required folders (1, 2 or N picker dialogs)</h3>
+            <h3>5. At the end a summary of all selected folders is shown</h3>
+            <p>✅ <strong>Mode and folders are saved</strong>. Next time you open an input file, they are automatically restored if compatible with the number of records.</p>
+            <p>⚠️ If the new input file has a different number of Documents/Registers compared to saved folders, a warning is shown and the selection is reset to ask for new folders.</p>
+            <h4>📌 MODE SUMMARY:</h4>
             <ul>
-                <li>Each Document (D) will have a separate folder</li>
-                <li>Each Register (R) will have a separate folder</li>
-                <li>You can choose different folders for each record, the same for multiple records, or any combination</li>
-                <li>You can choose folders on different drives</li>
+                <li><strong>Single folder:</strong> Simple, everything in one place. Good for quick jobs or tests</li>
+                <li><strong>Separate doc/reg:</strong> Organised by type. Default: <code>output/doc/</code> and <code>output/reg/</code></li>
+                <li><strong>Per record:</strong> Maximum flexibility. You can use different drives, NAS, custom folders</li>
             </ul>
             <h4>STEP 3: START PROCESSING</h4>
             <p>─────────────────────────────</p>

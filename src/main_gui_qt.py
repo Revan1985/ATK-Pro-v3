@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
 )
 
 # Versione corrente dell'applicazione
-VERSION = "2.0.8"
+VERSION = "2.1.0"
 GITHUB_REPO = "DanielePigoli/ATK-Pro-v2"
 
 # Stato globale
@@ -187,10 +187,119 @@ def _write_config_language(lang: str) -> None:
         logging.debug(f"Errore scrittura config file: {e}")
 
 
+def _read_config_prefs() -> dict:
+    """Legge le preferenze persistenti (formati, cartelle, ultimo input) dal config JSON."""
+    import os as _os
+    import json as _json
+    try:
+        cfg = _config_file_path()
+        if _os.path.exists(cfg):
+            with open(cfg, encoding="utf-8") as fh:
+                data = _json.load(fh)
+            return {
+                "formats":            data.get("formats", []),
+                "last_input_file":    data.get("last_input_file", None),
+                "output_folders_doc": data.get("output_folders_doc", []),
+                "output_folders_reg": data.get("output_folders_reg", []),
+            }
+    except Exception as e:
+        logging.debug(f"Errore lettura prefs config: {e}")
+    return {"formats": [], "last_input_file": None, "output_folders_doc": [], "output_folders_reg": []}
+
+
+def _write_config_prefs(key: str, value) -> None:
+    """Aggiorna una singola chiave delle preferenze nel config JSON."""
+    import os as _os
+    import json as _json
+    try:
+        cfg = _config_file_path()
+        cfg_dir = _os.path.dirname(cfg)
+        _os.makedirs(cfg_dir, exist_ok=True)
+        data = {}
+        if _os.path.exists(cfg):
+            with open(cfg, encoding="utf-8") as fh:
+                data = _json.load(fh)
+        data[key] = value
+        with open(cfg, "w", encoding="utf-8") as fh:
+            _json.dump(data, fh, ensure_ascii=False, indent=2)
+        logging.debug(f"Prefs salvate: {key}={value}")
+    except Exception as e:
+        logging.debug(f"Errore scrittura prefs config: {e}")
+
+
 def _is_first_run() -> bool:
     """Ritorna True se il config file non esiste ancora (primo avvio)."""
     import os as _os
     return not _os.path.exists(_config_file_path())
+
+
+def _get_default_output_dir(sub: str = "") -> str:
+    """Ritorna il percorso della cartella output di default tramite Qt (cross-platform)."""
+    from PySide6.QtCore import QStandardPaths
+    docs = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
+    base = os.path.join(docs, "ATK-Pro", "output")
+    return os.path.join(base, sub) if sub else base
+
+
+def _ensure_default_output_dirs() -> None:
+    """Crea silenziosamente le 3 cartelle output di default se non esistono."""
+    for sub in ("", "doc", "reg"):
+        try:
+            os.makedirs(_get_default_output_dir(sub), exist_ok=True)
+        except Exception as e:
+            logging.debug(f"_ensure_default_output_dirs: impossibile creare {sub}: {e}")
+
+
+def ask_output_mode(glossario_data, lingua) -> str:
+    """Dialog per scegliere la modalità di selezione cartelle output.
+    Ritorna: 'single' | 'split' | 'per_record'
+    """
+    from PySide6.QtWidgets import QDialog, QVBoxLayout, QRadioButton, QButtonGroup, QPushButton, QLabel
+    dlg = QDialog()
+    dlg.setWindowTitle(get_msg(glossario_data, "Cartelle output", lingua.upper()) or "Cartelle di output")
+    dlg.setWindowIcon(QIcon(get_pixmap_cached(asset_path("assets/common/grafici/ATK-Pro.ico"))))
+    _setup_dialog_pergamena(dlg, 440, 240)
+
+    layout = QVBoxLayout(dlg)
+    lbl = QLabel(get_msg(glossario_data, "Scegli modalità cartelle output", lingua.upper())
+                 or "Scegli come organizzare le cartelle di output:")
+    lbl.setWordWrap(True)
+    lbl.setStyleSheet("color:#fff; font-size:14px;")
+    layout.addWidget(lbl)
+
+    grp = QButtonGroup(dlg)
+    r_single     = QRadioButton(get_msg(glossario_data, "Cartella unica per tutti", lingua.upper())
+                                or "Cartella unica per tutti i record")
+    r_split      = QRadioButton(get_msg(glossario_data, "Cartelle separate doc/reg", lingua.upper())
+                                or "Cartelle separate: Documenti e Registri")
+    r_per_record = QRadioButton(get_msg(glossario_data, "Cartella per ogni record", lingua.upper())
+                                or "Una cartella per ogni singolo record")
+    _radio_style = """
+        QRadioButton { color: #fff; font-size: 13px; padding: 4px 6px; border-radius: 4px; }
+        QRadioButton:checked { background: rgba(255,255,255,0.25); color: #ffe96a; font-weight: bold; }
+        QRadioButton::indicator { width: 14px; height: 14px; }
+    """
+    for r in (r_single, r_split, r_per_record):
+        r.setStyleSheet(_radio_style)
+        grp.addButton(r)
+        layout.addWidget(r)
+
+    # Preseleziona dall'ultimo uso
+    _saved_mode = _read_config_prefs().get("output_mode", "per_record")
+    if _saved_mode == "single":     r_single.setChecked(True)
+    elif _saved_mode == "split":    r_split.setChecked(True)
+    else:                           r_per_record.setChecked(True)
+
+    btn_ok = QPushButton(get_msg(glossario_data, "Conferma", lingua.upper()) or "Conferma")
+    btn_ok.clicked.connect(dlg.accept)
+    layout.addWidget(btn_ok, alignment=Qt.AlignCenter)
+
+    if dlg.exec() != QDialog.Accepted:
+        # annullato: torna alla modalità salvata
+        return _saved_mode
+    if r_single.isChecked():     return "single"
+    if r_split.isChecked():      return "split"
+    return "per_record"
 def asset_path(rel_path):
     return os.path.join(BASE_DIR, rel_path)
 from PySide6.QtGui import QBrush, QPalette, QPixmap, QIcon
@@ -1749,6 +1858,13 @@ def ask_image_formats(glossario_data, lingua):
     jpg = QCheckBox("JPG")
     tiff = QCheckBox("TIFF")
 
+    # Pre-seleziona i formati dall'ultimo uso (state ha priorità, poi config)
+    _saved_fmts = state.get("formats") or _read_config_prefs().get("formats", [])
+    _saved_fmts_upper = [f.upper() for f in _saved_fmts]
+    if "PNG" in _saved_fmts_upper:  png.setChecked(True)
+    if "JPG" in _saved_fmts_upper:  jpg.setChecked(True)
+    if "TIF" in _saved_fmts_upper or "TIFF" in _saved_fmts_upper:  tiff.setChecked(True)
+
     checks_layout.addWidget(png)
     checks_layout.addWidget(jpg)
     checks_layout.addWidget(tiff)
@@ -1771,6 +1887,7 @@ def ask_image_formats(glossario_data, lingua):
 
         if scelti:
             state["formats"] = scelti
+            _write_config_prefs("formats", scelti)
             logging.info(f"Formati selezionati: {scelti}")
             # Usa una label di fallback se la chiave non esiste o è None
             label = get_msg(glossario_data, 'Formati selezionati', lingua.upper())
@@ -1807,8 +1924,64 @@ def action_open_input(glossario_data, lingua, parent=None):
         raw_text = load_input_file(path)
         records = parse_input_text(raw_text)
         state["records"] = records
-        state["current_input_file"] = path  # Memorizza il percorso
+        state["current_input_file"] = path
+        _write_config_prefs("last_input_file", path)
         logging.info(f"{len(records)} record caricati")
+
+        # Ripristina formati dall'ultimo uso
+        prefs = _read_config_prefs()
+        if prefs["formats"] and not state.get("formats"):
+            state["formats"] = prefs["formats"]
+            logging.debug(f"Formati ripristinati dal config: {prefs['formats']}")
+
+        # Ripristina cartelle output solo se compatibili con il nuovo file
+        num_doc = sum(1 for r in records if r.get("modalita", "").strip().upper() == "D")
+        num_reg = sum(1 for r in records if r.get("modalita", "").strip().upper() == "R")
+        saved_mode = prefs.get("output_mode", "per_record")
+        folders_restored = False
+
+        if saved_mode == "single":
+            sf = prefs.get("output_folder_single", "")
+            if sf and os.path.isdir(sf):
+                state["output_folders_doc"] = [sf] * num_doc
+                state["output_folders_reg"] = [sf] * num_reg
+                state["output_folder"] = sf
+                state["output_mode"] = "single"
+                folders_restored = True
+                logging.debug(f"Cartella unica ripristinata: {sf}")
+
+        elif saved_mode == "split":
+            sd = prefs.get("output_folder_doc", "")
+            sr = prefs.get("output_folder_reg", "")
+            if sd and sr and os.path.isdir(sd) and os.path.isdir(sr):
+                state["output_folders_doc"] = [sd] * num_doc
+                state["output_folders_reg"] = [sr] * num_reg
+                state["output_folder"] = sd
+                state["output_mode"] = "split"
+                folders_restored = True
+                logging.debug(f"Cartelle split ripristinate: doc={sd}, reg={sr}")
+
+        else:  # per_record
+            pd = prefs.get("output_folders_doc", [])
+            pr = prefs.get("output_folders_reg", [])
+            if (len(pd) == num_doc and len(pr) == num_reg
+                    and all(os.path.isdir(f) for f in pd + pr)):
+                state["output_folders_doc"] = pd
+                state["output_folders_reg"] = pr
+                state["output_folder"] = pd[0] if pd else (pr[0] if pr else None)
+                state["output_mode"] = "per_record"
+                folders_restored = True
+                logging.debug(f"Cartelle per record ripristinate: {pd}, {pr}")
+
+        if not folders_restored:
+            state["output_folders_doc"] = []
+            state["output_folders_reg"] = []
+            state["output_folder"] = None
+            state.pop("output_mode", None)
+            logging.debug("Cartelle output azzerate: incompatibili o mancanti")
+            _needs_folder_selection = True
+        else:
+            _needs_folder_selection = False
 
         # Conferma con solo il path, stile uniforme
         msg = QMessageBox(parent)
@@ -1817,6 +1990,30 @@ def action_open_input(glossario_data, lingua, parent=None):
         msg.setText(path)
         style_msgbox_pergamena(msg)
         msg.exec()
+
+        # 1) Selezione formati immagine (pre-seleziona quelli salvati nel config)
+        scelti = ask_image_formats(glossario_data, lingua)
+        if scelti:
+            state["formats"] = scelti
+            _write_config_prefs("formats", scelti)
+
+        # 2) Selezione cartelle output:
+        #    - se incompatibili: avvisa e apre il dialog
+        #    - se compatibili e già ripristinate: chiede conferma o ri-selezione
+        if _needs_folder_selection:
+            show_msgbox_localized(
+                parent, glossario_data, lingua,
+                get_msg(glossario_data, "Cartelle output", lingua.upper()) or "Cartelle di output",
+                get_msg(glossario_data, "Cartelle output azzerate", lingua.upper())
+                    or "Le cartelle di output non sono compatibili con il nuovo file. Selezionare le cartelle nuovamente.",
+                QMessageBox.Information,
+                buttons=(get_msg(glossario_data, "Conferma", lingua.upper()) or "Conferma",),
+                default=get_msg(glossario_data, "Conferma", lingua.upper()) or "Conferma"
+            )
+            action_select_output(glossario_data, lingua)
+        else:
+            action_select_output(glossario_data, lingua)
+
     except Exception as e:
         msg = QMessageBox(parent)
         msg.setIcon(QMessageBox.Critical)
@@ -1825,8 +2022,6 @@ def action_open_input(glossario_data, lingua, parent=None):
         msg.setText(f"{get_msg(glossario_data, 'Errore caricamento input', lingua.upper())}: {str(e)}")
         style_msgbox_pergamena(msg)
         msg.exec()
-
-
 def parse_record_types_from_file(path: str):
     num_doc, num_reg = 0, 0
     try:
@@ -1843,75 +2038,146 @@ def parse_record_types_from_file(path: str):
     return num_doc, num_reg
 
 
+def _pick_folder(title: str, default: str) -> str:
+    """Apre QFileDialog partendo dalla cartella default; ritorna la scelta o '' se annullato."""
+    return QFileDialog.getExistingDirectory(None, title, default)
+
+
 def action_select_output(glossario_data, lingua):
     records = state.get("records") or []
     if not records:
-        show_msgbox_localized(None, glossario_data, lingua, get_msg(glossario_data, "Attenzione", lingua.upper()), get_msg(glossario_data, "Nessun input caricato", lingua.upper()), QMessageBox.Warning, buttons=("Conferma",), default="Conferma")
+        show_msgbox_localized(None, glossario_data, lingua,
+            get_msg(glossario_data, "Attenzione", lingua.upper()),
+            get_msg(glossario_data, "Nessun input caricato", lingua.upper()),
+            QMessageBox.Warning, buttons=("Conferma",), default="Conferma")
         return
 
     num_doc = sum(1 for r in records if r.get("modalita", "").strip().upper() == "D")
     num_reg = sum(1 for r in records if r.get("modalita", "").strip().upper() == "R")
+    lbl_conf  = get_msg(glossario_data, "Conferma", lingua.upper()) or "Conferma"
+    lbl_att   = get_msg(glossario_data, "Attenzione", lingua.upper()) or "Attenzione"
+    lbl_obbl  = get_msg(glossario_data, "Selezione cartella obbligatoria", lingua.upper()) or "Selezione cartella obbligatoria"
+    lbl_doc   = get_msg(glossario_data, "Documento", lingua.upper()) or "Documento"
+    lbl_reg   = get_msg(glossario_data, "Registro", lingua.upper()) or "Registro"
+    lbl_docs  = get_msg(glossario_data, "Documenti", lingua.upper()) or "Documenti"
+    lbl_regs  = get_msg(glossario_data, "Registri", lingua.upper()) or "Registri"
 
+    # Scelta modalità
+    mode = ask_output_mode(glossario_data, lingua)
     folders_doc, folders_reg = [], []
 
-    # Obbliga la selezione di tutte le cartelle richieste
-    for i in range(num_doc):
+    if mode == "single":
+        # --- Modalità: cartella unica per tutti ---
+        default = _get_default_output_dir()
         folder = None
         while not folder:
-            folder = QFileDialog.getExistingDirectory(
-                None,
-                f"{get_msg(glossario_data, 'Documento', lingua.upper())} {i+1}/{num_doc}"
-            )
+            folder = _pick_folder(
+                get_msg(glossario_data, "Cartella unica per tutti", lingua.upper()) or "Cartella output",
+                default)
             if not folder:
-                show_msgbox_localized(None, glossario_data, lingua, get_msg(glossario_data, "Attenzione", lingua.upper()), get_msg(glossario_data, "Selezione cartella obbligatoria", lingua.upper()), QMessageBox.Warning, buttons=(get_msg(glossario_data, "Conferma", lingua.upper()),), default=get_msg(glossario_data, "Conferma", lingua.upper()))
-        folders_doc.append(folder)
+                show_msgbox_localized(None, glossario_data, lingua, lbl_att, lbl_obbl,
+                    QMessageBox.Warning, buttons=(lbl_conf,), default=lbl_conf)
+        folders_doc = [folder] * num_doc
+        folders_reg = [folder] * num_reg
+        _write_config_prefs("output_mode", "single")
+        _write_config_prefs("output_folder_single", folder)
 
-    for i in range(num_reg):
-        folder = None
-        while not folder:
-            folder = QFileDialog.getExistingDirectory(
-                None,
-                f"{get_msg(glossario_data, 'Registro', lingua.upper())} {i+1}/{num_reg}"
-            )
-            if not folder:
-                show_msgbox_localized(None, glossario_data, lingua, get_msg(glossario_data, "Attenzione", lingua.upper()), get_msg(glossario_data, "Selezione cartella obbligatoria", lingua.upper()), QMessageBox.Warning, buttons=(get_msg(glossario_data, "Conferma", lingua.upper()),), default=get_msg(glossario_data, "Conferma", lingua.upper()))
-        folders_reg.append(folder)
+    elif mode == "split":
+        # --- Modalità: cartella separata per D e per R ---
+        if num_doc > 0:
+            folder_doc = None
+            while not folder_doc:
+                folder_doc = _pick_folder(
+                    f"{lbl_docs} — {get_msg(glossario_data, 'Cartella output', lingua.upper()) or 'Cartella output'}",
+                    _get_default_output_dir("doc"))
+                if not folder_doc:
+                    show_msgbox_localized(None, glossario_data, lingua, lbl_att, lbl_obbl,
+                        QMessageBox.Warning, buttons=(lbl_conf,), default=lbl_conf)
+            folders_doc = [folder_doc] * num_doc
+            _write_config_prefs("output_folder_doc", folder_doc)
 
-    # Aggiorna lo stato globale
+        if num_reg > 0:
+            folder_reg = None
+            while not folder_reg:
+                folder_reg = _pick_folder(
+                    f"{lbl_regs} — {get_msg(glossario_data, 'Cartella output', lingua.upper()) or 'Cartella output'}",
+                    _get_default_output_dir("reg"))
+                if not folder_reg:
+                    show_msgbox_localized(None, glossario_data, lingua, lbl_att, lbl_obbl,
+                        QMessageBox.Warning, buttons=(lbl_conf,), default=lbl_conf)
+            folders_reg = [folder_reg] * num_reg
+            _write_config_prefs("output_folder_reg", folder_reg)
+
+        _write_config_prefs("output_mode", "split")
+
+    else:
+        # --- Modalità: una cartella per ogni record (comportamento originale) ---
+        for i in range(num_doc):
+            folder = None
+            while not folder:
+                folder = _pick_folder(
+                    f"{lbl_doc} {i+1}/{num_doc}",
+                    _get_default_output_dir("doc"))
+                if not folder:
+                    show_msgbox_localized(None, glossario_data, lingua, lbl_att, lbl_obbl,
+                        QMessageBox.Warning, buttons=(lbl_conf,), default=lbl_conf)
+            folders_doc.append(folder)
+
+        for i in range(num_reg):
+            folder = None
+            while not folder:
+                folder = _pick_folder(
+                    f"{lbl_reg} {i+1}/{num_reg}",
+                    _get_default_output_dir("reg"))
+                if not folder:
+                    show_msgbox_localized(None, glossario_data, lingua, lbl_att, lbl_obbl,
+                        QMessageBox.Warning, buttons=(lbl_conf,), default=lbl_conf)
+            folders_reg.append(folder)
+
+        _write_config_prefs("output_mode", "per_record")
+        _write_config_prefs("output_folders_doc", folders_doc)
+        _write_config_prefs("output_folders_reg", folders_reg)
+
+    # Aggiorna stato globale
     state["output_folders_doc"] = folders_doc
     state["output_folders_reg"] = folders_reg
-    state["registri_output"] = folders_doc + folders_reg  # compatibilità
+    state["registri_output"] = folders_doc + folders_reg
+    state["output_mode"] = mode
     if folders_doc:
         state["output_folder"] = folders_doc[0]
     elif folders_reg:
         state["output_folder"] = folders_reg[0]
 
-    # Finestra di conferma riepilogativa dopo tutte le selezioni
+    # Riepilogo
     riepilogo = []
-    if folders_doc:
-        riepilogo.append(f"<b>{get_msg(glossario_data, 'Documenti', lingua.upper()) or 'Documenti'}:</b>")
-        for idx, folder in enumerate(folders_doc):
-            riepilogo.append(f"{get_msg(glossario_data, 'Documento', lingua.upper()) or 'Documento'} {idx+1}: {folder}")
-    if folders_reg:
-        riepilogo.append(f"<b>{get_msg(glossario_data, 'Registri', lingua.upper()) or 'Registri'}:</b>")
-        for idx, folder in enumerate(folders_reg):
-            riepilogo.append(f"{get_msg(glossario_data, 'Registro', lingua.upper()) or 'Registro'} {idx+1}: {folder}")
+    seen = set()
+    for idx, folder in enumerate(folders_doc):
+        if folder not in seen:
+            riepilogo.append(f"<b>{lbl_docs}:</b> {folder}")
+            seen.add(folder)
+        elif mode == "per_record":
+            riepilogo.append(f"{lbl_doc} {idx+1}: {folder}")
+    for idx, folder in enumerate(folders_reg):
+        if folder not in seen:
+            riepilogo.append(f"<b>{lbl_regs}:</b> {folder}")
+            seen.add(folder)
+        elif mode == "per_record":
+            riepilogo.append(f"{lbl_reg} {idx+1}: {folder}")
+
     conferma = QDialog()
     conferma.setWindowTitle("ATK-Pro")
-    _setup_dialog_pergamena(conferma, 600, 300)
+    _setup_dialog_pergamena(conferma, 620, 300)
     layout = QVBoxLayout(conferma)
     label_widget = QLabel("<br>".join(riepilogo))
     label_widget.setAlignment(Qt.AlignLeft)
     label_widget.setStyleSheet("color: #fff; font-size: 15px;")
     label_widget.setTextFormat(Qt.RichText)
     layout.addWidget(label_widget)
-    ok_btn = QPushButton(get_msg(glossario_data, "Conferma", lingua.upper()) or "Conferma")
+    ok_btn = QPushButton(lbl_conf)
     ok_btn.clicked.connect(conferma.accept)
     layout.addWidget(ok_btn, alignment=Qt.AlignCenter)
     conferma.setLayout(layout)
     conferma.exec()
-
-    # Eliminato: dialogo di conferma cartelle selezionate
 
 
 def action_process(glossario_data, lingua, parent=None):
@@ -2480,6 +2746,9 @@ def main():
             logging.debug(f"Sviluppo primo avvio: lingua scelta: {lingua}")
 
     glossario_data = carica_glossario(lingua)
+
+    # Crea cartelle output di default (silenzioso, exist_ok=True)
+    _ensure_default_output_dirs()
 
     # Carica file di esempio localizzato
     example_path = carica_file_esempio(lingua)

@@ -431,7 +431,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italiano): Fondamentale per i cittadini residenti e i nuovi espatriati.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Inglese): Lingua ponte per USA, Canada, Australia e Regno Unito.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spagnolo): Copre l'Argentina (il paese con più italiani al mondo), l'Uruguay e la Spagna (meta preferita dai giovani italiani nel 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spagnolo): Copre tutti i paesi ispanici delle Americhe, le Filippine e la Spagna (meta preferita dai giovani italiani nel 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Francese): Per le storiche e vaste comunità in Francia e Belgio.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Tedesco): Per la Germania (quasi 900.000 residenti italiani) e la Svizzera.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portoghese): Indispensabile per il Brasile (bacino di oltre 30 milioni di discendenti).</li>
@@ -459,10 +459,12 @@
                 <li>Il programma richiede un riavvio per applicare la nuova lingua selezionata</li>
             </ul>
             <h4>📂 CONFIGURAZIONE CARTELLE</h4>
-            <p>Alla prima esecuzione, il programma crea:</p>
+            <p>Alla prima esecuzione, il programma crea automaticamente le seguenti cartelle:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[TuoNome]\Documents\ATK-Pro\output\</code> (file elaborati)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (file elaborati)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TuoNome]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TuoNome]\Documents\ATK-Pro\output\doc\</code> (default documenti)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TuoNome]\Documents\ATK-Pro\output\reg\</code> (default registri)</li>
+                <li><strong>Linux/macOS:</strong> analoghe sotto <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Cartella <code>input\</code> analoga (opzionale, per input file)</li>
             </ul>
             <p>Durante l'elaborazione vengono create cartelle temporanee per i tile scaricati (tiles_canvas_X/).
@@ -471,11 +473,7 @@
             </p>
             <p>Rimangono solo i file finali elaborati (immagini nei formati scelti, PDF, manifest e metadati).
             </p>
-            <p>Per modificare la cartella di output:</p>
-            <ul>
-                <li>Usa Menu → Impostazioni → "Seleziona cartella output"</li>
-                <li>La cartella scelta rimane quella predefinita per le elaborazioni successive</li>
-            </ul>
+            <p>Per modificare le cartelle di output usa Menu → Impostazioni → "Seleziona cartelle output". Le scelte vengono memorizzate e ripristinate automaticamente alla sessione successiva.</p>
             </div>
             <div class="section-box">
             <h3>3. INTERFACCIA PRINCIPALE</h3>
@@ -554,8 +552,13 @@
 │  └─ Seleziona la lingua dell'interfaccia (richiede riavvio)
 ├─ Seleziona formati immagine
 │  └─ Scegli tra PNG, JPG, TIFF (almeno 1 obbligatorio)
-├─ Seleziona cartella output
-│  └─ Scegli la cartella dove salvare le immagini elaborate
+│     La scelta viene memorizzata e pre-selezionata automaticamente alla sessione successiva
+├─ Seleziona cartelle output
+│  └─ Apre prima la scelta della modalità cartelle, poi le finestre di selezione:
+│     • Cartella unica per tutti    → una sola cartella per documenti e registri
+│     • Cartelle separate doc/reg   → una cartella per tutti i doc, una per tutti i reg
+│     • Cartella per ogni record    → una cartella distinta per ciascun record
+│     La modalità e le cartelle vengono memorizzate e ripristinate alla sessione successiva
 ├─ Esporta configurazione
 │  └─ Salva le impostazioni attuali in un file
 ├─ Importa configurazione
@@ -682,39 +685,38 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Il workflow di elaborazione prevede 3 passi:</p>
             <h4>PASSO 1: SELEZIONA FORMATI IMMAGINE</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Clicca Menu → "Impostazioni" → "Seleziona formati immagine"</h3>
-            <h3>2. Si apre una finestra di dialogo con 3 opzioni:</h3>
+            <h3>1. Carica un file input (File input → Apri input): la finestra formati si apre automaticamente</h3>
+            <h3>2. In alternativa: Clicca Menu → "Impostazioni" → "Seleziona formati immagine"</h3>
+            <h3>3. Si apre una finestra di dialogo con 3 opzioni:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Formato senza perdita (lossless), migliore qualità, file più grandi</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Formato compresso (lossy), buon compromesso qualità/dimensione</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Formato archiviale, massima qualità, file molto grandi</p>
-            <h3>3. Seleziona almeno un formato (puoi sceglierne più di uno)</h3>
-            <h3>4. Clicca "Conferma"</h3>
-            <h3>5. Il programma mostra un messaggio con i formati scelti</h3>
+            <h3>4. Seleziona almeno un formato (puoi sceglierne più di uno)</h3>
+            <h3>5. Clicca "Conferma"</h3>
+            <p>✅ <strong>I formati scelti vengono memorizzati</strong> e pre-selezionati automaticamente alla prossima apertura del programma.</p>
             <h4>📝 CONSIGLI:</h4>
             <ul>
                 <li>Per preview/consultazione: JPG (veloce da aprire, minore spazio)</li>
                 <li>Per archivio conservativo: PNG (lossless, compromesso di spazio) o TIFF (massima qualità)</li>
                 <li>Per entrambi: seleziona sia PNG che TIFF</li>
             </ul>
-            <h4>PASSO 2: SELEZIONA CARTELLA OUTPUT</h4>
+            <h4>PASSO 2: SELEZIONA CARTELLE OUTPUT</h4>
             <p>──────────────────────────────────────</p>
-            <h3>1. PRIMA: Assicurati di aver caricato un file input (File input → Apri input)</h3>
-            <h3>2. Clicca Menu → "Impostazioni" → "Seleziona cartella output"</h3>
-            <h3>3. Il programma LEGGE l'input e CONTA quanti Documenti (D) e Registri (R):</h3>
-            <p>Esempio: Se input contiene "2 Documenti + 1 Registro"</p>
-            <h3>4. Per OGNI Documento, si apre un dialog:</h3>
-            <p>"Seleziona cartella per: Documento 1/2"</p>
-            <p>"Seleziona cartella per: Documento 2/2"</p>
-            <h3>5. Per OGNI Registro, si apre un dialog:</h3>
-            <p>"Seleziona cartella per: Registro 1/1"</p>
-            <h3>6. Scegli cartelle per ogni record (puoi usare cartelle diverse, uguali, o qualsiasi combinazione)</h3>
-            <h3>7. Al termine, mostra riepilogo di tutte le cartelle scelte</h3>
-            <h4>📌 IMPORTANTE:</h4>
+            <h3>1. La finestra cartelle si apre automaticamente dopo la scelta dei formati (quando carichi un file input)</h3>
+            <h3>2. In alternativa: Clicca Menu → "Impostazioni" → "Seleziona cartelle output"</h3>
+            <h3>3. Scegli la MODALITÀ di organizzazione delle cartelle:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Cartella unica per tutti</span> → un'unica cartella per tutti i record (doc e registri)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Cartelle separate doc/reg</span> → una cartella per tutti i documenti, una per tutti i registri</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Cartella per ogni record</span> → una cartella distinta per ciascun record nel file input</p>
+            <h3>4. Dopo la scelta della modalità, seleziona le cartelle richieste (1, 2 o N finestre di dialog)</h3>
+            <h3>5. Al termine mostra il riepilogo delle cartelle scelte</h3>
+            <p>✅ <strong>Modalità e cartelle vengono memorizzate</strong>. Alla prossima apertura di un file input, vengono ripristinate automaticamente se compatibili con il numero di record.</p>
+            <p>⚠️ Se il nuovo file input ha un numero diverso di Documenti/Registri rispetto alle cartelle salvate, viene mostrato un avviso e la selezione viene azzerata per richiedere nuove cartelle.</p>
+            <h4>📌 RIEPILOGO MODALITÀ:</h4>
             <ul>
-                <li>Ogni Documento (D) avrà una cartella separata</li>
-                <li>Ogni Registro (R) avrà una cartella separata</li>
-                <li>Puoi scegliere cartelle diverse per ogni record, la stessa per più record, o qualsiasi combinazione</li>
-                <li>Puoi scegliere cartelle su drive diversi</li>
+                <li><strong>Cartella unica:</strong> Semplice, tutto in un posto. Adatto per elaborazioni veloci o test</li>
+                <li><strong>Separate doc/reg:</strong> Organizzazione per tipo. Default: <code>output/doc/</code> e <code>output/reg/</code></li>
+                <li><strong>Per ogni record:</strong> Massima flessibilità. Puoi usare drive diversi, NAS, cartelle personalizzate</li>
             </ul>
             <h4>PASSO 3: AVVIA ELABORAZIONE</h4>
             <p>─────────────────────────────</p>

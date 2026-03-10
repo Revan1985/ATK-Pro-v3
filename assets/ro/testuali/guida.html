@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italiană): Fundamental pentru cetățenii rezidenți și noii expatriați.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Engleză): Limbă de legătură pentru SUA, Canada, Australia și Regatul Unit.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spaniolă): Acoperă Argentina (țara cu cei mai mulți italieni din lume), Uruguay și Spania (destinația preferată a tinerilor italieni în 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spaniolă): Acoperă toate țările hispanice din Americi, Filipine și Spania (destinația preferată a tinerilor italieni în 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Franceză): Pentru comunitățile istorice și numeroase din Franța și Belgia.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Germană): Pentru Germania (aproape 900.000 de rezidenți italieni) și Elveția.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portugheză): Indispensabil pentru Brazilia (bazin de peste 30 de milioane de descendenți).</li>
@@ -445,12 +445,14 @@
                 <li>Poate fi schimbată oricând prin Meniu → Setări → Schimbă limba</li>
                 <li>Programul necesită o repornire pentru a aplica noua limbă selectată</li>
             </ul>
-            <h4>📂 CONFIGURARE FOLDERE</h4>
-            <p>La prima execuție, programul creează:</p>
+                        <h4>📂 CONFIGURARE FOLDERE</h4>
+            <p>La prima rulare, programul creează automat următoarele foldere:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[NumeleTău]\Documents\ATK-Pro\output\</code> (fișiere procesate)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (fișiere procesate)</li>
-                <li>Dosarul <code>input/</code> corespunzător (opțional)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[NumeleTau]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[NumeleTau]\Documents\ATK-Pro\output\doc\</code> (implicit pentru documente)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[NumeleTau]\Documents\ATK-Pro\output\reg\</code> (implicit pentru registre)</li>
+                <li><strong>Linux/macOS:</strong> similar sub <code>~/Documents/ATK-Pro/output/</code></li>
+                <li>Folderul <code>input/</code> corespunzător (opţional)</li>
             </ul>
             <p>În timpul procesării, sunt create foldere temporare pentru plăcile descărcate (tiles_canvas_X/).
             </p>
@@ -458,11 +460,7 @@
             </p>
             <p>Rămân doar fișierele finale procesate (imagini în formatele alese, PDF, manifest și metadate).
             </p>
-            <p>Pentru a modifica directorul de ieșire:</p>
-            <ul>
-                <li>Folosește Meniu → Setări → „Selectează folderul de ieșire”</li>
-                <li>Directorul selectat rămâne cel implicit pentru procesările ulterioare</li>
-            </ul>
+                        <p>Pentru a modifica folderele de ieşire, foloseşte Meniu → Setări → „Selectează folderele de ieşire‟. Alegerile tale sunt salvate şi restaurate automat la următoarea sesiune.</p>
             </div>
             <div class="section-box">
             <h3>3. INTERFAȚĂ PRINCIPALĂ</h3>
@@ -541,8 +539,13 @@
 │  └─ Selectați limba interfeței (necesită repornire)
 ├─ Selectați formate de imagine
 │  └─ Alegeți între PNG, JPG, TIFF (cel puțin 1 obligatoriu)
-├─ Selectați directorul de ieșire
-│  └─ Alegeți directorul unde să salvați imaginile procesate
+│     Alegerea dvs. este salvată și preselectată automat la sesiunea următoare
+├─ Selectați folderele de ieșire
+│  └─ Deschide mai întâi selectorul de mod folder, apoi dialogurile de selecție:
+│     • Folder unic pentru toți       → un singur folder pentru documente și registre
+│     • Foldere separate doc/reg      → un folder pentru toate doc, altul pentru reg
+│     • Folder per înregistrare       → un folder distinct pentru fiecare înregistrare
+│     Modul și folderele sunt salvate și restaurate la sesiunea următoare
 ├─ Exportă configurație
 │  └─ Salvează setările curente într-un fișier
 ├─ Importă configurație
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Fluxul de lucru de procesare implică 3 pași:</p>
             <h4>PASUL 1: SELECTAȚI FORMATUL IMAGINII</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Apăsați Meniu → „Setări” → „Selectați formatele imaginii”</h3>
-            <h3>2. Se deschide o fereastră de dialog cu 3 opțiuni:</h3>
+            <h3>1. Încarcă un fișier de intrare (Fișier intrare → Deschide intrarea): fereastra formatelor se deschide automat</h3>
+            <h3>2. Apăsați Meniu → „Setări” → „Selectați formatele imaginii”</h3>
+            <h3>3. Se deschide o fereastră de dialog cu 3 opțiuni:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Format fără pierderi (lossless), calitate mai bună, fișiere mai mari</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Format comprimat (cu pierderi), compromis bun calitate/dimensiune</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Format arhivă, calitate maximă, fișiere foarte mari</p>
-            <h3>3. Selectați cel puțin un format (puteți alege mai multe)</h3>
-            <h3>4. Apăsați „Confirmare”</h3>
-            <h3>5. Programul afișează un mesaj cu formatele alese</h3>
-            <h4>📝 SFATURI:</h4>
+            <h3>4. Selectați cel puțin un format (puteți alege mai multe)</h3>
+            <h3>5. Apăsați „Confirmare”</h3>
+            <h3>6. Programul afișează un mesaj cu formatele alese</h3>
+                        <p>✅ <strong>Formatele selectate sunt salvate</strong> și preselectate automat data viitoare când deschizi programul.</p>
+<h4>📝 SFATURI:</h4>
             <ul>
                 <li>Pentru previzualizare/consultare: JPG (rapid de deschis, spațiu mai mic)</li>
                 <li>Pentru arhivare conservatoare: PNG (fără pierderi, compromis de spațiu) sau TIFF (calitate maximă)</li>
                 <li>Pentru amândoi: selectați atât PNG, cât și TIFF</li>
             </ul>
-            <h4>PASUL 2: SELECTAȚI FOLDERUL DE IEȘIRE</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. PRIMA: Asigură-te că ai încărcat un fișier de intrare (Fișier de intrare → Deschide intrare)</h3>
-            <h3>2. Apăsați Meniu → „Setări” → „Selectați folderul de ieșire”</h3>
-            <h3>3. Programul CITEȘTE intrarea și NUMĂRĂ câte Documente (D) și Registre (R):</h3>
-            <p>Exemplu: Dacă intrarea conține „2 Documente + 1 Registru”</p>
-            <h3>4. Pentru FIECARE Document, se deschide o fereastră de dialog:</h3>
-            <p>Selectați dosarul pentru: Document 1/2</p>
-            <p>Selectați dosarul pentru: Document 2/2</p>
-            <h3>5. Pentru FIECARE registru, se deschide o fereastră de dialog:</h3>
-            <p>Selectați dosarul pentru: Jurnal 1/1</p>
-            <h3>6. Alege foldere pentru fiecare înregistrare (poți folosi foldere diferite, identice sau orice combinație)</h3>
-            <h3>7. La final, afișează un rezumat al tuturor dosarelor selectate</h3>
-            <h4>📌 IMPORTANT:</h4>
+                        <h4>PASUL 2: SELECTAȚI FOLDERELE DE IEȘIRE</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. Fereastra folderelor se deschide automat după selectarea formatelor (când încarci un fișier de intrare)</h3>
+            <h3>2. Alternativ: Fă clic pe Meniu → Setări → „Selectează folderele de ieșire"</h3>
+            <h3>3. Alege MODUL FOLDERELOR:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Folder unic pentru toți</span> → un singur folder pentru toate înregistrările (documente și registre)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Foldere separate doc/reg</span> → un folder pentru toate documentele, altul pentru toate registrele</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Folder per înregistrare</span> → un folder distinct pentru fiecare înregistrare din fișierul de intrare</p>
+            <h3>4. După alegerea modului, selectează folderele necesare (1, 2 sau N dialoguri de selecție)</h3>
+            <h3>5. La final afișează un rezumat al tuturor folderelor selectate</h3>
+            <p>✅ <strong>Modul și folderele sunt salvate</strong>. Data viitoare când deschizi un fișier de intrare, sunt restaurate automat dacă sunt compatibile cu numărul de înregistrări.</p>
+            <p>⚠️ Dacă noul fișier de intrare are un număr diferit de Documente/Registre față de folderele salvate, apare un avertisment și selecția este resetată.</p>
+            <h4>📌 REZUMAT MODURI:</h4>
             <ul>
-                <li>Fiecare Document (D) va avea un dosar separat</li>
-                <li>Fiecare Registru (R) va avea un dosar separat</li>
-                <li>Poți alege foldere diferite pentru fiecare înregistrare, același folder pentru mai multe înregistrări sau orice combinație</li>
-                <li>Poți alege foldere pe unități diferite</li>
+                <li><strong>Folder unic pentru toți:</strong> Simplu, totul într-un loc. Bun pentru sarcini rapide sau teste</li>
+                <li><strong>Separate doc/reg:</strong> Organizat pe tip. Implicit: <code>output/doc/</code> și <code>output/reg/</code></li>
+                <li><strong>Folder per înregistrare:</strong> Flexibilitate maximă. Foldere pe unități diferite, NAS, personalizate</li>
             </ul>
-            <h4>PASUL 3: PORNIȚI PROCESAREA</h4>
+<h4>PASUL 3: PORNIȚI PROCESAREA</h4>
             <p>─────────────────────────────</p>
             <h3>1. Apăsați Meniu → „Ieșire” → „Procesare”</h3>
             <h3>2. Verificați că:</h3>

@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italiano): Fundamental para los ciudadanos residentes y los nuevos expatriados.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Inglés): Idioma puente para EE. UU., Canadá, Australia y Reino Unido.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Español): Cubre Argentina (el país con más italianos del mundo), Uruguay y España (destino preferido por los jóvenes italianos en 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Español): Cubre todos los países hispanos de las Américas, Filipinas y España (destino preferido por los jóvenes italianos en 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Francés): Para las históricas y extensas comunidades en Francia y Bélgica.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Alemán): Para Alemania (casi 900.000 residentes italianos) y Suiza.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portugués): Indispensable para Brasil (cuenca de más de 30 millones de descendientes).</li>
@@ -446,10 +446,12 @@
                 <li>El programa requiere un reinicio para aplicar el nuevo idioma seleccionado</li>
             </ul>
             <h4>📂 CONFIGURACIÓN DE CARPETAS</h4>
-            <p>En la primera ejecución, el programa crea:</p>
+            <p>En la primera ejecución, el programa crea automáticamente las siguientes carpetas:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[TuNombre]\Documents\ATK-Pro\output\</code> (archivos procesados)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (archivos procesados)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TuNombre]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TuNombre]\Documents\ATK-Pro\output\doc\</code> (predeterminado documentos)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TuNombre]\Documents\ATK-Pro\output\reg\</code> (predeterminado registros)</li>
+                <li><strong>Linux/macOS:</strong> análogas bajo <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Carpeta <code>input/</code> correspondiente (opcional)</li>
             </ul>
             <p>Durante el procesamiento, se crean carpetas temporales para los mosaicos descargados (tiles_canvas_X/).
@@ -458,11 +460,7 @@
             </p>
             <p>Solo quedan los archivos finales procesados (imágenes en los formatos elegidos, PDF, manifiesto y metadatos).
             </p>
-            <p>Para modificar la carpeta de salida:</p>
-            <ul>
-                <li>Usa Menú → Configuración → "Seleccionar carpeta de salida"</li>
-                <li>La carpeta seleccionada sigue siendo la predeterminada para los procesos posteriores</li>
-            </ul>
+            <p>Para modificar las carpetas de salida usa Menú → Configuración → "Seleccionar carpetas de salida". Las opciones se guardan y se restauran automáticamente en la próxima sesión.</p>
             </div>
             <div class="section-box">
             <h3>3. INTERFAZ PRINCIPAL</h3>
@@ -543,8 +541,13 @@
 │  └─ Selecciona el idioma de la interfaz (requiere reinicio)
 ├─ Seleccionar formatos de imagen
 │  └─ Elige entre PNG, JPG, TIFF (al menos 1 obligatorio)
-├─ Seleccionar carpeta de salida
-│  └─ Elige la carpeta donde guardar las imágenes procesadas
+│     Tu elección se guarda y se preselecciona automáticamente en la próxima sesión
+├─ Seleccionar carpetas de salida
+│  └─ Abre primero la selección del modo de carpeta y luego los diálogos de selección:
+│     • Carpeta única para todos      → una sola carpeta para documentos y registros
+│     • Carpetas separadas doc/reg    → una carpeta para todos los doc, otra para los reg
+│     • Carpeta por cada registro     → una carpeta distinta para cada registro
+│     El modo y las carpetas se guardan y restauran automáticamente en la próxima sesión
 ├─ Exportar configuración
 │  └─ Guardar la configuración actual en un archivo
 ├─ Importar configuración
@@ -671,41 +674,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>El flujo de trabajo de procesamiento consta de 3 pasos:</p>
             <h4>PASO 1: SELECCIONAR FORMATOS DE IMAGEN</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Haz clic en Menú → "Configuración" → "Seleccionar formatos de imagen"</h3>
-            <h3>2. Se abre una ventana de diálogo con 3 opciones:</h3>
+            <h3>1. Carga un archivo input (Archivo input → Abrir input): la ventana de formatos se abre automáticamente</h3>
+            <h3>2. Haz clic en Menú → "Configuración" → "Seleccionar formatos de imagen"</h3>
+            <h3>3. Se abre una ventana de diálogo con 3 opciones:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Formato sin pérdida (lossless), mejor calidad, archivos más grandes</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Formato comprimido (con pérdida), buen compromiso calidad/tamaño</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Formato de archivo, máxima calidad, archivos muy grandes</p>
-            <h3>3. Selecciona al menos un formato (puedes elegir más de uno)</h3>
-            <h3>4. Haz clic en "Confirmar"</h3>
-            <h3>5. El programa muestra un mensaje con los formatos elegidos</h3>
-            <h4>📝 CONSEJOS:</h4>
+            <h3>4. Selecciona al menos un formato (puedes elegir más de uno)</h3>
+            <h3>5. Haz clic en "Confirmar"</h3>
+            <h3>6. El programa muestra un mensaje con los formatos elegidos</h3>
+                        <p>✅ <strong>Los formatos seleccionados se guardan</strong> y se preseleccionan automáticamente la próxima vez que abras el programa.</p>
+<h4>📝 CONSEJOS:</h4>
             <ul>
                 <li>Para vista previa/consulta: JPG (rápido de abrir, menor espacio)</li>
                 <li>Para archivo conservador: PNG (sin pérdidas, compromiso de espacio) o TIFF (máxima calidad)</li>
                 <li>Para ambos: selecciona tanto PNG como TIFF</li>
             </ul>
-            <h4>PASO 2: SELECCIONAR CARPETA DE SALIDA</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. PRIMERO: Asegúrate de haber cargado un archivo de entrada (Archivo de entrada → Abrir entrada)</h3>
-            <h3>2. Haz clic en Menú → "Configuración" → "Seleccionar carpeta de salida"</h3>
-            <h3>3. El programa LEE la entrada y CUENTA cuántos Documentos (D) y Registros (R):</h3>
-            <p>Ejemplo: Si la entrada contiene "2 Documentos + 1 Registro"</p>
-            <h3>4. Para CADA Documento, se abre un diálogo:</h3>
-            <p>Seleccionar carpeta para: Documento 1/2</p>
-            <p>Seleccionar carpeta para: Documento 2/2</p>
-            <h3>5. Para CADA Registro, se abre un diálogo:</h3>
-            <p>Seleccionar carpeta para: Registro 1/1</p>
-            <h3>6. Elige carpetas para cada registro (puedes usar carpetas diferentes, iguales o cualquier combinación)</h3>
-            <h3>7. Al final, muestra un resumen de todas las carpetas seleccionadas</h3>
-            <h4>📌 IMPORTANTE:</h4>
+                        <h4>PASO 2: SELECCIONAR CARPETAS DE SALIDA</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. La ventana de carpetas se abre automáticamente después de elegir los formatos (cuando cargas un archivo input)</h3>
+            <h3>2. En alternativa: Haz clic en Menú → "Configuración" → "Seleccionar carpetas de salida"</h3>
+            <h3>3. Elige el MODO DE CARPETAS:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Carpeta única para todos</span> → una sola carpeta para todos los registros (doc y registros)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Carpetas separadas doc/reg</span> → una carpeta para todos los documentos, una para todos los registros</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Carpeta por cada registro</span> → una carpeta distinta para cada registro en el archivo input</p>
+            <h3>4. Tras elegir el modo, selecciona las carpetas requeridas (1, 2 o N ventanas de diálogo)</h3>
+            <h3>5. Al final muestra un resumen de todas las carpetas seleccionadas</h3>
+            <p>✅ <strong>El modo y las carpetas se guardan</strong>. La próxima vez que abras un archivo input, se restauran automáticamente si son compatibles con el número de registros.</p>
+            <p>⚠️ Si el nuevo archivo input tiene un número diferente de Documentos/Registros respecto a las carpetas guardadas, aparece un aviso y la selección se restablece para pedir nuevas carpetas.</p>
+            <h4>📌 RESUMEN DE MODOS:</h4>
             <ul>
-                <li>Cada Documento (D) tendrá una carpeta separada</li>
-                <li>Cada Registro (R) tendrá una carpeta separada</li>
-                <li>Puedes elegir carpetas diferentes para cada registro, la misma para varios registros, o cualquier combinación</li>
-                <li>Puedes elegir carpetas en diferentes unidades</li>
+                <li><strong>Carpeta única:</strong> Sencillo, todo en un lugar. Ideal para trabajos rápidos o pruebas</li>
+                <li><strong>Separate doc/reg:</strong> Organizado por tipo. Predeterminado: <code>output/doc/</code> y <code>output/reg/</code></li>
+                <li><strong>Por registro:</strong> Máxima flexibilidad. Puedes usar unidades diferentes, NAS, carpetas personalizadas</li>
             </ul>
-            <h4>PASO 3: INICIAR PROCESAMIENTO</h4>
+<h4>PASO 3: INICIAR PROCESAMIENTO</h4>
             <p>─────────────────────────────</p>
             <h3>1. Haz clic en Menú → "Salida" → "Procesar"</h3>
             <h3>2. Verifica que:</h3>

@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italiensk): Essensielt for fastboende borgere og nye expats.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Engelsk): Bro-språk for USA, Canada, Australia og Storbritannia.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spansk): Dekker Argentina (landet med flest italienere i verden), Uruguay og Spania (foretrukket reisemål for unge italienere i 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spansk): Dekker alle spansktalende land i Amerika, Filippinene og Spania (foretrukket reisemål for unge italienere i 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Fransk): For de historiske og store samfunnene i Frankrike og Belgia.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Tysk): For Tyskland (nesten 900 000 italienske innbyggere) og Sveits.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portugisisk): Uunnværlig for Brasil (et nedslagsfelt på over 30 millioner etterkommere).</li>
@@ -445,11 +445,13 @@
                 <li>Kan endres når som helst via Meny → Innstillinger → Endre språk</li>
                 <li>Programmet krever en omstart for å ta i bruk det nye språket som er valgt</li>
             </ul>
-            <h4>📂 MAPPEKONFIGURASJON</h4>
-            <p>Ved første kjøring oppretter programmet:</p>
+                        <h4>📂 MAPPEKONFIGURASJON</h4>
+            <p>Ved første kjøring oppretter programmet automatisk følgende mapper:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[DittNavn]\Documents\ATK-Pro\output\</code> (behandlede filer)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (behandlede filer)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DittNavn]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DittNavn]\Documents\ATK-Pro\output\doc\</code> (standard for dokumenter)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DittNavn]\Documents\ATK-Pro\output\reg\</code> (standard for registre)</li>
+                <li><strong>Linux/macOS:</strong> tilsvarende under <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Tilsvarende <code>input/</code>-mappe (valgfritt)</li>
             </ul>
             <p>Under behandlingen opprettes midlertidige mapper for nedlastede fliser (tiles_canvas_X/).
@@ -458,11 +460,7 @@
             </p>
             <p>Bare de ferdigbehandlede sluttfilene gjenstår (bilder i valgte formater, PDF, manifest og metadata).
             </p>
-            <p>For å endre utdatamappen:</p>
-            <ul>
-                <li>Bruk Meny → Innstillinger → «Velg utdatamappe»</li>
-                <li>Den valgte mappen forblir standardmappen for påfølgende behandlinger</li>
-            </ul>
+                        <p>For å endre utdatamappene bruker du Meny → Innstillinger → «Velg utdatamapper». Valgene dine lagres og gjenopprettes automatisk ved neste økt.</p>
             </div>
             <div class="section-box">
             <h3>3. HOVEDGRENSESNITT</h3>
@@ -541,8 +539,13 @@
 │  └─ Velg grensesnittspråk (krever omstart)
 ├─ Velg bildeformater
 │  └─ Velg mellom PNG, JPG, TIFF (minst 1 obligatorisk)
-├─ Velg utdatamappe
-│  └─ Velg mappen der du vil lagre de behandlede bildene
+│     Valget lagres og forhåndsvelges automatisk i neste økt
+├─ Velg utdatamapper
+│  └─ Åpner først mappemodus-valg, deretter mappevelger-dialoger:
+│     • Enkelt mappe for alle         → én mappe for dokumenter og registre
+│     • Separate mapper doc/reg       → én for alle dok., én for alle reg.
+│     • Mappe per oppføring           → en separat mappe for hver oppføring
+│     Modus og mapper lagres og gjenopprettes automatisk i neste økt
 ├─ Eksporter konfigurasjon
 │  └─ Lagre gjeldende innstillinger i en fil
 ├─ Importer innstillinger
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Arbeidsflyten for behandling består av 3 trinn:</p>
             <h4>STEG 1: VELG BILDEFORMATER</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Klikk Meny → «Innstillinger» → «Velg bildeformater»</h3>
-            <h3>2. Et dialogvindu åpnes med 3 alternativer:</h3>
+            <h3>1. Last inn en inndatafil (Inndatafil → Åpne inndata): formatvinduet åpnes automatisk</h3>
+            <h3>2. Klikk Meny → «Innstillinger» → «Velg bildeformater»</h3>
+            <h3>3. Et dialogvindu åpnes med 3 alternativer:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Tapsfritt format (lossless), bedre kvalitet, større filer</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Komprimert format (med tap), god balanse mellom kvalitet/størrelse</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Arkivformat, maksimal kvalitet, veldig store filer</p>
-            <h3>3. Velg minst ett format (du kan velge flere)</h3>
-            <h3>4. Klikk «Bekreft»</h3>
-            <h3>5. Programmet viser en melding med de valgte formatene</h3>
-            <h4>📝 TIPS:</h4>
+            <h3>4. Velg minst ett format (du kan velge flere)</h3>
+            <h3>5. Klikk «Bekreft»</h3>
+            <h3>6. Programmet viser en melding med de valgte formatene</h3>
+                        <p>✅ <strong>De valgte formatene lagres</strong> og forhåndsvelges automatisk neste gang du åpner programmet.</p>
+<h4>📝 TIPS:</h4>
             <ul>
                 <li>For forhåndsvisning/konsultasjon: JPG (rask å åpne, mindre plass)</li>
                 <li>For arkivering: PNG (tapsfri, kompromiss med lagringsplass) eller TIFF (maksimal kvalitet)</li>
                 <li>For begge: velg både PNG og TIFF</li>
             </ul>
-            <h4>STEG 2: VELG UTDATAKART</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. FØRST: Forsikre deg om at du har lastet opp en inndatafil (Inndatafil → Åpne inndata)</h3>
-            <h3>2. Klikk Meny → «Innstillinger» → «Velg utdatamappe»</h3>
-            <h3>3. Programmet LESER inn dataene og TELLER antall dokumenter (D) og registre (R):</h3>
-            <p>Eksempel: Hvis inndata inneholder "2 Dokumenter + 1 Register"</p>
-            <h3>4. For HVERT dokument åpnes en dialogboks:</h3>
-            <p>Velg mappe for: Dokument 1/2</p>
-            <p>Velg mappe for: Dokument 2/2</p>
-            <h3>5. For HVER journal åpnes en dialogboks:</h3>
-            <p>Velg mappe for: Logg 1/1</p>
-            <h3>6. Velg mapper for hver oppføring (du kan bruke forskjellige mapper, like mapper, eller en hvilken som helst kombinasjon)</h3>
-            <h3>7. Til slutt, vis en oppsummering av alle valgte mapper</h3>
-            <h4>📌 VIKTIG:</h4>
+                        <h4>STEG 2: VELG UTDATAMAPPER</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. Mappedialogen åpnes automatisk etter formatvalget (når du laster inn en inndatafil)</h3>
+            <h3>2. Alternativt: Klikk Meny → «Innstillinger» → «Velg utdatamapper»</h3>
+            <h3>3. Velg MAPPEMODUS:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Enkelt mappe for alle</span> → én mappe for alle oppføringer (dokumenter og registre)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Separate mapper doc/reg</span> → én mappe for alle dokumenter, én for alle registre</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Mappe per oppføring</span> → en separat mappe for hver oppføring i inndatafilen</p>
+            <h3>4. Etter å ha valgt modus, velg de nødvendige mappene (1, 2 eller N velgerdialogbokser)</h3>
+            <h3>5. Til slutt vises en oppsummering av alle valgte mapper</h3>
+            <p>✅ <strong>Modus og mapper lagres</strong>. Neste gang du åpner en inndatafil, gjenopprettes de automatisk hvis de er kompatible med antall oppføringer.</p>
+            <p>⚠️ Hvis den nye inndatafilen har et annet antall Dokumenter/Registre enn de lagrede mappene, vises en advarsel og valget tilbakestilles.</p>
+            <h4>📌 MODUSSAMMENDRAG:</h4>
             <ul>
-                <li>Hvert dokument (D) vil ha en egen mappe</li>
-                <li>Hver journal (R) vil ha en egen mappe</li>
-                <li>Du kan velge forskjellige mapper for hver post, den samme for flere poster, eller en hvilken som helst kombinasjon</li>
-                <li>Du kan velge mapper på forskjellige stasjoner</li>
+                <li><strong>Enkelt mappe for alle:</strong> Enkelt, alt på ett sted. Bra for raske jobber eller tester</li>
+                <li><strong>Separate doc/reg:</strong> Organisert etter type. Standard: <code>output/doc/</code> og <code>output/reg/</code></li>
+                <li><strong>Mappe per oppføring:</strong> Maksimal fleksibilitet. Mapper på forskjellige stasjoner, NAS, tilpassede mapper</li>
             </ul>
-            <h4>STEG 3: START BEHANDLING</h4>
+<h4>STEG 3: START BEHANDLING</h4>
             <p>─────────────────────────────</p>
             <h3>1. Klikk Meny → "Utdata" → "Behandle"</h3>
             <h3>2. Kontroller at:</h3>

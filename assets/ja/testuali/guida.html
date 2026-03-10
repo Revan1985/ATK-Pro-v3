@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (イタリア語): 居住者および新たに海外に移住する方々にとって不可欠です。</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (英語): アメリカ、カナダ、オーストラリア、イギリスの架け橋となる言語。</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (スペイン語): アルゼンチン（世界で最もイタリア人が多い国）、ウルグアイ、スペイン（2024-2025年にイタリアの若者が最も好む旅行先）をカバーしています。</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (スペイン語): アメリカ大陸のすべてのスペイン語圏の国々、フィリピン、スペインをカバーしています（2024-2025年にイタリアの若者が最も好む旅行先）。</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (フランス語): フランスとベルギーの歴史的かつ広大なコミュニティのために。</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (ドイツ語): ドイツ（イタリア居住者約90万人）およびスイス向け。</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (ポルトガル語): ブラジルにとって不可欠（3000万人以上の子孫の盆地）。</li>
@@ -445,11 +445,13 @@
                 <li>いつでもメニュー → 設定 → 言語の変更 から変更できます</li>
                 <li>新しい言語設定を適用するには再起動が必要です</li>
             </ul>
-            <h4>📂 フォルダ設定</h4>
-            <p>初回実行時に、プログラムは以下を作成します。</p>
+                        <h4>📂 フォルダ設定</h4>
+            <p>初回実行時に、プログラムは以下のフォルダーを自動的に作成します：</p>
             <ul>
-                <li><strong>Windows：</strong><code>C:\Users\[ユーザー名]\Documents\ATK-Pro\output\</code>（処理済みファイル）</li>
-                <li><strong>Linux/macOS：</strong><code>~/Documents/ATK-Pro/output/</code>（処理済みファイル）</li>
+                <li><strong>Windows：</strong><code>C:\Users\[ユーザー名]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows：</strong><code>C:\Users\[ユーザー名]\Documents\ATK-Pro\output\doc\</code>（ドキュメントのデフォルト）</li>
+                <li><strong>Windows：</strong><code>C:\Users\[ユーザー名]\Documents\ATK-Pro\output\reg\</code>（レジスターのデフォルト）</li>
+                <li><strong>Linux/macOS：</strong><code>~/Documents/ATK-Pro/output/</code>以下に同様</li>
                 <li>対応する<code>input/</code>フォルダ（オプション）</li>
             </ul>
             <p>処理中に、ダウンロードされたタイルのためのテンポラリフォルダ（tiles_canvas_X/）が作成されます。
@@ -458,11 +460,7 @@
             </p>
             <p>最終的に処理されたファイル（選択された形式の画像、PDF、マニフェスト、メタデータ）のみが残ります。
             </p>
-            <p>出力フォルダを変更するには：</p>
-            <ul>
-                <li>メニュー → 設定 → 「出力フォルダを選択」を使用</li>
-                <li>選択されたフォルダは、後続の処理のデフォルトとして保持されます</li>
-            </ul>
+                        <p>出力フォルダーを変更するにはメニュー → 設定 → 「出力フォルダーを選択」を使用します。設定は保存され、次回起動時に自動的に復元されます。</p>
             </div>
             <div class="section-box">
             <h3>3. メインインターフェース</h3>
@@ -541,8 +539,13 @@
 │  └─ インターフェース言語を選択（再起動が必要です）
 ├─ 画像形式を選択
 │  └─ PNG、JPG、TIFFから選択（少なくとも1つ必須）
-├─ 出力フォルダを選択
-│  └─ 処理された画像を保存するフォルダを選択してください
+│     選択は保存され次回セッションで自動的に事前選択されます
+├─ 出力フォルダーを選択
+│  └─ 最初にフォルダーモードを選択し、次に選択ダイアログを開きます：
+│     • すべてに単一フォルダー         → ドキュメントとレジスター用の1つのフォルダー
+│     • doc/reg別フォルダー           → すべてのdoc用、すべてのreg用に各1つ
+│     • レコードごとのフォルダー       → 各レコードに個別フォルダー
+│     モードとフォルダーは保存され次回セッションで自動的に復元されます
 ├─ 設定のエクスポート
 │  └─ 現在の設定をファイルに保存
 ├─ 設定をインポート
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>処理ワークフローは3つのステップで構成されます。</p>
             <h4>ステップ1：画像フォーマットを選択</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. メニュー → 「設定」 → 「画像フォーマットの選択」をクリック</h3>
-            <h3>2. ダイアログボックスが開き、3つのオプションが表示されます。</h3>
+            <h3>1. 入力ファイルを読み込む（入力ファイル → 入力を開く）：フォーマットダイアログが自動的に開きます</h3>
+            <h3>2. メニュー → 「設定」 → 「画像フォーマットの選択」をクリック</h3>
+            <h3>3. ダイアログボックスが開き、3つのオプションが表示されます。</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  ロスレス形式、高音質、大容量ファイル</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → 圧縮形式（ロッシー）、品質とサイズのバランスが良い</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → アーカイブ形式、最高品質、非常に大きなファイル</p>
-            <h3>3. 少なくとも1つのフォーマットを選択してください（複数選択も可能です）</h3>
-            <h3>4. 「確認」をクリック</h3>
-            <h3>5. プログラムは選択されたフォーマットのメッセージを表示します</h3>
-            <h4>📝 アドバイス：</h4>
+            <h3>4. 少なくとも1つのフォーマットを選択してください（複数選択も可能です）</h3>
+            <h3>5. 「確認」をクリック</h3>
+            <h3>6. プログラムは選択されたフォーマットのメッセージを表示します</h3>
+                        <p>✅ <strong>選択したフォーマットは保存され</strong>、次回プログラムを開いたときに自動的に事前選択されます。</p>
+<h4>📝 アドバイス：</h4>
             <ul>
                 <li>プレビュー/参照用：JPG（開きやすく、容量が小さい）</li>
                 <li>アーカイブ保存用：PNG（ロスレス、容量圧縮あり）またはTIFF（最高品質）</li>
                 <li>両方とも：PNGとTIFFの両方を選択</li>
             </ul>
-            <h4>ステップ2：出力フォルダを選択</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. 事前準備：入力ファイルがロードされていることを確認してください（入力ファイル → 入力を開く）</h3>
-            <h3>2. メニュー → 「設定」 → 「出力フォルダを選択」をクリック</h3>
-            <h3>3. プログラムは入力を読み込み、ドキュメント（D）とレジスタ（R）の数をカウントします。</h3>
-            <p>例：入力に「書類2件＋記録1件」が含まれる場合</p>
-            <h3>4. 各ドキュメントごとにダイアログが開きます。</h3>
-            <p>「ドキュメント 1/2 のフォルダを選択」</p>
-            <p>「ドキュメント 2/2 のフォルダを選択」</p>
-            <h3>5. 各レジスタごとにダイアログが開きます。</h3>
-            <p>「選択フォルダ：ログ 1/1」</p>
-            <h3>6. 各レコードのフォルダを選択します（異なるフォルダ、同じフォルダ、または任意の組み合わせを使用できます）</h3>
-            <h3>7. 最後に、選択したすべてのフォルダーの概要を表示します</h3>
-            <h4>📌 重要：</h4>
+                        <h4>ステップ2：出力フォルダーを選択</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. フォルダーダイアログはフォーマット選択後に自動的に開きます（入力ファイルを読み込んだとき）</h3>
+            <h3>2. 代わりに：メニュー → 「設定」 → 「出力フォルダーを選択」をクリック</h3>
+            <h3>3. フォルダーモードを選んでください：</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ すべてに単一フォルダー</span> → すべてのレコード（ドキュメントとレジスター）に1つのフォルダー</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ doc/reg別フォルダー</span> → すべてのドキュメント用に1つ、すべてのレジスター用に1つ</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ レコードごとのフォルダー</span> → 入力ファイルの各レコードに個別フォルダー</p>
+            <h3>4. モード選択後に必要なフォルダーを選択します（1、2またはNのピッカーダイアログ）</h3>
+            <h3>5. 最後に選択したすべてのフォルダーの概要が表示されます</h3>
+            <p>✅ <strong>モードとフォルダーは保存され</strong>、次に入力ファイルを開いたときにレコード数と互換性があれば自動的に復元されます。</p>
+            <p>⚠️ 新しい入力ファイルのドキュメント/レジスター数が保存済みフォルダーと異なる場合、警告が表示され選択がリセットされます。</p>
+            <h4>📌 モード概要:</h4>
             <ul>
-                <li>各ドキュメント（D）には個別のフォルダがあります</li>
-                <li>各レジスタ（R）は個別のフォルダを持ちます</li>
-                <li>各レコードに異なるフォルダを選択することも、複数のレコードに同じフォルダを選択することも、あるいはその両方の組み合わせを選択することも可能です。</li>
-                <li>異なるドライブ上のフォルダを選択できます</li>
+                <li><strong>単一フォルダー:</strong> シンプル、すべて一か所。素早い作業やテストに最適</li>
+                <li><strong>Separate doc/reg:</strong> タイプ別に整理。デフォルト: <code>output/doc/</code> と <code>output/reg/</code></li>
+                <li><strong>レコードごとのフォルダー:</strong> 最大の柔軟性。異なるドライブ、NAS、カスタムフォルダーを使用可能</li>
             </ul>
-            <h4>ステップ3：処理を開始</h4>
+<h4>ステップ3：処理を開始</h4>
             <p>─────────────────────────────</p>
             <h3>1. メニュー →「出力」→「処理」をクリック</h3>
             <h3>2. 確認してください：</h3>

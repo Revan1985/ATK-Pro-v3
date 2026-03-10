@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italienisch): Grundlegend für ansässige Bürger und neue Expats.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Englisch): Brückensprache für USA, Kanada, Australien und das Vereinigte Königreich.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spanisch): Es deckt Argentinien (das Land mit den meisten Italienern der Welt), Uruguay und Spanien (bevorzugtes Reiseziel junger Italiener im Jahr 2024-2025) ab.</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spanisch): Umfasst alle hispanischsprachigen Länder Amerikas, die Philippinen und Spanien (bevorzugtes Reiseziel junger Italiener im Jahr 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Französisch): Für die historischen und großen Gemeinschaften in Frankreich und Belgien.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Deutsch): Für Deutschland (fast 900.000 italienische Einwohner) und die Schw eiz.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portugiesisch): Unverzichtbar für Brasilien (Einzugsgebiet von über 30 Millionen Nachkommen).</li>
@@ -446,10 +446,12 @@
                 <li>Das Programm erfordert einen Neustart, um die neu ausgewählte Sprache anzuwenden</li>
             </ul>
             <h4>📂 ORDNERKONFIGURATION</h4>
-            <p>Bei der ersten Ausführung erstellt das Programm:</p>
+            <p>Bei der ersten Ausführung erstellt das Programm automatisch folgende Ordner:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[IhrName]\Documents\ATK-Pro\output\</code> (verarbeitete Dateien)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (verarbeitete Dateien)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[IhrName]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[IhrName]\Documents\ATK-Pro\output\doc\</code> (Standard für Dokumente)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[IhrName]\Documents\ATK-Pro\output\reg\</code> (Standard für Register)</li>
+                <li><strong>Linux/macOS:</strong> analog unter <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Entsprechender <code>input/</code>-Ordner (optional)</li>
             </ul>
             <p>Während der Verarbeitung werden temporäre Ordner für die heruntergeladenen Kacheln erstellt (tiles_canvas_X/).
@@ -458,11 +460,7 @@
             </p>
             <p>Es verbleiben nur die endgültig verarbeiteten Dateien (Bilder in den gewählten Formaten, PDF, Manifest und Metadaten).
             </p>
-            <p>Zum Ändern des Ausgabeordners:</p>
-            <ul>
-                <li>Verwenden Sie Menü → Einstellungen → „Ausgabeordner auswählen“</li>
-                <li>Der ausgewählte Ordner bleibt der Standardordner für nachfolgende Verarbeitungen</li>
-            </ul>
+            <p>Um die Ausgabeordner zu ändern, verwenden Sie Menü → Einstellungen → „Ausgabeordner auswählen“. Die Einstellungen werden gespeichert und beim nächsten Start automatisch wiederhergestellt.</p>
             </div>
             <div class="section-box">
             <h3>3. HAUPTSCHNITTSTELLE</h3>
@@ -541,8 +539,13 @@
 │  └─ Wählen Sie die Anzeigesprache (Neustart erforderlich)
 ├─ Bildformate auswählen
 │  └─ Wählen Sie zwischen PNG, JPG, TIFF (mindestens 1 erforderlich)
+│     Ihre Auswahl wird gespeichert und in der nächsten Sitzung automatisch vorausgewählt
 ├─ Ausgabeordner auswählen
-│  └─ Wählen Sie den Ordner, in dem die bearbeiteten Bilder gespeichert werden sollen
+│  └─ Öffnet zuerst die Ordnermoduswahl, dann die Ordnerauswahl-Dialoge:
+│     • Einzelner Ordner für alle     → ein Ordner für Dokumente und Register
+│     • Separate Ordner doc/reg       → ein Ordner für alle Dok., einer für alle Register
+│     • Ordner pro Datensatz          → ein eigener Ordner für jeden Datensatz
+│     Modus und Ordner werden gespeichert und in der nächsten Sitzung wiederhergestellt
 ├─ Konfiguration exportieren
 │  └─ Aktuelle Einstellungen in einer Datei speichern
 ├─ Konfiguration importieren
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Der Verarbeitungsworkflow umfasst 3 Schritte:</p>
             <h4>SCHRITT 1: BILDERFORMATE AUSWÄHLEN</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Klicken Sie auf Menü → „Einstellungen“ → „Bildformate auswählen“</h3>
-            <h3>2. Ein Dialogfenster mit 3 Optionen öffnet sich:</h3>
+            <h3>1. Laden Sie eine Eingabedatei (Eingabedatei → Eingabe öffnen): das Formatfenster öffnet sich automatisch</h3>
+            <h3>2. Klicken Sie auf Menü → „Einstellungen“ → „Bildformate auswählen“</h3>
+            <h3>3. Ein Dialogfenster mit 3 Optionen öffnet sich:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  Verlustfreies Format (lossless), bessere Qualität, größere Dateien</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Komprimiertes Format (verlustbehaftet), guter Kompromiss zwischen Qualität und Größe</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Archivformat, höchste Qualität, sehr große Dateien</p>
-            <h3>3. Wählen Sie mindestens ein Format aus (Sie können auch mehrere auswählen)</h3>
-            <h3>4. Klicken Sie auf „Bestätigen“</h3>
-            <h3>5. Das Programm zeigt eine Meldung mit den ausgewählten Formaten an</h3>
-            <h4>📝 TIPPS:</h4>
+            <h3>4. Wählen Sie mindestens ein Format aus (Sie können auch mehrere auswählen)</h3>
+            <h3>5. Klicken Sie auf „Bestätigen“</h3>
+            <h3>6. Das Programm zeigt eine Meldung mit den ausgewählten Formaten an</h3>
+                        <p>✅ <strong>Die ausgewählten Formate werden gespeichert</strong> und beim nächsten Programmstart automatisch vorausgewählt.</p>
+<h4>📝 TIPPS:</h4>
             <ul>
                 <li>Zur Vorschau/Konsultation: JPG (schnell zu öffnen, geringerer Speicherplatz)</li>
                 <li>Für konservative Archivierung: PNG (verlustfrei, Kompromiss bei der Größe) oder TIFF (höchste Qualität)</li>
                 <li>Für beide: Wählen Sie sowohl PNG als auch TIFF</li>
             </ul>
-            <h4>SCHRITT 2: AUSGABEVERZEICHNIS AUSWÄHLEN</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. ZUERST: Stellen Sie sicher, dass Sie eine Eingabedatei geladen haben (Eingabedatei → Eingabe öffnen)</h3>
-            <h3>2. Klicken Sie auf Menü → „Einstellungen“ → „Ausgabeordner auswählen“</h3>
-            <h3>3. Das Programm LIESST die Eingabe und ZÄHLT, wie viele Dokumente (D) und Register (R) vorhanden sind:</h3>
-            <p>Beispiel: Wenn die Eingabe „2 Dokumente + 1 Register“ enthält</p>
-            <h3>4. Für JEDES Dokument öffnet sich ein Dialogfenster:</h3>
-            <p>Ordner auswählen für: Dokument 1/2</p>
-            <p>Ordner auswählen für: Dokument 2/2</p>
-            <h3>5. Für JEDES Register öffnet sich ein Dialogfenster:</h3>
-            <p>Ordner auswählen für: Protokoll 1/1</p>
-            <h3>6. Wählen Sie Ordner für jeden Datensatz aus (Sie können verschiedene, gleiche oder beliebige Kombinationen von Ordnern verwenden)</h3>
-            <h3>7. Am Ende wird eine Zusammenfassung aller ausgewählten Ordner angezeigt</h3>
-            <h4>📌 WICHTIG:</h4>
+                        <h4>SCHRITT 2: AUSGABEORDNER AUSWÄHLEN</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. Das Ordnerfenster öffnet sich automatisch nach der Formatauswahl (wenn Sie eine Eingabedatei laden)</h3>
+            <h3>2. Alternativ: Klicken Sie auf Menü → „Einstellungen" → „Ausgabeordner auswählen"</h3>
+            <h3>3. Wählen Sie den ORDNERMODUS:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Einzelner Ordner für alle</span> → ein Ordner für alle Datensätze (Dokumente und Register)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Separate Ordner doc/reg</span> → ein Ordner für alle Dokumente, einer für alle Register</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Ordner pro Datensatz</span> → ein eigener Ordner für jeden Datensatz in der Eingabedatei</p>
+            <h3>4. Wählen Sie nach der Moduswahl die erforderlichen Ordner aus (1, 2 oder N Auswahldialoge)</h3>
+            <h3>5. Am Ende wird eine Zusammenfassung aller ausgewählten Ordner angezeigt</h3>
+            <p>✅ <strong>Modus und Ordner werden gespeichert</strong>. Beim nächsten Öffnen einer Eingabedatei werden sie automatisch wiederhergestellt, wenn sie mit der Anzahl der Datensätze kompatibel sind.</p>
+            <p>⚠️ Wenn die neue Eingabedatei eine andere Anzahl von Dokumenten/Registern als die gespeicherten Ordner hat, wird eine Warnung angezeigt und die Auswahl wird zurückgesetzt.</p>
+            <h4>📌 MODUS-ÜBERSICHT:</h4>
             <ul>
-                <li>Jedes Dokument (D) erhält einen separaten Ordner</li>
-                <li>Jedes Register (R) erhält einen separaten Ordner</li>
-                <li>Sie können für jeden Datensatz unterschiedliche Ordner auswählen, denselben für mehrere Datensätze oder eine beliebige Kombination.</li>
-                <li>Sie können Ordner auf verschiedenen Laufwerken auswählen</li>
+                <li><strong>Einzelner Ordner:</strong> Einfach, alles an einem Ort. Gut für schnelle Aufgaben oder Tests</li>
+                <li><strong>Separate doc/reg:</strong> Nach Typ organisiert. Standard: <code>output/doc/</code> und <code>output/reg/</code></li>
+                <li><strong>Pro Datensatz:</strong> Maximale Flexibilität. Ordner auf verschiedenen Laufwerken, NAS, benutzerdefiniert</li>
             </ul>
-            <h4>SCHRITT 3: VERARBEITUNG STARTEN</h4>
+<h4>SCHRITT 3: VERARBEITUNG STARTEN</h4>
             <p>─────────────────────────────</p>
             <h3>1. Klicken Sie auf Menü → „Ausgabe“ → „Verarbeiten“</h3>
             <h3>2. Stellen Sie sicher, dass:</h3>

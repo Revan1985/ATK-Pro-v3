@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italien): Essentiel pour les citoyens résidents et les nouveaux expatriés.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Anglais): Langue passerelle pour les États-Unis, le Canada, l'Australie et le Royaume-Uni.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Espagnol): Couvre l'Argentine (le pays comptant le plus d'Italiens au monde), l'Uruguay et l'Espagne (destination préférée des jeunes Italiens en 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Espagnol): Couvre tous les pays hispanophones des Amériques, les Philippines et l'Espagne (destination préférée des jeunes Italiens en 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Français): Pour les communautés historiques et vastes en France et en Belgique.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Allemand): Pour l'Allemagne (près de 900 000 résidents italiens) et la Suisse.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portugais): Indispensable pour le Brésil (bassin de plus de 30 millions de descendants).</li>
@@ -445,11 +445,13 @@
                 <li>Peut être modifiée à tout moment via Menu → Paramètres → Changer de langue</li>
                 <li>Le programme nécessite un redémarrage pour appliquer la nouvelle langue sélectionnée</li>
             </ul>
-            <h4>📂 CONFIGURATION DES DOSSIERS</h4>
-            <p>Lors de la première exécution, le programme crée :</p>
+                        <h4>📂 CONFIGURATION DES DOSSIERS</h4>
+            <p>Lors de la première exécution, le programme crée automatiquement les dossiers suivants :</p>
             <ul>
-                <li><strong>Windows :</strong> <code>C:\Users\[VotreNom]\Documents\ATK-Pro\output\</code> (fichiers traités)</li>
-                <li><strong>Linux/macOS :</strong> <code>~/Documents/ATK-Pro/output/</code> (fichiers traités)</li>
+                <li><strong>Windows :</strong> <code>C:\Users\[VotreNom]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows :</strong> <code>C:\Users\[VotreNom]\Documents\ATK-Pro\output\doc\</code> (par défaut pour les documents)</li>
+                <li><strong>Windows :</strong> <code>C:\Users\[VotreNom]\Documents\ATK-Pro\output\reg\</code> (par défaut pour les registres)</li>
+                <li><strong>Linux/macOS :</strong> analogues sous <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Dossier <code>input/</code> correspondant (facultatif)</li>
             </ul>
             <p>Pendant le traitement, des dossiers temporaires sont créés pour les tuiles téléchargées (tiles_canvas_X/).
@@ -458,11 +460,7 @@
             </p>
             <p>Il ne reste que les fichiers finaux traités (images dans les formats choisis, PDF, manifestes et métadonnées).
             </p>
-            <p>Pour modifier le dossier de sortie :</p>
-            <ul>
-                <li>Utilisez Menu → Paramètres → « Sélectionner le dossier de sortie »</li>
-                <li>Le dossier choisi reste celui par défaut pour les traitements ultérieurs</li>
-            </ul>
+                        <p>Pour modifier les dossiers de sortie, utilisez Menu → Paramètres → « Sélectionner les dossiers de sortie ». Vos choix sont sauvegardés et restaurés automatiquement à la prochaine session.</p>
             </div>
             <div class="section-box">
             <h3>3. INTERFACE PRINCIPALE</h3>
@@ -541,8 +539,13 @@
 │  └─ Sélectionnez la langue de l'interface (nécessite un redémarrage)
 ├─ Sélectionner les formats d'image
 │  └─ Choisissez entre PNG, JPG, TIFF (au moins 1 obligatoire)
-├─ Sélectionner le dossier de sortie
-│  └─ Choisissez le dossier où enregistrer les images traitées
+│     Votre choix est sauvegardé et présélectionné automatiquement à la prochaine session
+├─ Sélectionner les dossiers de sortie
+│  └─ Ouvre d'abord le choix du mode dossier, puis les fenêtres de sélection :
+│     • Dossier unique pour tous      → un seul dossier pour documents et registres
+│     • Dossiers séparés doc/reg      → un dossier pour tous les doc, un pour les reg
+│     • Dossier par enregistrement    → un dossier distinct pour chaque enregistrement
+│     Le mode et les dossiers sont sauvegardés et restaurés à la prochaine session
 ├─ Exporter la configuration
 │  └─ Sauvegarder les paramètres actuels dans un fichier
 ├─ Importer la configuration
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Le workflow de traitement comprend 3 étapes :</p>
             <h4>ÉTAPE 1 : SÉLECTIONNER LES FORMATS D'IMAGE</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Cliquez sur Menu → « Paramètres » → « Sélectionner les formats d'image »</h3>
-            <h3>2. Une fenêtre de dialogue s'ouvre avec 3 options :</h3>
+            <h3>1. Chargez un fichier d'entrée (Fichier d'entrée → Ouvrir l'entrée) : la fenêtre des formats s'ouvre automatiquement</h3>
+            <h3>2. Cliquez sur Menu → « Paramètres » → « Sélectionner les formats d'image »</h3>
+            <h3>3. Une fenêtre de dialogue s'ouvre avec 3 options :</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Format sans perte (lossless), meilleure qualité, fichiers plus volumineux</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Format compressé (avec perte), bon compromis qualité/taille</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Format d'archivage, qualité maximale, fichiers très volumineux</p>
-            <h3>3. Sélectionnez au moins un format (vous pouvez en choisir plusieurs)</h3>
-            <h3>4. Cliquez sur « Confirmer »</h3>
-            <h3>5. Le programme affiche un message avec les formats choisis</h3>
-            <h4>📝 CONSEILS :</h4>
+            <h3>4. Sélectionnez au moins un format (vous pouvez en choisir plusieurs)</h3>
+            <h3>5. Cliquez sur « Confirmer »</h3>
+            <h3>6. Le programme affiche un message avec les formats choisis</h3>
+                        <p>✅ <strong>Les formats sélectionnés sont sauvegardés</strong> et présélectionnés automatiquement à la prochaine ouverture du programme.</p>
+<h4>📝 CONSEILS :</h4>
             <ul>
                 <li>Pour aperçu/consultation : JPG (rapide à ouvrir, moins d'espace)</li>
                 <li>Pour archivage conservateur : PNG (sans perte, compromis sur l'espace) ou TIFF (qualité maximale)</li>
                 <li>Pour les deux : sélectionnez PNG et TIFF</li>
             </ul>
-            <h4>ÉTAPE 2 : SÉLECTIONNER LE DOSSIER DE SORTIE</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. AVANT : Assurez-vous d'avoir chargé un fichier d'entrée (Fichier d'entrée → Ouvrir l'entrée)</h3>
-            <h3>2. Cliquez sur Menu → « Paramètres » → « Sélectionner le dossier de sortie »</h3>
-            <h3>3. Le programme LIT l'entrée et COMPTE combien de Documents (D) et d'Enregistrements (R) :</h3>
-            <p>Exemple : Si l'entrée contient « 2 Documents + 1 Registre »</p>
-            <h3>4. Pour CHAQUE Document, une boîte de dialogue s'ouvre :</h3>
-            <p>Sélectionner un dossier pour : Document 1/2</p>
-            <p>Sélectionner un dossier pour : Document 2/2</p>
-            <h3>5. Pour CHAQUE Registre, une boîte de dialogue s'ouvre :</h3>
-            <p>Sélectionner un dossier pour : Journal 1/1</p>
-            <h3>6. Choisissez des dossiers pour chaque enregistrement (vous pouvez utiliser des dossiers différents, identiques, ou toute combinaison)</h3>
-            <h3>7. À la fin, affiche un résumé de tous les dossiers choisis</h3>
-            <h4>📌 IMPORTANT :</h4>
+                        <h4>ÉTAPE 2 : SÉLECTIONNER LES DOSSIERS DE SORTIE</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. La fenêtre des dossiers s'ouvre automatiquement après le choix des formats (quand vous chargez un fichier d'entrée)</h3>
+            <h3>2. En alternative : Cliquez sur Menu → « Paramètres » → « Sélectionner les dossiers de sortie »</h3>
+            <h3>3. Choisissez le MODE DOSSIER :</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Dossier unique pour tous</span> → un seul dossier pour tous les enregistrements (doc et registres)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Dossiers séparés doc/reg</span> → un dossier pour tous les documents, un pour tous les registres</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Dossier par enregistrement</span> → un dossier distinct pour chaque enregistrement dans le fichier d'entrée</p>
+            <h3>4. Après le choix du mode, sélectionnez les dossiers requis (1, 2 ou N fenêtres de sélection)</h3>
+            <h3>5. À la fin, affiche un résumé de tous les dossiers choisis</h3>
+            <p>✅ <strong>Le mode et les dossiers sont sauvegardés</strong>. À la prochaine ouverture d'un fichier d'entrée, ils sont automatiquement restaurés s'ils sont compatibles avec le nombre d'enregistrements.</p>
+            <p>⚠️ Si le nouveau fichier d'entrée a un nombre différent de Documents/Registres par rapport aux dossiers sauvegardés, un avertissement s'affiche et la sélection est réinitialisée.</p>
+            <h4>📌 RÉSUMÉ DES MODES:</h4>
             <ul>
-                <li>Chaque Document (D) aura un dossier séparé</li>
-                <li>Chaque Registre (R) aura un dossier séparé</li>
-                <li>Vous pouvez choisir des dossiers différents pour chaque enregistrement, le même pour plusieurs enregistrements, ou n'importe quelle combinaison</li>
-                <li>Vous pouvez choisir des dossiers sur différents disques</li>
+                <li><strong>Dossier unique:</strong> Simple, tout au même endroit. Idéal pour les travaux rapides ou les tests</li>
+                <li><strong>Separate doc/reg:</strong> Organisé par type. Par défaut: <code>output/doc/</code> et <code>output/reg/</code></li>
+                <li><strong>Par enregistrement:</strong> Flexibilité maximale. Dossiers sur différents disques, NAS, personnalisés</li>
             </ul>
-            <h4>ÉTAPE 3 : LANCER LE TRAITEMENT</h4>
+<h4>ÉTAPE 3 : LANCER LE TRAITEMENT</h4>
             <p>─────────────────────────────</p>
             <h3>1. Cliquez sur Menu → « Sortie » → « Traiter »</h3>
             <h3>2. Vérifiez que :</h3>

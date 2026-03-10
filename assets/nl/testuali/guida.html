@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italiaans): Essentieel voor ingezeten burgers en nieuwe expats.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Engels): Brugtaal voor de VS, Canada, Australië en het Verenigd Koninkrijk.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spaans): Het omvat Argentinië (het land met de meeste Italianen ter wereld), Uruguay en Spanje (favoriete bestemming van jonge Italianen in 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spaans): Omvat alle Spaanstalige landen van de Amerika's, de Filipijnen en Spanje (favoriete bestemming van jonge Italianen in 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Frans): Voor de historische en grote gemeenschappen in Frankrijk en België.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Duits): Voor Duitsland (bijna 900.000 Italiaanse inwoners) en Zwitserland.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portugees): Onmisbaar voor Brazilië (bekken van meer dan 30 miljoen nakomelingen).</li>
@@ -446,10 +446,12 @@
                 <li>Het programma vereist een herstart om de nieuw geselecteerde taal toe te passen</li>
             </ul>
             <h4>📂 MAPCONFIGURATIE</h4>
-            <p>Bij de eerste uitvoering maakt het programma:</p>
+            <p>Bij de eerste uitvoering maakt het programma automatisch de volgende mappen aan:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[UwNaam]\Documents\ATK-Pro\output\</code> (verwerkte bestanden)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (verwerkte bestanden)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[UwNaam]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[UwNaam]\Documents\ATK-Pro\output\doc\</code> (standaard documenten)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[UwNaam]\Documents\ATK-Pro\output\reg\</code> (standaard registers)</li>
+                <li><strong>Linux/macOS:</strong> analoog onder <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Bijbehorende map <code>input/</code> (optioneel)</li>
             </ul>
             <p>Tijdens de verwerking worden tijdelijke mappen aangemaakt voor gedownloade tegels (tiles_canvas_X/).
@@ -458,11 +460,7 @@
             </p>
             <p>Alleen de verwerkte definitieve bestanden blijven over (afbeeldingen in de gekozen formaten, PDF, manifest en metadata).
             </p>
-            <p>Om de uitvoermap te wijzigen:</p>
-            <ul>
-                <li>Gebruik Menu → Instellingen → "Selecteer uitvoermap"</li>
-                <li>De gekozen map blijft de standaardmap voor volgende verwerkingen</li>
-            </ul>
+            <p>Om de uitvoermappen te wijzigen gebruik Menu → Instellingen → "Selecteer uitvoermappen". Uw keuzes worden opgeslagen en automatisch hersteld in de volgende sessie.</p>
             </div>
             <div class="section-box">
             <h3>3. HOOFDINTERFACE</h3>
@@ -541,8 +539,13 @@
 │  └─ Selecteer de interface taal (herstart vereist)
 ├─ Selecteer afbeeldingsindelingen
 │  └─ Kies uit PNG, JPG, TIFF (minimaal 1 verplicht)
-├─ Selecteer uitvoermap
-│  └─ Kies de map waar de verwerkte afbeeldingen moeten worden opgeslagen
+│     Uw keuze wordt opgeslagen en automatisch voorgeselecteerd bij de volgende sessie
+├─ Selecteer uitvoermappen
+│  └─ Opent eerst de mapselectie, dan de mappenkiezer-dialogen:
+│     • Eén map voor alles            → één map voor documenten en registers
+│     • Aparte mappen doc/reg         → één map voor alle doc, één voor alle reg
+│     • Map per record                → een aparte map voor elk record
+│     Modus en mappen worden opgeslagen en hersteld bij de volgende sessie
 ├─ Exporteer configuratie
 │  └─ Sla de huidige instellingen op in een bestand
 ├─ Importeer configuratie
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Het verwerkingsworkflow bestaat uit 3 stappen:</p>
             <h4>STAP 1: SELECTEER AFBEELDINGSFORMATEN</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Klik op Menu → "Instellingen" → "Afbeeldingsformaten selecteren"</h3>
-            <h3>2. Er opent een dialoogvenster met 3 opties:</h3>
+            <h3>1. Laad een invoerbestand (Invoerbestand → Invoer openen): het formaatvenster opent automatisch</h3>
+            <h3>2. Klik op Menu → "Instellingen" → "Afbeeldingsformaten selecteren"</h3>
+            <h3>3. Er opent een dialoogvenster met 3 opties:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Lossless formaat, betere kwaliteit, grotere bestanden</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Gecomprimeerd formaat (lossy), goed compromis kwaliteit/grootte</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Archiefformaat, maximale kwaliteit, zeer grote bestanden</p>
-            <h3>3. Selecteer minimaal één formaat (u kunt er meer dan één kiezen)</h3>
-            <h3>4. Klik op "Bevestigen"</h3>
-            <h3>5. Het programma toont een bericht met de gekozen formaten</h3>
-            <h4>📝 TIPS:</h4>
+            <h3>4. Selecteer minimaal één formaat (u kunt er meer dan één kiezen)</h3>
+            <h3>5. Klik op "Bevestigen"</h3>
+            <h3>6. Het programma toont een bericht met de gekozen formaten</h3>
+                        <p>✅ <strong>De geselecteerde indelingen worden opgeslagen</strong> en automatisch voorgeselecteerd de volgende keer dat u het programma opent.</p>
+<h4>📝 TIPS:</h4>
             <ul>
                 <li>Ter preview/consultatie: JPG (snel te openen, minder ruimte)</li>
                 <li>Voor archivering: PNG (lossless, ruimtebesparend) of TIFF (maximale kwaliteit)</li>
                 <li>Voor beiden: selecteer zowel PNG als TIFF</li>
             </ul>
-            <h4>STAP 2: SELECTEER UITVOERMAP</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. EERST: Zorg ervoor dat u een invoerbestand hebt geladen (Invoerbestand → Invoer openen)</h3>
-            <h3>2. Klik op Menu → "Instellingen" → "Kies uitvoermap"</h3>
-            <h3>3. Het programma LEEST de invoer en TELT hoeveel Documenten (D) en Registers (R):</h3>
-            <p>Voorbeeld: Als de invoer ""2 Documenten + 1 Register"" bevat</p>
-            <h3>4. Voor ELK Document wordt een dialoogvenster geopend:</h3>
-            <p>"Selecteer map voor: Document 1/2"</p>
-            <p>"Selecteer map voor: Document 2/2"</p>
-            <h3>5. Voor ELK register wordt een dialoog geopend:</h3>
-            <p>"Selecteer map voor: Logboek 1/1"</p>
-            <h3>6. Kies mappen voor elk record (u kunt verschillende mappen, dezelfde mappen of een willekeurige combinatie gebruiken)</h3>
-            <h3>7. Toon aan het einde een samenvatting van alle geselecteerde mappen</h3>
-            <h4>📌 BELANGRIJK:</h4>
+                        <h4>STAP 2: SELECTEER UITVOERMAPPEN</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. Het mappenvenster opent automatisch na de formaatselectie (wanneer u een invoerbestand laadt)</h3>
+            <h3>2. Als alternatief: Klik op Menu → "Instellingen" → "Uitvoermappen selecteren"</h3>
+            <h3>3. Kies de MAPPENMODUS:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Eén map voor alles</span> → één map voor alle records (documenten en registers)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Aparte mappen doc/reg</span> → één map voor alle documenten, één voor alle registers</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Map per record</span> → een aparte map voor elk record in het invoerbestand</p>
+            <h3>4. Na het kiezen van de modus, selecteer de vereiste mappen (1, 2 of N keuzedialogen)</h3>
+            <h3>5. Aan het einde wordt een samenvatting van alle geselecteerde mappen getoond</h3>
+            <p>✅ <strong>Modus en mappen worden opgeslagen</strong>. De volgende keer dat u een invoerbestand opent, worden ze automatisch hersteld als ze compatibel zijn met het aantal records.</p>
+            <p>⚠️ Als het nieuwe invoerbestand een ander aantal Documenten/Registers heeft dan de opgeslagen mappen, wordt een waarschuwing getoond en wordt de selectie gereset.</p>
+            <h4>📌 MODUS-OVERZICHT:</h4>
             <ul>
-                <li>Elk document (D) krijgt een aparte map</li>
-                <li>Elk Register (R) krijgt een aparte map</li>
-                <li>U kunt verschillende mappen kiezen voor elk record, dezelfde voor meerdere records, of een willekeurige combinatie</li>
-                <li>U kunt mappen op verschillende schijven kiezen</li>
+                <li><strong>Eén map voor alles:</strong> Eenvoudig, alles op één plek. Goed voor snelle taken of tests</li>
+                <li><strong>Separate doc/reg:</strong> Georganiseerd per type. Standaard: <code>output/doc/</code> en <code>output/reg/</code></li>
+                <li><strong>Per record:</strong> Maximale flexibiliteit. Mappen op verschillende schijven, NAS, aangepast</li>
             </ul>
-            <h4>STAP 3: START VERWERKING</h4>
+<h4>STAP 3: START VERWERKING</h4>
             <p>─────────────────────────────</p>
             <h3>1. Klik op Menu → "Output" → "Verwerken"</h3>
             <h3>2. Controleer of:</h3>

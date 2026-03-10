@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Włoski): Kluczowe dla mieszkańców i nowych emigrantów.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Angielski): Język pomostowy dla USA, Kanady, Australii i Wielkiej Brytanii.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Hiszpański): Obejmuje Argentynę (kraj z największą liczbą Włochów na świecie), Urugwaj i Hiszpanię (preferowany kierunek podróży młodych Włochów w latach 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Hiszpański): Obejmuje wszystkie kraje hispańskie Ameryki, Filipiny i Hiszpanię (preferowany kierunek podróży młodych Włochów w latach 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Francuski): Dla historycznych i licznych społeczności we Francji i Belgii.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Niemiecki): Dla Niemiec (prawie 900 000 włoskich rezydentów) i Szwajcarii.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portugalski): Niezbędny dla Brazylii (ponad 30 milionów potomków).</li>
@@ -445,12 +445,14 @@
                 <li>Może być zmienione w dowolnym momencie poprzez Menu → Ustawienia → Zmień język</li>
                 <li>Program wymaga ponownego uruchomienia, aby zastosować nowy wybrany język</li>
             </ul>
-            <h4>📂 KONFIGURACJA FOLDERÓW</h4>
-            <p>Przy pierwszym uruchomieniu program tworzy:</p>
+                        <h4>📂 KONFIGURACJA FOLDERÓW</h4>
+            <p>Przy pierwszym uruchomieniu program automatycznie tworzy następujące foldery:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[NazwaUżytkownika]\Documents\ATK-Pro\output\</code> (przetworzone pliki)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (przetworzone pliki)</li>
-                <li>Odpowiedni folder <code>input/</code> (opcjonalnie)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TwojeImie]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TwojeImie]\Documents\ATK-Pro\output\doc\</code> (domyślny dla dokumentów)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TwojeImie]\Documents\ATK-Pro\output\reg\</code> (domyślny dla rejestrów)</li>
+                <li><strong>Linux/macOS:</strong> analogicznie pod <code>~/Documents/ATK-Pro/output/</code></li>
+                <li>Odpowiadający folder <code>input/</code> (opcjonalnie)</li>
             </ul>
             <p>Podczas przetwarzania tworzone są tymczasowe foldery dla pobranych kafelków (tiles_canvas_X/).
             </p>
@@ -458,11 +460,7 @@
             </p>
             <p>Pozostają tylko przetworzone pliki końcowe (obrazy w wybranych formatach, PDF, manifest i metadane).
             </p>
-            <p>Aby zmienić folder wyjściowy:</p>
-            <ul>
-                <li>Użyj Menu → Ustawienia → „Wybierz folder wyjściowy”</li>
-                <li>Wybrany folder pozostaje domyślnym dla kolejnych przetwarzania</li>
-            </ul>
+                        <p>Aby zmienić foldery wyjściowe, użyj Menu → Ustawienia → „Wybierz foldery wyjściowe‟. Twoje wybory są zapisywane i automatycznie przywracane przy następnej sesji.</p>
             </div>
             <div class="section-box">
             <h3>3. INTERFEJS GŁÓWNY</h3>
@@ -541,8 +539,13 @@
 │  └─ Wybierz język interfejsu (wymaga ponownego uruchomienia)
 ├─ Wybierz formaty obrazu
 │  └─ Wybierz spośród PNG, JPG, TIFF (wymagany co najmniej 1)
-├─ Wybierz folder wyjściowy
-│  └─ Wybierz folder, w którym chcesz zapisać przetworzone obrazy
+│     Twój wybór jest zapisywany i automatycznie wstępnie wybierany w następnej sesji
+├─ Wybierz foldery wyjściowe
+│  └─ Najpierw otwiera wybór trybu folderów, potem dialogi wyboru:
+│     • Jeden folder dla wszystkich   → jeden folder dla dokumentów i rejestrów
+│     • Oddzielne foldery doc/reg     → jeden dla wszystkich dok., drugi dla reg.
+│     • Folder na każdy rekord        → osobny folder dla każdego rekordu
+│     Tryb i foldery są zapisywane i przywracane w następnej sesji
 ├─ Eksportuj konfigurację
 │  └─ Zapisz bieżące ustawienia w pliku
 ├─ Importuj konfigurację
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Przebieg przetwarzania obejmuje 3 kroki:</p>
             <h4>KROK 1: WYBIERZ FORMATY OBRAZU</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Kliknij Menu → „Ustawienia” → „Wybierz formaty obrazu”</h3>
-            <h3>2. Otworzy się okno dialogowe z 3 opcjami:</h3>
+            <h3>1. Wczytaj plik wejściowy (Plik wejściowy → Otwórz wejście): okno formatów otwiera się automatycznie</h3>
+            <h3>2. Kliknij Menu → „Ustawienia” → „Wybierz formaty obrazu”</h3>
+            <h3>3. Otworzy się okno dialogowe z 3 opcjami:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Format bezstratny (lossless), lepsza jakość, większe pliki</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Format skompresowany (stratny), dobry kompromis jakość/rozmiar</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Format archiwalny, najwyższa jakość, bardzo duże pliki</p>
-            <h3>3. Wybierz co najmniej jeden format (możesz wybrać więcej niż jeden)</h3>
-            <h3>4. Kliknij „Potwierdź”</h3>
-            <h3>5. Program wyświetla komunikat z wybranymi formatami</h3>
-            <h4>📝 WSKAZÓWKI:</h4>
+            <h3>4. Wybierz co najmniej jeden format (możesz wybrać więcej niż jeden)</h3>
+            <h3>5. Kliknij „Potwierdź”</h3>
+            <h3>6. Program wyświetla komunikat z wybranymi formatami</h3>
+                        <p>✅ <strong>Wybrane formaty są zapisywane</strong> i automatycznie wstępnie wybierane następnym razem gdy otworzysz program.</p>
+<h4>📝 WSKAZÓWKI:</h4>
             <ul>
                 <li>Do podglądu/konsultacji: JPG (szybki do otwarcia, mniejszy rozmiar)</li>
                 <li>Do archiwizacji konserwatorskiej: PNG (bezstratny, kompromis przestrzeni) lub TIFF (maksymalna jakość)</li>
                 <li>Dla obu: wybierz PNG i TIFF</li>
             </ul>
-            <h4>KROK 2: WYBIERZ FOLDER WYJŚCIOWY</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. NAJPIERW: Upewnij się, że załadowałeś plik wejściowy (Plik wejściowy → Otwórz wejście)</h3>
-            <h3>2. Kliknij Menu → „Ustawienia” → „Wybierz folder wyjściowy”</h3>
-            <h3>3. Program odczytuje dane wejściowe i zlicza liczbę Dokumentów (D) i Rejestrów (R):</h3>
-            <p>Przykład: Jeśli dane wejściowe zawierają „2 Dokumenty + 1 Rejestr”</p>
-            <h3>4. Dla KAŻDEGO dokumentu otwiera się okno dialogowe:</h3>
-            <p>Wybierz folder dla: Dokument 1/2</p>
-            <p>Wybierz folder dla: Dokument 2/2</p>
-            <h3>5. Dla KAŻDEGO Rejestr otwiera się okno dialogowe:</h3>
-            <p>Wybierz folder dla: Rejestr 1/1</p>
-            <h3>6. Wybierz foldery dla każdego rekordu (możesz użyć różnych folderów, tych samych lub dowolnej kombinacji)</h3>
-            <h3>7. Na koniec wyświetl podsumowanie wszystkich wybranych folderów</h3>
-            <h4>📌 WAŻNE:</h4>
+                        <h4>KROK 2: WYBIERZ FOLDERY WYJŚCIOWE</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. Okno folderów otwiera się automatycznie po wyborze formatów (gdy wczytasz plik wejściowy)</h3>
+            <h3>2. Alternatywnie: Kliknij Menu → „Ustawienia" → „Wybierz foldery wyjściowe"</h3>
+            <h3>3. Wybierz TRYB FOLDERÓW:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Jeden folder dla wszystkich</span> → jeden folder dla wszystkich rekordów (dokumenty i rejestry)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Oddzielne foldery doc/reg</span> → jeden folder dla wszystkich dokumentów, inny dla wszystkich rejestrów</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Folder na każdy rekord</span> → osobny folder dla każdego rekordu w pliku wejściowym</p>
+            <h3>4. Po wyborze trybu, wybierz wymagane foldery (1, 2 lub N okien wyboru)</h3>
+            <h3>5. Na koniec wyświetlane jest podsumowanie wszystkich wybranych folderów</h3>
+            <p>✅ <strong>Tryb i foldery są zapisywane</strong>. Następnym razem gdy otworzysz plik wejściowy, są automatycznie przywracane jeśli są zgodne z liczbą rekordów.</p>
+            <p>⚠️ Jeśli nowy plik wejściowy ma inną liczbę Dokumentów/Rejestrów w porównaniu z zapisanymi folderami, wyświetlane jest ostrzeżenie i wybór jest resetowany.</p>
+            <h4>📌 PODSUMOWANIE TRYBÓW:</h4>
             <ul>
-                <li>Każdy Dokument (D) będzie miał osobny folder</li>
-                <li>Każdy Rejestr (R) będzie miał osobną teczkę</li>
-                <li>Możesz wybrać różne foldery dla każdego rekordu, ten sam dla wielu rekordów lub dowolną kombinację</li>
-                <li>Możesz wybrać foldery na różnych dyskach</li>
+                <li><strong>Jeden folder dla wszystkich:</strong> Prosto, wszystko w jednym miejscu. Dobre do szybkich zadań lub testów</li>
+                <li><strong>Separate doc/reg:</strong> Zorganizowane według typu. Domyślnie: <code>output/doc/</code> i <code>output/reg/</code></li>
+                <li><strong>Folder na każdy rekord:</strong> Maksymalna elastyczność. Różne dyski, NAS, foldery niestandardowe</li>
             </ul>
-            <h4>KROK 3: ROZPOCZNIJ PRZETWARZANIE</h4>
+<h4>KROK 3: ROZPOCZNIJ PRZETWARZANIE</h4>
             <p>─────────────────────────────</p>
             <h3>1. Kliknij Menu → „Wyjście” → „Przetwórz”</h3>
             <h3>2. Sprawdź, czy:</h3>

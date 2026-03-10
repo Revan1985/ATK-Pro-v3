@@ -417,7 +417,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Tiếng Ý): Thiết yếu cho công dân đang sinh sống và những người nước ngoài mới đến.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Tiếng Anh): Ngôn ngữ cầu nối cho Hoa Kỳ, Canada, Úc và Vương quốc Anh.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Tiếng Tây Ban Nha): : Bao gồm Argentina (quốc gia có nhiều người Ý nhất thế giới), Uruguay và Tây Ban Nha (điểm đến yêu thích của giới trẻ Ý vào năm 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Tiếng Tây Ban Nha): Bao gồm tất cả các quốc gia nói tiếng Tây Ban Nha ở châu Mỹ, Philippines và Tây Ban Nha (điểm đến yêu thích của giới trẻ Ý vào năm 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Tiếng Pháp): Dành cho các cộng đồng lịch sử và đông đảo ở Pháp và Bỉ.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Tiếng Đức): Dành cho Đức (gần 900.000 người Ý cư trú) và Thụy Sĩ.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Tiếng Bồ Đào Nha): Không thể thiếu đối với Brazil (với hơn 30 triệu người gốc).</li>
@@ -443,11 +443,13 @@
                 <li>Có thể thay đổi bất cứ lúc nào thông qua Menu → Cài đặt → Thay đổi ngôn ngữ</li>
                 <li>Chương trình yêu cầu khởi động lại để áp dụng ngôn ngữ mới đã chọn</li>
             </ul>
-            <h4>📂 CẤU HÌNH THƯ MỤC</h4>
-            <p>Khi thực thi lần đầu, chương trình sẽ tạo ra:</p>
+                        <h4>📂 CẤU HÌNH THƯ MỤC</h4>
+            <p>Khi chạy lần đầu, chương trình tự động tạo các thư mục sau:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[TênCủaBạn]\Documents\ATK-Pro\output\</code> (các tệp đã xử lý)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (các tệp đã xử lý)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TenBan]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TenBan]\Documents\ATK-Pro\output\doc\</code> (mặc định cho tài liệu)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[TenBan]\Documents\ATK-Pro\output\reg\</code> (mặc định cho sổ đăng ký)</li>
+                <li><strong>Linux/macOS:</strong> tương tự trong <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Thư mục <code>input/</code> tương ứng (tùy chọn)</li>
             </ul>
             <p>Trong quá trình xử lý, các thư mục tạm thời được tạo cho các ô đã tải xuống (tiles_canvas_X/).
@@ -456,11 +458,7 @@
             </p>
             <p>Chỉ còn lại các tệp cuối cùng đã xử lý (hình ảnh ở các định dạng đã chọn, PDF, manifest và siêu dữ liệu).
             </p>
-            <p>Để thay đổi thư mục đầu ra:</p>
-            <ul>
-                <li>Sử dụng Menu → Cài đặt → "Chọn thư mục đầu ra"</li>
-                <li>Thư mục đã chọn sẽ là thư mục mặc định cho các xử lý tiếp theo</li>
-            </ul>
+                        <p>Để thay đổi thư mục đầu ra, sử dụng Menu → Cài đặt → “Chọn thư mục đầu ra”. Lựa chọn được lưu và tự động khôi phục khi bắt đầu phiên tiếp theo.</p>
             </div>
             <div class="section-box">
             <h3>3. GIAO DIỆN CHÍNH</h3>
@@ -541,8 +539,13 @@
 │  └─ Chọn ngôn ngữ giao diện (yêu cầu khởi động lại)
 ├─ Chọn định dạng ảnh
 │  └─ Chọn giữa PNG, JPG, TIFF (ít nhất 1 bắt buộc)
+│     Lựa chọn được lưu và tự động chọn trước trong phiên tiếp theo
 ├─ Chọn thư mục đầu ra
-│  └─ Chọn thư mục để lưu ảnh đã xử lý
+│  └─ Mở hộp thoại chọn chế độ thư mục trước, sau đó chọn thư mục:
+│     • Thư mục duy nhất cho tất cả   → một thư mục cho tài liệu và sổ đăng ký
+│     • Thư mục riêng doc/reg         → một cho tất cả tài liệu, một cho sổ đăng ký
+│     • Thư mục cho mỗi bản ghi       → thư mục riêng cho từng bản ghi
+│     Chế độ và thư mục được lưu và tự động khôi phục trong phiên tiếp theo
 ├─ Xuất cấu hình
 │  └─ Lưu cài đặt hiện tại vào tệp
 ├─ Nhập cấu hình
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Quy trình xử lý bao gồm 3 bước:</p>
             <h4>BƯỚC 1: CHỌN ĐỊNH DẠNG ẢNH</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Nhấp vào Menu → "Cài đặt" → "Chọn định dạng ảnh"</h3>
-            <h3>2. Một cửa sổ hội thoại sẽ mở ra với 3 tùy chọn:</h3>
+            <h3>1. Tải tệp đầu vào (Tệp đầu vào → Mở đầu vào): hộp thoại định dạng tự động mở</h3>
+            <h3>2. Nhấp vào Menu → "Cài đặt" → "Chọn định dạng ảnh"</h3>
+            <h3>3. Một cửa sổ hội thoại sẽ mở ra với 3 tùy chọn:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Định dạng không mất dữ liệu (lossless), chất lượng tốt hơn, tệp lớn hơn</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Định dạng nén (mất mát), cân bằng tốt giữa chất lượng/kích thước</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Định dạng lưu trữ, chất lượng tối đa, tệp rất lớn</p>
-            <h3>3. Chọn ít nhất một định dạng (bạn có thể chọn nhiều hơn một)</h3>
-            <h3>4. Nhấp vào "Xác nhận"</h3>
-            <h3>5. Chương trình hiển thị một thông báo với các định dạng đã chọn</h3>
-            <h4>📝 LỜI KHUYÊN:</h4>
+            <h3>4. Chọn ít nhất một định dạng (bạn có thể chọn nhiều hơn một)</h3>
+            <h3>5. Nhấp vào "Xác nhận"</h3>
+            <h3>6. Chương trình hiển thị một thông báo với các định dạng đã chọn</h3>
+                        <p>✅ <strong>Các định dạng đã chọn được lưu</strong> và tự động chọn trước lần tiếp theo bạn mở chương trình.</p>
+<h4>📝 LỜI KHUYÊN:</h4>
             <ul>
                 <li>Để xem trước/tham khảo: JPG (nhanh mở, dung lượng nhỏ)</li>
                 <li>Để lưu trữ bảo tồn: PNG (không mất dữ liệu, tiết kiệm dung lượng) hoặc TIFF (chất lượng cao nhất)</li>
                 <li>Đối với cả hai: chọn cả PNG và TIFF</li>
             </ul>
-            <h4>BƯỚC 2: CHỌN THƯ MỤC OUTPUT</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. TRƯỚC TIÊN: Đảm bảo bạn đã tải lên một tệp đầu vào (Tệp đầu vào → Mở đầu vào)</h3>
-            <h3>2. Nhấp vào Menu → "Cài đặt" → "Chọn thư mục đầu ra"</h3>
-            <h3>3. Chương trình ĐỌC đầu vào và ĐẾM số lượng Tài liệu (D) và Sổ đăng ký (R):</h3>
-            <p>Ví dụ: Nếu đầu vào chứa "2 Tài liệu + 1 Sổ đăng ký"</p>
-            <h3>4. Đối với MỖI Tài liệu, một hộp thoại sẽ mở ra:</h3>
-            <p>Chọn thư mục cho: Tài liệu 1/2</p>
-            <p>Chọn thư mục cho: Tài liệu 2/2</p>
-            <h3>5. Đối với MỖI Sổ đăng ký, một hộp thoại sẽ mở ra:</h3>
-            <p>Chọn thư mục cho: Nhật ký 1/1</p>
-            <h3>6. Chọn thư mục cho mỗi bản ghi (bạn có thể sử dụng các thư mục khác nhau, giống nhau hoặc bất kỳ sự kết hợp nào)</h3>
-            <h3>7. Cuối cùng, hiển thị tóm tắt của tất cả các thư mục đã chọn</h3>
-            <h4>📌 QUAN TRỌNG:</h4>
+                        <h4>BƯỚC 2: CHỌN THƯ MỤC ĐẦU RA</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. Cửa sổ thư mục tự động mở sau khi chọn định dạng (khi bạn tải tệp đầu vào)</h3>
+            <h3>2. Thay thế: Nhấp vào Menu → "Cài đặt" → "Chọn thư mục đầu ra"</h3>
+            <h3>3. Chọn CHẾ ĐỘ THƯ MỤC:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Thư mục duy nhất cho tất cả</span> → một thư mục cho tất cả các bản ghi (tài liệu và sổ đăng ký)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Thư mục riêng doc/reg</span> → một thư mục cho tất cả tài liệu, một cho tất cả sổ đăng ký</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Thư mục cho mỗi bản ghi</span> → thư mục riêng cho từng bản ghi trong tệp đầu vào</p>
+            <h3>4. Sau khi chọn chế độ, chọn các thư mục cần thiết (1, 2 hoặc N hộp thoại chọn)</h3>
+            <h3>5. Cuối cùng hiển thị tóm tắt tất cả các thư mục đã chọn</h3>
+            <p>✅ <strong>Chế độ và thư mục được lưu</strong>. Lần tiếp theo bạn mở tệp đầu vào, chúng được tự động khôi phục nếu tương thích với số lượng bản ghi.</p>
+            <p>⚠️ Nếu tệp đầu vào mới có số lượng Tài liệu/Sổ đăng ký khác với thư mục đã lưu, sẽ hiển thị cảnh báo và lựa chọn được đặt lại.</p>
+            <h4>📌 TÓM TẮT CHẾ ĐỘ:</h4>
             <ul>
-                <li>Mỗi Tài liệu (D) sẽ có một thư mục riêng</li>
-                <li>Mỗi Sổ đăng ký (R) sẽ có một thư mục riêng</li>
-                <li>Bạn có thể chọn các thư mục khác nhau cho mỗi bản ghi, cùng một thư mục cho nhiều bản ghi, hoặc bất kỳ sự kết hợp nào</li>
-                <li>Bạn có thể chọn thư mục trên các ổ đĩa khác nhau</li>
+                <li><strong>Thư mục duy nhất cho tất cả:</strong> Đơn giản, mọi thứ ở một nơi. Tốt cho công việc nhanh hoặc kiểm tra</li>
+                <li><strong>Separate doc/reg:</strong> Được tổ chức theo loại. Mặc định: <code>output/doc/</code> và <code>output/reg/</code></li>
+                <li><strong>Thư mục cho mỗi bản ghi:</strong> Tối đa linh hoạt. Ổ đĩa khác nhau, NAS, thư mục tùy chỉnh</li>
             </ul>
-            <h4>BƯỚC 3: BẮT ĐẦU XỬ LÝ</h4>
+<h4>BƯỚC 3: BẮT ĐẦU XỬ LÝ</h4>
             <p>─────────────────────────────</p>
             <h3>1. Nhấp vào Menu → "Output" → "Process"</h3>
             <h3>2. Kiểm tra xem:</h3>

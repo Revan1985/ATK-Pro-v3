@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italienska): Grundläggande för boende medborgare och nya expats.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Engelska): Brygga språk för USA, Kanada, Australien och Storbritannien.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spanska): Omfattar Argentina (landet med flest italienare i världen), Uruguay och Spanien (favoritmål för unga italienare 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spanska): Omfattar alla spansktalande länder i Amerika, Filippinerna och Spanien (favoritmål för unga italienare 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Franska): För de historiska och stora samhällena i Frankrike och Belgien.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Tyska): För Tyskland (nästan 900 000 italienska invånare) och Schweiz.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portugisiska): Oumbärligt för Brasilien (en befolkning på över 30 miljoner ättlingar).</li>
@@ -445,11 +445,13 @@
                 <li>Kan ändras när som helst via Meny → Inställningar → Ändra språk</li>
                 <li>Programmet kräver en omstart för att tillämpa det nya valda språket</li>
             </ul>
-            <h4>📂 KONFIGURATIONSKATALOGER</h4>
-            <p>Vid den första körningen skapar programmet:</p>
+                        <h4>📂 KONFIGURATIONSKATALOGER</h4>
+            <p>Vid första körningen skapar programmet automatiskt följande mappar:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[DittNamn]\Documents\ATK-Pro\output\</code> (bearbetade filer)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (bearbetade filer)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DittNamn]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DittNamn]\Documents\ATK-Pro\output\doc\</code> (standard för dokument)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DittNamn]\Documents\ATK-Pro\output\reg\</code> (standard för register)</li>
+                <li><strong>Linux/macOS:</strong> analogt under <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Motsvarande <code>input/</code>-mapp (valfritt)</li>
             </ul>
             <p>Under bearbetningen skapas temporära mappar för nedladdade brickor (tiles_canvas_X/).
@@ -458,11 +460,7 @@
             </p>
             <p>Endast de bearbetade slutliga filerna återstår (bilder i valda format, PDF, manifest och metadata).
             </p>
-            <p>För att ändra utdatamappen:</p>
-            <ul>
-                <li>Använd Meny → Inställningar → "Välj utdatamapp"</li>
-                <li>Den valda mappen förblir standardmappen för efterföljande bearbetningar</li>
-            </ul>
+                        <p>För att ändra utdatamapparna, använd Meny → Inställningar → „Välj utdatamappar‟. Dina val sparas och återställs automatiskt vid nästa session.</p>
             </div>
             <div class="section-box">
             <h3>3. HUVUDGRÄNSSNITT</h3>
@@ -543,8 +541,13 @@
 │  └─ Välj gränssnittsspråk (kräver omstart)
 ├─ Välj bildformat
 │  └─ Välj mellan PNG, JPG, TIFF (minst 1 obligatoriskt)
-├─ Välj utdatamapp
-│  └─ Välj mappen där bearbetade bilder ska sparas
+│     Ditt val sparas och förmarkeras automatiskt i nästa session
+├─ Välj utdatamappar
+│  └─ Öppnar först val av mappläge, sedan mappval-dialoger:
+│     • Enstaka mapp för alla         → en mapp för dokument och register
+│     • Separata mappar doc/reg       → en mapp för alla dok, en för alla reg
+│     • Mapp per post                 → en separat mapp för varje post
+│     Läget och mapparna sparas och återställs i nästa session
 ├─ Exportera konfiguration
 │  └─ Spara nuvarande inställningar i en fil
 ├─ Importera konfiguration
@@ -671,41 +674,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Arbetsflödet för bearbetning består av 3 steg:</p>
             <h4>STEG 1: VÄLJ BILDFORMAT</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Klicka på Meny → "Inställningar" → "Välj bildformat"</h3>
-            <h3>2. Ett dialogfönster öppnas med 3 alternativ:</h3>
+            <h3>1. Ladda en indatafil (Indatafil → Öppna indata): formatfönstret öppnas automatiskt</h3>
+            <h3>2. Klicka på Meny → "Inställningar" → "Välj bildformat"</h3>
+            <h3>3. Ett dialogfönster öppnas med 3 alternativ:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Förlustfritt format (lossless), bättre kvalitet, större filer</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Komprimerat format (förlust), bra kompromiss kvalitet/storlek</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Arkivformat, högsta kvalitet, mycket stora filer</p>
-            <h3>3. Välj minst ett format (du kan välja fler än ett)</h3>
-            <h3>4. Klicka på "Bekräfta"</h3>
-            <h3>5. Programmet visar ett meddelande med de valda formaten</h3>
-            <h4>📝 RÅD:</h4>
+            <h3>4. Välj minst ett format (du kan välja fler än ett)</h3>
+            <h3>5. Klicka på "Bekräfta"</h3>
+            <h3>6. Programmet visar ett meddelande med de valda formaten</h3>
+                        <p>✅ <strong>De valda formaten sparas</strong> och förmarkeras automatiskt nästa gång du öppnar programmet.</p>
+<h4>📝 RÅD:</h4>
             <ul>
                 <li>För förhandsgranskning/konsultation: JPG (snabb att öppna, mindre utrymme)</li>
                 <li>För arkivbevarande: PNG (förlustfri, kompromiss med utrymme) eller TIFF (maximal kvalitet)</li>
                 <li>För båda: välj både PNG och TIFF</li>
             </ul>
-            <h4>STEG 2: VÄLJ UTDATAK পারছি</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. FÖRST: Se till att du har laddat upp en indatafil (Indatafil → Öppna indata)</h3>
-            <h3>2. Klicka på Meny → "Inställningar" → "Välj utdatamapp"</h3>
-            <h3>3. Programmet LÄSER inmatningen och RÄKNAR hur många Dokument (D) och Register (R):</h3>
-            <p>Exempel: Om indata innehåller "2 dokument + 1 register"</p>
-            <h3>4. För VARJE dokument öppnas en dialogruta:</h3>
-            <p>Välj mapp för: Dokument 1/2</p>
-            <p>Välj mapp för: Dokument 2/2</p>
-            <h3>5. För VARJE register öppnas en dialogruta:</h3>
-            <p>Välj mapp för: Register 1/1</p>
-            <h3>6. Välj mappar för varje post (du kan använda olika mappar, samma, eller vilken kombination som helst)</h3>
-            <h3>7. I slutet, visa en sammanfattning av alla valda mappar</h3>
-            <h4>📌 VIKTIGT:</h4>
+                        <h4>STEG 2: VÄLJ UTDATAMAPPAR</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. Mappfönstret öppnas automatiskt efter formatvalet (när du laddar en indatafil)</h3>
+            <h3>2. Alternativt: Klicka på Meny → "Inställningar" → "Välj utdatamappar"</h3>
+            <h3>3. Välj MAPPLÄGE:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Enstaka mapp för alla</span> → en mapp för alla poster (dokument och register)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Separata mappar doc/reg</span> → en mapp för alla dokument, en för alla register</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Mapp per post</span> → en separat mapp för varje post i indatafilen</p>
+            <h3>4. Efter att ha valt läge, välj de nödvändiga mapparna (1, 2 eller N väljar-dialoger)</h3>
+            <h3>5. I slutet visas en sammanfattning av alla valda mappar</h3>
+            <p>✅ <strong>Läge och mappar sparas</strong>. Nästa gång du öppnar en indatafil återställs de automatiskt om de är kompatibla med antalet poster.</p>
+            <p>⚠️ Om den nya indatafilen har ett annat antal Dokument/Register jämfört med sparade mappar visas en varning och urvalet återställs.</p>
+            <h4>📌 LÄGESÖVERSIKT:</h4>
             <ul>
-                <li>Varje dokument (D) kommer att ha en separat mapp</li>
-                <li>Varje register (R) kommer att ha en separat mapp</li>
-                <li>Du kan välja olika mappar för varje post, samma för flera poster, eller vilken kombination som helst</li>
-                <li>Du kan välja mappar på olika enheter</li>
+                <li><strong>Enstaka mapp för alla:</strong> Enkelt, allt på ett ställe. Bra för snabba jobb eller tester</li>
+                <li><strong>Separate doc/reg:</strong> Organiserat per typ. Standard: <code>output/doc/</code> och <code>output/reg/</code></li>
+                <li><strong>Mapp per post:</strong> Maximal flexibilitet. Mappar på olika enheter, NAS, anpassade mappar</li>
             </ul>
-            <h4>STEG 3: STARTA BEARBETNING</h4>
+<h4>STEG 3: STARTA BEARBETNING</h4>
             <p>─────────────────────────────</p>
             <h3>1. Klicka på Meny → "Utdata" → "Bearbeta"</h3>
             <h3>2. Kontrollera att:</h3>

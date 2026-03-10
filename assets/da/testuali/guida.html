@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (Italiensk): Afgørende for fastboende borgere og nye expats.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (Engelsk): Brosprog for USA, Canada, Australien og Storbritannien.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spansk): Dækker Argentina (landet med flest italienere i verden), Uruguay og Spanien (foretrukket destination for unge italienere i 2024-2025).</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (Spansk): Dækker alle spansktalende lande i Amerikaene, Filippinerne og Spanien (foretrukket destination for unge italienere i 2024-2025).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Fransk): Til de historiske og store samfund i Frankrig og Belgien.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Tysk): Til Tyskland (næsten 900.000 italienske indbyggere) og Schweiz.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portugisisk): Uundværlig for Brasilien (en befolkning på over 30 millioner efterkommere).</li>
@@ -445,11 +445,13 @@
                 <li>Kan ændres når som helst via Menu → Indstillinger → Skift sprog</li>
                 <li>Programmet kræver en genstart for at anvende det nyvalgte sprog</li>
             </ul>
-            <h4>📂 MAPPEKONFIGURATION</h4>
-            <p>Ved første kørsel opretter programmet:</p>
+                        <h4>📂 MAPPEKONFIGURATION</h4>
+            <p>Ved første kørsel opretter programmet automatisk følgende mapper:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[DitNavn]\Documents\ATK-Pro\output\</code> (behandlede filer)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (behandlede filer)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DitNavn]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DitNavn]\Documents\ATK-Pro\output\doc\</code> (standard for dokumenter)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[DitNavn]\Documents\ATK-Pro\output\reg\</code> (standard for registre)</li>
+                <li><strong>Linux/macOS:</strong> tilsvarende under <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Tilsvarende <code>input/</code>-mappe (valgfrit)</li>
             </ul>
             <p>Under behandlingen oprettes der midlertidige mapper til de downloadede fliser (tiles_canvas_X/).
@@ -458,11 +460,7 @@
             </p>
             <p>Kun de endelige behandlede filer forbliver (billeder i de valgte formater, PDF, manifest og metadata).
             </p>
-            <p>For at ændre outputmappen:</p>
-            <ul>
-                <li>Brug Menu → Indstillinger → "Vælg outputmappe"</li>
-                <li>Den valgte mappe forbliver standardmappen for efterfølgende behandlinger</li>
-            </ul>
+                        <p>For at ændre outputmapperne skal du bruge Menu → Indstillinger → „Vælg outputmapper‟. Dine valg gemmes og gendannes automatisk ved næste session.</p>
             </div>
             <div class="section-box">
             <h3>3. HOVEDGRÆNSEFLADE</h3>
@@ -541,8 +539,13 @@
 │  └─ Vælg sprog for brugergrænsefladen (kræver genstart)
 ├─ Vælg billedformater
 │  └─ Vælg mellem PNG, JPG, TIFF (mindst 1 obligatorisk)
-├─ Vælg outputmappe
-│  └─ Vælg mappen, hvor de behandlede billeder skal gemmes
+│     Dit valg gemmes og forudvælges automatisk i næste session
+├─ Vælg outputmapper
+│  └─ Åbner først mappevalg, derefter mappevælger-dialoger:
+│     • Enkelt mappe til alle         → én mappe for dokumenter og registre
+│     • Separate mapper doc/reg       → én til alle dok., én til alle reg.
+│     • Mappe per post                → en separat mappe for hver post
+│     Tilstand og mapper gemmes og gendannes automatisk i næste session
 ├─ Eksporter konfiguration
 │  └─ Gem de aktuelle indstillinger i en fil
 ├─ Importer konfiguration
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>Arbejdsprocessen omfatter 3 trin:</p>
             <h4>TRIN 1: VÆLG BILLEDER</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Klik Menu → "Indstillinger" → "Vælg billedformater"</h3>
-            <h3>2. Et dialogvindue åbnes med 3 valgmuligheder:</h3>
+            <h3>1. Indlæs en inputfil (Inputfil → Åbn input): formatvinduet åbner automatisk</h3>
+            <h3>2. Klik Menu → "Indstillinger" → "Vælg billedformater"</h3>
+            <h3>3. Et dialogvindue åbnes med 3 valgmuligheder:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Tabsløs (lossless) format, bedre kvalitet, større filer</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Komprimeret format (tabsgivende), god kompromis mellem kvalitet/størrelse</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Arkivformat, maksimal kvalitet, meget store filer</p>
-            <h3>3. Vælg mindst ét format (du kan vælge mere end ét)</h3>
-            <h3>4. Klik "Bekræft"</h3>
-            <h3>5. Programmet viser en meddelelse med de valgte formater</h3>
-            <h4>📝 VEJLEDNING:</h4>
+            <h3>4. Vælg mindst ét format (du kan vælge mere end ét)</h3>
+            <h3>5. Klik "Bekræft"</h3>
+            <h3>6. Programmet viser en meddelelse med de valgte formater</h3>
+                        <p>✅ <strong>De valgte formater gemmes</strong> og forudvælges automatisk næste gang du åbner programmet.</p>
+<h4>📝 VEJLEDNING:</h4>
             <ul>
                 <li>Til forhåndsvisning/konsultation: JPG (hurtig at åbne, mindre plads)</li>
                 <li>Til arkivering: PNG (tabsfri, pladsbesparende) eller TIFF (maksimal kvalitet)</li>
                 <li>For begge: vælg både PNG og TIFF</li>
             </ul>
-            <h4>TRIN 2: VÆLG OUTPUTMAPPE</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. FØRST: Sørg for, at du har indlæst en inputfil (Inputfil → Åbn input)</h3>
-            <h3>2. Klik Menu → "Indstillinger" → "Vælg outputmappe"</h3>
-            <h3>3. Programmet LÆSER inputtet og TÆLLER hvor mange Dokumenter (D) og Registre (R):</h3>
-            <p>Eksempel: Hvis input indeholder "2 Dokumenter + 1 Register"</p>
-            <h3>4. For HVERT dokument åbnes en dialogboks:</h3>
-            <p>Vælg mappe til: Dokument 1/2</p>
-            <p>Vælg mappe til: Dokument 2/2</p>
-            <h3>5. For HVER registrering åbnes en dialog:</h3>
-            <p>Vælg mappe til: Log 1/1</p>
-            <h3>6. Vælg mapper til hver post (du kan bruge forskellige mapper, ens mapper eller enhver kombination)</h3>
-            <h3>7. Vis til sidst en oversigt over alle valgte mapper</h3>
-            <h4>📌 VIGTIGT:</h4>
+                        <h4>TRIN 2: VÆLG OUTPUTMAPPER</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. Mappevinduet åbnes automatisk efter formatvalget (når du indlæser en inputfil)</h3>
+            <h3>2. Alternativt: Klik på Menu → "Indstillinger" → "Vælg outputmapper"</h3>
+            <h3>3. Vælg MAPPETILSTAND:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Enkelt mappe til alle</span> → én mappe for alle poster (dokumenter og registre)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Separate mapper doc/reg</span> → én mappe for alle dokumenter, én for alle registre</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Mappe per post</span> → en separat mappe for hver post i inputfilen</p>
+            <h3>4. Vælg de nødvendige mapper efter valg af tilstand (1, 2 eller N valgdialogbokse)</h3>
+            <h3>5. Til sidst vises en oversigt over alle valgte mapper</h3>
+            <p>✅ <strong>Tilstand og mapper gemmes</strong>. Næste gang du åbner en inputfil, gendannes de automatisk, hvis de er kompatible med antallet af poster.</p>
+            <p>⚠️ Hvis den nye inputfil har et andet antal Dokumenter/Registre end de gemte mapper, vises en advarsel og valget nulstilles.</p>
+            <h4>📌 TILSTANDSOVERSIGT:</h4>
             <ul>
-                <li>Hvert dokument (D) vil have en separat mappe</li>
-                <li>Hver fortegnelse (R) vil have en separat mappe</li>
-                <li>Du kan vælge forskellige mapper for hver post, den samme for flere poster eller enhver kombination</li>
-                <li>Du kan vælge mapper på forskellige drev</li>
+                <li><strong>Enkelt mappe til alle:</strong> Simpelt, alt ét sted. Godt til hurtige opgaver eller tests</li>
+                <li><strong>Separate doc/reg:</strong> Organiseret efter type. Standard: <code>output/doc/</code> og <code>output/reg/</code></li>
+                <li><strong>Mappe per post:</strong> Maksimal fleksibilitet. Mapper på forskellige drev, NAS, tilpassede mapper</li>
             </ul>
-            <h4>TRIN 3: START BEHANDLING</h4>
+<h4>TRIN 3: START BEHANDLING</h4>
             <p>─────────────────────────────</p>
             <h3>1. Klik Menu → "Output" → "Behandl"</h3>
             <h3>2. Kontroller, at:</h3>

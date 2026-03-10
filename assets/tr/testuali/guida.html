@@ -419,7 +419,7 @@
             <ul style="display: flex; flex-direction: column; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0;">
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">IT</span>Italiano (İtalyanca): İtalya'da ikamet eden vatandaşlar ve yeni gurbetçiler için temel.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">EN</span>English (İngilizce): ABD, Kanada, Avustralya ve Birleşik Krallık için köprü dil.</li>
-                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (İspanyolca): Arjantin'i (dünyada en çok İtalyan'ın yaşadığı ülke), Uruguay'ı ve İspanya'yı (2024-2025'te İtalyan gençlerin favori destinasyonu) kapsar.</li>
+                <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">ES</span>Español (İspanyolca): Amerika'daki tüm Hispanik ülkeleri, Filipinler'i ve İspanya'yı kapsar (2024-2025'te İtalyan gençlerin favori destinasyonu).</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">FR</span>Français (Fransızca): Fransa ve Belçika'daki tarihi ve geniş topluluklar için.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">DE</span>Deutsch (Almanca): Almanya (neredeyse 900.000 İtalyan vatandaşı) ve İsviçre için.</li>
                 <li><span style="background: #f0f0f0; padding: 2px 8px; border-radius: 3px; font-weight: bold;">PT</span>Português (Portekizce): Brezilya için vazgeçilmez (30 milyondan fazla torun havzası).</li>
@@ -445,11 +445,13 @@
                 <li>İstediğiniz zaman Menü → Ayarlar → Dil Değiştir aracılığıyla değiştirilebilir</li>
                 <li>Programın seçilen yeni dili uygulaması için yeniden başlatılması gerekiyor</li>
             </ul>
-            <h4>📂 KLASÖR YAPILANDIRMASI</h4>
-            <p>İlk çalıştırmada program şunları oluşturur:</p>
+                        <h4>📂 KLASÖR YAPILANDIRMASI</h4>
+            <p>Program ilk çalıştırıldığında otomatik olarak şu klasörleri oluşturur:</p>
             <ul>
-                <li><strong>Windows:</strong> <code>C:\Users\[KullanıcıAdı]\Documents\ATK-Pro\output\</code> (işlenmiş dosyalar)</li>
-                <li><strong>Linux/macOS:</strong> <code>~/Documents/ATK-Pro/output/</code> (işlenmiş dosyalar)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[Adiniz]\Documents\ATK-Pro\output\</code></li>
+                <li><strong>Windows:</strong> <code>C:\Users\[Adiniz]\Documents\ATK-Pro\output\doc\</code> (belgeler için varsayılan)</li>
+                <li><strong>Windows:</strong> <code>C:\Users\[Adiniz]\Documents\ATK-Pro\output\reg\</code> (siciller için varsayılan)</li>
+                <li><strong>Linux/macOS:</strong> benzer şekilde <code>~/Documents/ATK-Pro/output/</code> altında</li>
                 <li>Karşılık gelen <code>input/</code> klasörü (isteğe bağlı)</li>
             </ul>
             <p>İşleme sırasında indirilen döşemeler için geçici klasörler oluşturulur (tiles_canvas_X/).
@@ -458,11 +460,7 @@
             </p>
             <p>Yalnızca işlenmiş nihai dosyalar (seçilen formatlardaki resimler, PDF, manifest ve meta veriler) kalır.
             </p>
-            <p>Çıktı klasörünü değiştirmek için:</p>
-            <ul>
-                <li>Menü → Ayarlar → "Çıktı klasörünü seç" kullanın</li>
-                <li>Seçilen klasör, sonraki işlemler için varsayılan olarak kalır</li>
-            </ul>
+                        <p>Çıktı klasörlerini değiştirmek için Menü → Ayarlar → "Çıktı klasörlerini seç" kullanın. Seçimleriniz kaydedilir ve bir sonraki oturumda otomatik olarak geri yüklenir.</p>
             </div>
             <div class="section-box">
             <h3>3. ANA ARAYÜZ</h3>
@@ -541,8 +539,13 @@
 │  └─ Arayüz dilini seçin (yeniden başlatma gerektirir)
 ├─ Görüntü biçimleri seçin
 │  └─ PNG, JPG, TIFF arasından seçim yapın (en az 1 zorunlu)
-├─ Çıktı klasörünü seçin
-│  └─ İşlenmiş resimleri kaydetmek istediğiniz klasörü seçin
+│     Seçiminiz kaydedilir ve sonraki oturumda otomatik olarak önceden seçilir
+├─ Çıktı klasörlerini seçin
+│  └─ Önce klasör modu seçimi, ardından klasör seçici diyaloglar açılır:
+│     • Tümü için tek klasör           → belge ve siciller için tek klasör
+│     • Ayrı klasörler doc/reg         → tüm belgeler için bir, tüm sic. için bir
+│     • Her kayıt için klasör          → her kayıt için ayrı bir klasör
+│     Mod ve klasörler kaydedilir ve sonraki oturumda otomatik geri yüklenir
 ├─ Yapılandırmayı dışa aktar
 │  └─ Mevcut ayarları bir dosyaya kaydet
 ├─ Yapılandırmayı içe aktar
@@ -669,41 +672,41 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p>İşleme iş akışı 3 adımdan oluşur:</p>
             <h4>ADIM 1: GÖRÜNTÜ FORMATLARINI SEÇİN</h4>
             <p>─────────────────────────────────────</p>
-            <h3>1. Menü → "Ayarlar" → "Görüntü formatlarını seç" seçeneğine tıklayın</h3>
-            <h3>2. 3 seçenekli bir iletişim kutusu açılır:</h3>
+            <h3>1. Bir giriş dosyası yükleyin (Giriş dosyası → Girişi aç): format penceresi otomatik açılır</h3>
+            <h3>2. Menü → "Ayarlar" → "Görüntü formatlarını seç" seçeneğine tıklayın</h3>
+            <h3>3. 3 seçenekli bir iletişim kutusu açılır:</h3>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  Kayıpsız format, daha iyi kalite, daha büyük dosyalar</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  Sıkıştırılmış format (kayıplı), iyi kalite/boyut dengesi</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Arşiv formatı, maksimum kalite, çok büyük dosyalar</p>
-            <h3>3. En az bir format seçin (birden fazla seçebilirsiniz)</h3>
-            <h3>4. "Onayla"ya tıklayın</h3>
-            <h3>5. Program seçilen formatlarla bir mesaj gösterir</h3>
-            <h4>📝 İPUÇLARI:</h4>
+            <h3>4. En az bir format seçin (birden fazla seçebilirsiniz)</h3>
+            <h3>5. "Onayla"ya tıklayın</h3>
+            <h3>6. Program seçilen formatlarla bir mesaj gösterir</h3>
+                        <p>✅ <strong>Seçilen formatlar kaydedilir</strong> ve programı bir sonraki açışınızda otomatik olarak önceden seçilir.</p>
+<h4>📝 İPUÇLARI:</h4>
             <ul>
                 <li>Önizleme/danışma için: JPG (açması hızlı, daha az yer kaplar)</li>
                 <li>Arşivleme için: PNG (kayıpsız, yer kazanımı) veya TIFF (maksimum kalite)</li>
                 <li>Her ikisi için de: hem PNG hem de TIFF'i seçin</li>
             </ul>
-            <h4>ADIM 2: ÇIKTI KLASÖRÜNÜ SEÇİN</h4>
-            <p>──────────────────────────────────────</p>
-            <h3>1. İLK ÖNCE: Bir giriş dosyası yüklediğinizden emin olun (Dosya girişi → Girişi aç)</h3>
-            <h3>2. Menü → "Ayarlar" → "Çıktı klasörünü seç" seçeneğine tıklayın</h3>
-            <h3>3. Program, girdiyi OKUR ve kaç adet Belge (D) ve Kayıt (R) olduğunu SAYAR:</h3>
-            <p>Örnek: Girdi "2 Belge + 1 Kayıt" içeriyorsa</p>
-            <h3>4. Her Belge için bir diyalog penceresi açılır:</h3>
-            <p>"Seçenekler klasörü: Belge 1/2"</p>
-            <p>"Seçilen klasör: Belge 2/2"</p>
-            <h3>5. HER Kayıt için bir diyalog penceresi açılır:</h3>
-            <p>"Seçilen klasör: Kayıt 1/1"</p>
-            <h3>6. Her kayıt için klasör seçin (farklı, aynı veya herhangi bir kombinasyonda klasörler kullanabilirsiniz)</h3>
-            <h3>7. Sonunda, seçilen tüm klasörlerin özetini göster</h3>
-            <h4>📌 ÖNEMLİ:</h4>
+                        <h4>ADIM 2: ÇIKTI KLASÖRLERINI SEÇİN</h4>
+            <p>─────────────────────────────────────</p>
+            <h3>1. Klasör penceresi format seçiminden sonra otomatik açılır (bir giriş dosyası yüklediğinizde)</h3>
+            <h3>2. Alternatif olarak: Menü → "Ayarlar" → "Çıktı klasörlerini seç" seçeneğine tıklayın</h3>
+            <h3>3. KLASÖR MODUNU seçin:</h3>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Tümü için tek klasör</span> → tüm kayıtlar için bir klasör (belgeler ve siciller)</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Ayrı klasörler doc/reg</span> → tüm belgeler için bir klasör, tüm siciller için bir klasör</p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">⬤ Her kayıt için klasör</span> → giriş dosyasındaki her kayıt için ayrı bir klasör</p>
+            <h3>4. Modu seçtikten sonra gerekli klasörleri seçin (1, 2 veya N seçim iletişim kutusu)</h3>
+            <h3>5. Sonunda seçilen tüm klasörlerin özeti gösterilir</h3>
+            <p>✅ <strong>Mod ve klasörler kaydedilir</strong>. Bir sonraki giriş dosyası açılışında, kayıt sayısıyla uyumluysa otomatik olarak geri yüklenir.</p>
+            <p>⚠️ Yeni giriş dosyasında kaydedilen klasörlerden farklı sayıda Belge/Sicil varsa uyarı gösterilir ve seçim sıfırlanır.</p>
+            <h4>📌 MOD ÖZETİ:</h4>
             <ul>
-                <li>Her Belge (D) için ayrı bir klasör olacaktır</li>
-                <li>Her Kayıt (R) için ayrı bir klasör olacaktır</li>
-                <li>Her kayıt için farklı klasörler, birden fazla kayıt için aynı klasör veya herhangi bir kombinasyonu seçebilirsiniz</li>
-                <li>Farklı sürücülerdeki klasörleri seçebilirsiniz</li>
+                <li><strong>Tümü için tek klasör:</strong> Basit, her şey bir yerde. Hızlı işler veya testler için iyi</li>
+                <li><strong>Separate doc/reg:</strong> Türe göre düzenlenmiş. Varsayılan: <code>output/doc/</code> ve <code>output/reg/</code></li>
+                <li><strong>Her kayıt için klasör:</strong> Maksimum esneklik. Farklı sürücüler, NAS, özel klasörler</li>
             </ul>
-            <h4>ADIM 3: İŞLETMEYİ BAŞLAT</h4>
+<h4>ADIM 3: İŞLETMEYİ BAŞLAT</h4>
             <p>─────────────────────────────</p>
             <h3>1. Menü → "Çıktı" → "İşle" seçeneğine tıklayın</h3>
             <h3>2. Şunları doğrulayın:</h3>
