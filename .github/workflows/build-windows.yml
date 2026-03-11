@@ -70,11 +70,27 @@ jobs:
       run: |
         & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" ATK-Pro-Installer.iss
         
+    - name: Build portable ZIP
+      run: |
+        $VERSION = (Select-String 'VERSION = ' src/main_gui_qt.py | ForEach-Object { $_.Line -replace '.*"(.*)".*','$1' } | Select-Object -First 1)
+        Write-Host "Building portable ZIP for version: $VERSION"
+        # Crea il sentinel portable.txt (non e' in git, va generato qui)
+        Set-Content -Path dist\ATK-Pro\portable.txt -Value "ATK-Pro Portable Mode`nThis file enables portable mode: config.json is saved next to the executable." -Encoding UTF8
+        # Crea lo ZIP
+        $zipName = "ATK-Pro-v$VERSION-Windows-Portable.zip"
+        Compress-Archive -Path dist\ATK-Pro -DestinationPath "Output\$zipName" -Force
+        Write-Host "✓ Portable ZIP: Output\$zipName ($([math]::Round((Get-Item "Output\$zipName").Length/1MB,2)) MB)"
+        # Salva il nome per gli step successivi
+        echo "PORTABLE_ZIP=$zipName" >> $env:GITHUB_ENV
+        echo "APP_VERSION=$VERSION" >> $env:GITHUB_ENV
+
     - name: Verify installer
       run: |
-        if (Test-Path "Output\ATK-Pro-Setup-v2.0.exe") {
+        $VERSION = $env:APP_VERSION
+        $installerName = "ATK-Pro-Setup-v$VERSION.exe"
+        if (Test-Path "Output\$installerName") {
           Write-Host "✓ Installer created successfully"
-          $size = (Get-Item "Output\ATK-Pro-Setup-v2.0.exe").Length / 1MB
+          $size = (Get-Item "Output\$installerName").Length / 1MB
           Write-Host "Installer size: $([math]::Round($size, 2)) MB"
         } else {
           Write-Host "✗ Installer creation failed"
@@ -92,7 +108,14 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ATK-Pro-Windows-installer
-        path: Output/ATK-Pro-Setup-v2.0.exe
+        path: Output/ATK-Pro-Setup-v${{ env.APP_VERSION }}.exe
+        retention-days: 30
+
+    - name: Upload portable artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ATK-Pro-Windows-portable
+        path: Output/${{ env.PORTABLE_ZIP }}
         retention-days: 30
         
     - name: Upload to GitHub Release (if tagged)
@@ -113,7 +136,8 @@ jobs:
             --notes "" --draft=false 2>/dev/null || true
         fi
         gh release upload "${{ github.ref_name }}" \
-          "Output/ATK-Pro-Setup-v2.0.exe" \
+          "Output/ATK-Pro-Setup-v${APP_VERSION}.exe" \
+          "Output/${PORTABLE_ZIP}" \
           --clobber
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
