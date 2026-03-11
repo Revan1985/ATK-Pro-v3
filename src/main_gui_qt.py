@@ -238,6 +238,26 @@ def _is_first_run() -> bool:
     return not _os.path.exists(_config_file_path())
 
 
+def _read_config_disclaimer_accepted() -> bool:
+    """Ritorna True se l'utente ha già accettato il disclaimer (chiave disclaimer_accepted nel config)."""
+    import os as _os
+    import json as _json
+    try:
+        cfg = _config_file_path()
+        if _os.path.exists(cfg):
+            with open(cfg, encoding="utf-8") as fh:
+                data = _json.load(fh)
+            return bool(data.get("disclaimer_accepted", False))
+    except Exception:
+        pass
+    return False
+
+
+def _write_config_disclaimer_accepted() -> None:
+    """Scrive disclaimer_accepted=true nel config JSON."""
+    _write_config_prefs("disclaimer_accepted", True)
+
+
 def _get_default_output_dir(sub: str = "") -> str:
     """Ritorna il percorso della cartella output di default tramite Qt (cross-platform)."""
     from PySide6.QtCore import QStandardPaths
@@ -2689,9 +2709,25 @@ def main():
     primo_avvio = False
 
     if _is_frozen and sys.platform == "win32":
-        # Windows EXE: leggi la lingua dal registro (settata dall'Inno Setup installer)
-        lingua = get_language_from_registry()
-        logging.debug(f"Windows EXE: lingua dal registro: {lingua}")
+        if IS_PORTABLE:
+            # Portable: nessun installer → usa config file, non il registro Windows
+            saved = _read_config_language()
+            _disc_ok = _read_config_disclaimer_accepted()
+            if saved and _disc_ok:
+                lingua = saved
+                primo_avvio = False
+                logging.debug(f"Portable: lingua da config file: {lingua}")
+            else:
+                # Primo avvio portable: scegli lingua poi mostra disclaimer
+                primo_avvio = True
+                glossario_data_tmp = carica_glossario("en")
+                lingua = scegli_lingua(glossario_data_tmp, "en")
+                _write_config_language(lingua)
+                logging.debug(f"Portable primo avvio: lingua scelta: {lingua}")
+        else:
+            # Installer: leggi la lingua dal registro (settata dall'Inno Setup installer)
+            lingua = get_language_from_registry()
+            logging.debug(f"Windows EXE: lingua dal registro: {lingua}")
 
     elif _is_frozen and sys.platform in ("linux", "darwin"):
         # Linux/macOS bundle: usa file di configurazione utente
@@ -2788,6 +2824,10 @@ def main():
                 logging.info("Flag pending-disclaimer rimosso dopo accettazione")
             except OSError as e:
                 logging.warning(f"Impossibile rimuovere flag pending-disclaimer: {e}")
+        if IS_PORTABLE and accettato:
+            # Portable: persisti l'accettazione nel config affinché non venga richiesta al prossimo avvio
+            _write_config_disclaimer_accepted()
+            logging.info("Portable: disclaimer accettato, salvato in config.json")
         if not accettato:
             logging.warning("Disclaimer rifiutato → chiusura applicazione")
             # Cancella lingua salvata: al prossimo avvio primo_avvio=True / flag ancora presente
