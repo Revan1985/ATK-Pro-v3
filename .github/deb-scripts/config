@@ -9,13 +9,19 @@ set -e
 db_version 2.0
 
 if [ "$1" = "install" ]; then
+    # Resetta i flag "seen" per forzare la richiesta anche in caso di reinstallazione
+    # (senza db_fset, debconf ricorderebbe le risposte precedenti e salterebbe le domande)
+    db_fset atk-pro/language seen false || true
+    db_fset atk-pro/accept-disclaimer seen false || true
+
     # Selezione lingua (silenziosa se frontend noninteractive)
     db_input high atk-pro/language || true
     db_go || true
 
-    db_get atk-pro/language
+    db_get atk-pro/language || true
     LANG_CHOSEN="${RET:-en}"
-    printf '%s' "$LANG_CHOSEN" > /tmp/atk-pro-install-lang
+    # Usa /var/tmp/ (non /tmp/): apt-daemon ha PrivateTmp=yes, /tmp/ non e' visibile a postinst
+    printf '%s' "$LANG_CHOSEN" > /var/tmp/atk-pro-install-lang
 
     # Imposta locale per traduzione disclaimer debconf
     case "$LANG_CHOSEN" in

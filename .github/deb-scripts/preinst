@@ -433,6 +433,14 @@ if [ "$1" = "install" ]; then
                 exit 1
             fi  # end _ZENITY_ACCEPTED = 0
         fi  # end _ACCEPTED != true
+
+        # Percorso interattivo debconf: la lingua e' stata scelta via debconf ma preinst
+        # non ha usato zenity, quindi /var/tmp/atk-pro-install-lang potrebbe non esistere.
+        # Leggiamo il valore dal database debconf e lo scriviamo per postinst.
+        if [ ! -f /var/tmp/atk-pro-install-lang ]; then
+            db_get atk-pro/language || true
+            printf '%s' "${RET:-en}" > /var/tmp/atk-pro-install-lang
+        fi
     else
         # debconf non disponibile: fallback con pending flag
         mkdir -p /var/lib/atk-pro
