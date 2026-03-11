@@ -126,3 +126,11 @@ Thumbs.db
 # NOTA: Gli EXE installer (>100 MB) vanno caricati come asset su GitHub Release,
 #       non nel repository Git (limite GitHub: 100 MB per file)
 !ATK-Pro.spec
+
+# 🚀 Script di build (inclusi nel repo per riproducibilità)
+!build_installer.bat
+!build_portable.bat
+
+# 📦 Modalità portable — il sentinel NON va committato
+# (viene aggiunto solo nel pacchetto ZIP portable al momento del packaging)
+/portable.txt

@@ -144,8 +144,13 @@ _LINGUE_VALIDE = ["it", "en", "es", "de", "fr", "pt", "nl", "ar", "he", "ru",
 
 
 def _config_file_path():
-    """Ritorna il percorso del file di configurazione utente (lazy, usa os al runtime)."""
+    """Ritorna il percorso del file di configurazione utente.
+    In modalità portable (portable.txt accanto all'exe): config.json nella cartella dell'exe.
+    In modalità installata: ~/.config/atk-pro/config.json
+    """
     import os as _os
+    if IS_PORTABLE:
+        return _os.path.join(_EXE_DIR, "config.json")
     return _os.path.join(_os.path.expanduser("~"), ".config", "atk-pro", "config.json")
 
 
@@ -452,6 +457,13 @@ if _is_frozen:
     BASE_DIR = sys._MEIPASS
 else:
     BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# Directory dell'eseguibile (per modalità portable)
+# Quando frozen: cartella dell'exe reale (non sys._MEIPASS che è una dir temp)
+# Quando non frozen: stessa di BASE_DIR
+_EXE_DIR = os.path.dirname(sys.executable) if _is_frozen else BASE_DIR
+_PORTABLE_SENTINEL = os.path.join(_EXE_DIR, "portable.txt")
+IS_PORTABLE = os.path.exists(_PORTABLE_SENTINEL)
 
 
 # Inizializzazione ASSET_LANG e ASSET_COMMON subito dopo BASE_DIR
