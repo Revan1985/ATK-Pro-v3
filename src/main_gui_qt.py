@@ -259,10 +259,16 @@ def _write_config_disclaimer_accepted() -> None:
 
 
 def _get_default_output_dir(sub: str = "") -> str:
-    """Ritorna il percorso della cartella output di default tramite Qt (cross-platform)."""
-    from PySide6.QtCore import QStandardPaths
-    docs = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
-    base = os.path.join(docs, "ATK-Pro", "output")
+    """Ritorna il percorso della cartella output di default.
+    In modalità portable: <cartella exe>/output/
+    In modalità installata: ~/Documenti/ATK-Pro/output/
+    """
+    if IS_PORTABLE:
+        base = os.path.join(_EXE_DIR, "output")
+    else:
+        from PySide6.QtCore import QStandardPaths
+        docs = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
+        base = os.path.join(docs, "ATK-Pro", "output")
     return os.path.join(base, sub) if sub else base
 
 
