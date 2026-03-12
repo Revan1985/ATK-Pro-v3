@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ATK-Pro v2 - Download Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 24px;
+      background: #f7f7f9;
+      color: #222;
+    }
+    h1 {
+      margin-bottom: 8px;
+    }
+    .muted {
+      color: #666;
+      margin-bottom: 20px;
+    }
+    .cards {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 16px;
+      min-width: 220px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .big {
+      font-size: 28px;
+      font-weight: bold;
+      margin-top: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+    th {
+      background: #f0f2f5;
+    }
+    tr:hover {
+      background: #fafafa;
+    }
+    .right {
+      text-align: right;
+    }
+    .release {
+      font-weight: bold;
+    }
+    .error {
+      color: #a00;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <h1>ATK-Pro v2 - Download Dashboard</h1>
+  <div class="muted">Dati letti dalle GitHub Releases API</div>
+
+  <div class="cards">
+    <div class="card">
+      <div>Totale download</div>
+      <div id="totalDownloads" class="big">...</div>
+    </div>
+    <div class="card">
+      <div>Numero release</div>
+      <div id="totalReleases" class="big">...</div>
+    </div>
+    <div class="card">
+      <div>Numero asset</div>
+      <div id="totalAssets" class="big">...</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Release</th>
+        <th>Asset</th>
+        <th class="right">Download</th>
+      </tr>
+    </thead>
+    <tbody id="downloadsTable">
+      <tr><td colspan="3">Caricamento...</td></tr>
+    </tbody>
+  </table>
+
+  <div id="error" class="error"></div>
+
+  <script>
+    const owner = "DanielePigoli";
+    const repo = "ATK-Pro-v2";
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/releases`;
+
+    async function loadDownloads() {
+      const tbody = document.getElementById("downloadsTable");
+      const errorBox = document.getElementById("error");
+
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            "Accept": "application/vnd.github+json"
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Errore API GitHub: ${response.status} ${response.statusText}`);
+        }
+
+        const releases = await response.json();
+
+        let totalDownloads = 0;
+        let totalAssets = 0;
+        let rows = "";
+
+        for (const release of releases) {
+          const releaseName = release.name || release.tag_name || "(senza nome)";
+          const assets = release.assets || [];
+
+          if (assets.length === 0) {
+            rows += `
+              <tr>
+                <td class="release">${escapeHtml(releaseName)}</td>
+                <td><em>Nessun asset</em></td>
+                <td class="right">0</td>
+              </tr>
+            `;
+            continue;
+          }
+
+          for (const asset of assets) {
+            const count = asset.download_count || 0;
+            totalDownloads += count;
+            totalAssets += 1;
+
+            rows += `
+              <tr>
+                <td class="release">${escapeHtml(releaseName)}</td>
+                <td>
+                  <a href="${asset.browser_download_url}" target="_blank" rel="noopener noreferrer">
+                    ${escapeHtml(asset.name)}
+                  </a>
+                </td>
+                <td class="right">${count}</td>
+              </tr>
+            `;
+          }
+        }
+
+        document.getElementById("totalDownloads").textContent = totalDownloads;
+        document.getElementById("totalReleases").textContent = releases.length;
+        document.getElementById("totalAssets").textContent = totalAssets;
+
+        tbody.innerHTML = rows || `<tr><td colspan="3">Nessun dato disponibile</td></tr>`;
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="3">Impossibile caricare i dati</td></tr>`;
+        errorBox.textContent = err.message;
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    loadDownloads();
+  </script>
+</body>
+</html>
