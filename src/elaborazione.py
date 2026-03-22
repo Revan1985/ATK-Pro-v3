@@ -90,6 +90,8 @@ def _normalize_format(fmt):
         return 'TIFF'
     elif fmt_upper == 'PNG':
         return 'PNG'
+    elif fmt_upper == 'PDF':
+        return 'PDF'
     return fmt_upper
 
 
@@ -175,6 +177,32 @@ def save_image_variants(image: Image.Image, output_folder: str, base_filename: s
             logger.info(f"[TIFF] Salvata immagine: {path}")
         except Exception as e:
             logger.error(f"[Error] Errore salvataggio TIFF {path}: {e}")
+
+
+def _make_placeholder_image(service_id: str, width: int = 800, height: int = 1200) -> Image.Image:
+    """Genera immagine placeholder per download falliti, da includere nel PDF."""
+    from PIL import ImageDraw, ImageFont
+    img = Image.new('RGB', (width, height), color=(240, 240, 240))
+    draw = ImageDraw.Draw(img)
+    font_large = font_medium = font_small = None
+    for font_name in ("arial.ttf", "Arial.ttf", "DejaVuSans.ttf", "LiberationSans-Regular.ttf"):
+        try:
+            font_large = ImageFont.truetype(font_name, 36)
+            font_medium = ImageFont.truetype(font_name, 24)
+            font_small = ImageFont.truetype(font_name, 18)
+            break
+        except Exception:
+            continue
+    if font_large is None:
+        font_large = font_medium = font_small = ImageFont.load_default()
+    draw.text((50, 80), "Download fallito", fill=(200, 0, 0), font=font_large)
+    draw.text((50, 160), "Riprova usando il seguente link:", fill=(60, 60, 60), font=font_medium)
+    url_parts = [service_id[i:i+70] for i in range(0, len(service_id), 70)]
+    y = 220
+    for part in url_parts:
+        draw.text((50, y), part, fill=(0, 0, 180), font=font_small)
+        y += 28
+    return img
 
 
 class Elaborazione:
@@ -317,6 +345,17 @@ class Elaborazione:
         """Elabora documento singolo (D/d) con verifica immagini finali e richiesta PDF opzionale."""
         try:
             os.makedirs(self.output_dir, exist_ok=True)
+            # Calcola formati (incluso PDF) all'inizio per logica placeholder e salvataggio
+            formats = self.formats if hasattr(self, 'formats') and self.formats else state.get('formats', [])
+            if not formats:
+                formats = ['PNG', 'JPEG', 'TIFF']
+            _norm_formats = [_normalize_format(f) for f in formats]
+            pdf_in_formats = 'PDF' in _norm_formats
+            image_formats = [f for f in formats if _normalize_format(f) != 'PDF']
+            only_pdf = pdf_in_formats and not image_formats
+            temp_pdf_dir = os.path.join(self.output_dir, "_tmp_pdf_images") if only_pdf else None
+            if temp_pdf_dir:
+                os.makedirs(temp_pdf_dir, exist_ok=True)
             # ...estrazione canvas come prima...
             target_canvas_id = None
             if "an_ud" in self.ark_url:
@@ -376,8 +415,12 @@ class Elaborazione:
             logger.info(f"[Rebuild] Ricostruendo immagine dai tiles")
             final_img = rebuild_image(info, tile_dir)
             if final_img is None:
-                logger.error(f"[Error] Fallita ricostruzione immagine")
-                return False
+                if pdf_in_formats:
+                    logger.warning(f"[PDF] Immagine non ricostruita, genero placeholder per {self.nome_file}")
+                    final_img = _make_placeholder_image(service_id)
+                else:
+                    logger.error(f"[Error] Fallita ricostruzione immagine")
+                    return False
             page_label = canvas.get('label', None)
             try:
                 if hasattr(self, 'progress_cb') and callable(self.progress_cb):
@@ -407,9 +450,19 @@ class Elaborazione:
             formats = self.formats if hasattr(self, 'formats') and self.formats else state.get('formats', [])
             if not formats:
                 formats = ['PNG', 'JPEG', 'TIFF']
-            save_image_variants(final_img, self.output_dir, self.nome_file, formats, meta=meta)
-            # Verifica immagini finali e retry (max 3 tentativi)
-            immagini_attese = [f"{self.nome_file}.{ext.lower()}" for ext in ['png','jpg','tif'] if _normalize_format(ext.upper()) in formats]
+            # Salvataggio formati immagine (escluso PDF, gestito separatamente)
+            if image_formats:
+                save_image_variants(final_img, self.output_dir, self.nome_file, image_formats, meta=meta)
+            if only_pdf and temp_pdf_dir:
+                _pdf_png_path = os.path.join(temp_pdf_dir, f"{self.nome_file}_pdftmp.png")
+                try:
+                    final_img.save(_pdf_png_path, format='PNG')
+                    logger.info(f"[PDF] Salvata PNG temporanea per PDF: {_pdf_png_path}")
+                except Exception as _e:
+                    logger.error(f"[PDF] Errore salvataggio PNG temporanea: {_e}")
+            # Verifica immagini finali e retry (max 3 tentativi, solo per formati immagine)
+            _img_norm = [_normalize_format(f) for f in image_formats]
+            immagini_attese = [f"{self.nome_file}.{ext.lower()}" for ext in ['png','jpg','tif'] if _normalize_format(ext.upper()) in _img_norm]
             mancanti = [img for img in immagini_attese if not os.path.exists(os.path.join(self.output_dir, img))]
             retry_count = 0
             max_retries = 3
@@ -417,7 +470,7 @@ class Elaborazione:
                 logger.warning(f"[Verifica] Mancano immagini finali: {mancanti}. Retry {retry_count+1}/{max_retries}")
                 final_img = rebuild_image(info, tile_dir)
                 if final_img is not None:
-                    save_image_variants(final_img, self.output_dir, self.nome_file, formats, meta=meta)
+                    save_image_variants(final_img, self.output_dir, self.nome_file, image_formats, meta=meta)
                 mancanti = [img for img in immagini_attese if not os.path.exists(os.path.join(self.output_dir, img))]
                 retry_count += 1
             if mancanti:
@@ -429,23 +482,23 @@ class Elaborazione:
             logger.info(f"[Cleanup] Cartella tiles eliminata: {tile_dir}")
             # Aggiorna metadati manifest con file generati
             if self.manifest_path and os.path.exists(self.manifest_path):
-                # Costruisce la lista con _normalize_format per inclusione corretta
-                # di JPG/TIF anche se formats è ['PNG','JPG','TIF'] (non normalizzato)
-                _nfmts = [_normalize_format(f) for f in formats]
-                immagini_generate = []
+                _nfmts = [_normalize_format(f) for f in image_formats]
+                immagini_generate_meta = []
                 for _ext, _nfmt in [('png', 'PNG'), ('jpg', 'JPEG'), ('tif', 'TIFF')]:
                     if _nfmt in _nfmts:
-                        immagini_generate.append(f"{self.nome_file}.{_ext}")
+                        immagini_generate_meta.append(f"{self.nome_file}.{_ext}")
                 estrai_metadati_da_manifest(
                     self.manifest_path,
                     record_prefix="D",
                     record_url=self.ark_url,
                     record_nome_file=self.nome_file,
-                    immagini_generate=immagini_generate
+                    immagini_generate=immagini_generate_meta
                 )
             # Richiesta PDF anche per i documenti singoli
             gen_pdf = False
-            if hasattr(self, 'force_gen_pdf') and self.force_gen_pdf is not None:
+            if pdf_in_formats:
+                gen_pdf = True  # PDF già scelto nella maschera formati, nessun popup
+            elif hasattr(self, 'force_gen_pdf') and self.force_gen_pdf is not None:
                 gen_pdf = bool(self.force_gen_pdf)
             else:
                 if hasattr(self, 'ask_pdf_cb') and callable(self.ask_pdf_cb):
@@ -456,10 +509,27 @@ class Elaborazione:
                     except Exception as e:
                         logger.error(f"[Elaborazione] Errore callback richiesta PDF: {e}")
                         gen_pdf = False
-            if gen_pdf and not mancanti:
-                pdf_path = self._generate_register_pdf([os.path.basename(p) for p in immagini_attese if os.path.exists(os.path.join(self.output_dir, p))])
+            if gen_pdf:
+                if only_pdf:
+                    pdf_path = self._generate_register_pdf(
+                        [f"{self.nome_file}_pdftmp.png"], image_dir=temp_pdf_dir)
+                elif pdf_in_formats:
+                    # PDF + altri formati: usa immagini già in output_dir
+                    _pdf_src = []
+                    for _ext in ['.tif', '.tiff', '.png', '.jpg', '.jpeg']:
+                        _c = self.nome_file + _ext
+                        if os.path.exists(os.path.join(self.output_dir, _c)):
+                            _pdf_src.append(_c)
+                    pdf_path = self._generate_register_pdf(_pdf_src)
+                else:
+                    pdf_path = self._generate_register_pdf(
+                        [os.path.basename(p) for p in immagini_attese
+                         if os.path.exists(os.path.join(self.output_dir, p))])
                 if pdf_path:
                     logger.info(f"[OK] PDF generato per documento singolo: {pdf_path}")
+            if only_pdf and temp_pdf_dir and os.path.exists(temp_pdf_dir):
+                shutil.rmtree(temp_pdf_dir, ignore_errors=True)
+                logger.info(f"[Cleanup] Cartella temp PDF eliminata: {temp_pdf_dir}")
             logger.info(f"[OK] Documento elaborato: {self.nome_file}")
             return True
         except Exception as e:
@@ -478,7 +548,13 @@ class Elaborazione:
             formats = self.formats if hasattr(self, 'formats') and self.formats else state.get('formats', [])
             if not formats:
                 formats = ['PNG', 'JPEG', 'TIFF']
-
+            _norm_formats = [_normalize_format(f) for f in formats]
+            pdf_in_formats = 'PDF' in _norm_formats
+            image_formats = [f for f in formats if _normalize_format(f) != 'PDF']
+            only_pdf = pdf_in_formats and not image_formats
+            temp_pdf_dir = os.path.join(self.output_dir, "_tmp_pdf_images") if only_pdf else None
+            if temp_pdf_dir:
+                os.makedirs(temp_pdf_dir, exist_ok=True)
 
             from threading import Lock
             immagini_lock = Lock()
@@ -527,7 +603,16 @@ class Elaborazione:
                         source_url=self.ark_url,
                         atk_version="2.0"
                     )
-                    save_image_variants(final_img, self.output_dir, nome_base, formats, meta=meta)
+                    _use_img = final_img if final_img is not None else _make_placeholder_image(service_id)
+                    if image_formats:
+                        save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)
+                    if pdf_in_formats:
+                        _pdf_save_dir = temp_pdf_dir if only_pdf else self.output_dir
+                        _pdf_png_path = os.path.join(_pdf_save_dir, f"{nome_base}_pdftmp.png")
+                        try:
+                            _use_img.save(_pdf_png_path, format='PNG')
+                        except Exception as _e:
+                            logger.error(f"[PDF] Errore salvataggio PNG canvas {idx}: {_e}")
                     # Elimina la cartella dei tile dopo la ricostruzione
                     shutil.rmtree(tile_dir, ignore_errors=True)
                     logger.info(f"[Cleanup] Cartella tiles eliminata: {tile_dir}")
@@ -547,11 +632,12 @@ class Elaborazione:
                     pass  # errori già loggati
 
             # Verifica immagini finali e retry (max 3 tentativi) per tutte le pagine
+            _img_norm_r = [_normalize_format(f) for f in image_formats]
             immagini_attese = []
             for idx, canvas in enumerate(tiles_info, 1):
                 nome_base = f"{self.nome_file}_canvas_{idx}"
                 for ext in ['png','jpg','tif']:
-                    if _normalize_format(ext.upper()) in formats:
+                    if _normalize_format(ext.upper()) in _img_norm_r:
                         immagini_attese.append(f"{nome_base}.{ext}")
             mancanti = [img for img in immagini_attese if not os.path.exists(os.path.join(self.output_dir, img))]
             retry_count = 0
@@ -581,7 +667,7 @@ class Elaborazione:
                             source_url=self.ark_url,
                             atk_version="2.0"
                         )
-                        save_image_variants(final_img, self.output_dir, nome_base, formats, meta=meta)
+                        save_image_variants(final_img, self.output_dir, nome_base, image_formats, meta=meta)
                         # Elimina la cartella dei tile dopo la ricostruzione anche nei retry
                         shutil.rmtree(tile_dir, ignore_errors=True)
                         logger.info(f"[Cleanup] Cartella tiles eliminata (retry): {tile_dir}")
@@ -604,7 +690,9 @@ class Elaborazione:
             logger.info(f"[Elaborazione] File generati: {immagini_generate}")
             # --- RICHIESTA PDF DOPO ULTIMO CANVAS ---
             gen_pdf = False
-            if hasattr(self, 'force_gen_pdf') and self.force_gen_pdf is not None:
+            if pdf_in_formats:
+                gen_pdf = True  # PDF già scelto nella maschera formati, nessun popup
+            elif hasattr(self, 'force_gen_pdf') and self.force_gen_pdf is not None:
                 gen_pdf = bool(self.force_gen_pdf)
             else:
                 if hasattr(self, 'ask_pdf_cb') and callable(self.ask_pdf_cb):
@@ -616,30 +704,54 @@ class Elaborazione:
                         logger.error(f"[Elaborazione] Errore callback richiesta PDF: {e}")
                         gen_pdf = False
 
-            # Genera PDF: se mancano immagini, chiede all'utente tramite popup localizzato
+            # Genera PDF
             if gen_pdf:
-                mancanti_pdf = [img for img in immagini_attese if not os.path.exists(os.path.join(self.output_dir, img))]
-                if mancanti_pdf:
-                    try:
-                        from user_prompts import ask_generate_pdf_missing_images
-                        parent = getattr(self, 'parent', None) if hasattr(self, 'parent') else None
-                        glossario = getattr(self, 'glossario_data', None) if hasattr(self, 'glossario_data') else None
-                        lingua = getattr(self, 'lingua', 'IT') if hasattr(self, 'lingua') else 'IT'
-                        dark_mode = getattr(self, 'dark_mode', False) if hasattr(self, 'dark_mode') else False
-                        conferma = ask_generate_pdf_missing_images(len(mancanti_pdf), glossario, lingua, parent, dark_mode)
-                    except Exception as e:
-                        logger.error(f"[PDF] Errore popup immagini mancanti: {e}")
-                        conferma = False
-                    if conferma:
-                        pdf_path = self._generate_register_pdf([img for img in immagini_attese if os.path.exists(os.path.join(self.output_dir, img))])
-                        if pdf_path:
-                            immagini_generate.append(os.path.basename(pdf_path))
+                if pdf_in_formats:
+                    if only_pdf:
+                        # Usa immagini temporanee da temp_pdf_dir (ordinate per idx)
+                        _pdf_imgs = [
+                            f"{self.nome_file}_canvas_{i}_pdftmp.png"
+                            for i in range(1, len(tiles_info) + 1)
+                            if os.path.exists(os.path.join(temp_pdf_dir,
+                               f"{self.nome_file}_canvas_{i}_pdftmp.png"))
+                        ]
+                        pdf_path = self._generate_register_pdf(_pdf_imgs, image_dir=temp_pdf_dir)
                     else:
-                        logger.error(f"[PDF] PDF NON generato: immagini mancanti per il registro: {mancanti_pdf}")
-                else:
-                    pdf_path = self._generate_register_pdf(immagini_attese)
+                        # PDF + altri formati: usa immagini già in output_dir
+                        _pdf_src = sorted(
+                            f for f in os.listdir(self.output_dir)
+                            if f.startswith(f"{self.nome_file}_canvas_")
+                            and not f.endswith('.json') and not f.endswith('.pdf')
+                        )
+                        pdf_path = self._generate_register_pdf(_pdf_src)
                     if pdf_path:
                         immagini_generate.append(os.path.basename(pdf_path))
+                else:
+                    mancanti_pdf = [img for img in immagini_attese if not os.path.exists(os.path.join(self.output_dir, img))]
+                    if mancanti_pdf:
+                        try:
+                            from user_prompts import ask_generate_pdf_missing_images
+                            parent = getattr(self, 'parent', None) if hasattr(self, 'parent') else None
+                            glossario = getattr(self, 'glossario_data', None) if hasattr(self, 'glossario_data') else None
+                            lingua = getattr(self, 'lingua', 'IT') if hasattr(self, 'lingua') else 'IT'
+                            dark_mode = getattr(self, 'dark_mode', False) if hasattr(self, 'dark_mode') else False
+                            conferma = ask_generate_pdf_missing_images(len(mancanti_pdf), glossario, lingua, parent, dark_mode)
+                        except Exception as e:
+                            logger.error(f"[PDF] Errore popup immagini mancanti: {e}")
+                            conferma = False
+                        if conferma:
+                            pdf_path = self._generate_register_pdf([img for img in immagini_attese if os.path.exists(os.path.join(self.output_dir, img))])
+                            if pdf_path:
+                                immagini_generate.append(os.path.basename(pdf_path))
+                        else:
+                            logger.error(f"[PDF] PDF NON generato: immagini mancanti: {mancanti_pdf}")
+                    else:
+                        pdf_path = self._generate_register_pdf(immagini_attese)
+                        if pdf_path:
+                            immagini_generate.append(os.path.basename(pdf_path))
+            if only_pdf and temp_pdf_dir and os.path.exists(temp_pdf_dir):
+                shutil.rmtree(temp_pdf_dir, ignore_errors=True)
+                logger.info(f"[Cleanup] Cartella temp PDF eliminata: {temp_pdf_dir}")
 
             # Aggiorna metadati finali
             if self.manifest_path and os.path.exists(self.manifest_path):
@@ -677,12 +789,15 @@ class Elaborazione:
                 return None
         return None
 
-    def _generate_register_pdf(self, immagini_generate):
-        """Genera PDF multipagina da immagini registro."""
+    def _generate_register_pdf(self, immagini_generate, image_dir=None):
+        """Genera PDF multipagina da immagini registro.
+        image_dir: cartella da cui cercare le immagini (default: self.output_dir)."""
+        if image_dir is None:
+            image_dir = self.output_dir
         try:
             ordered_paths = []
             for img_name in immagini_generate:
-                img_path = os.path.join(self.output_dir, img_name)
+                img_path = os.path.join(image_dir, img_name)
                 if os.path.exists(img_path):
                     ordered_paths.append(img_path)
 

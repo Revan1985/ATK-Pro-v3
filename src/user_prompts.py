@@ -201,6 +201,12 @@ def ask_image_formats(glossario_data=None, lingua="IT", format_vars=None):
             tk.Checkbutton(root, text=fmt, variable=var).pack(anchor='w', padx=20)
             format_vars[fmt] = var
 
+        tk.Frame(root, height=1, bg='gray').pack(fill='x', padx=10, pady=4)
+        tk.Label(root, text=get_msg_fallback("Documento PDF", "Documento PDF:"), font=('TkDefaultFont', 9, 'bold')).pack(anchor='w', padx=10)
+        var_pdf = tk.BooleanVar()
+        tk.Checkbutton(root, text="PDF", variable=var_pdf).pack(anchor='w', padx=20)
+        format_vars["PDF"] = var_pdf
+
         btn_frame = tk.Frame(root)
         btn_frame.pack(pady=10)
         tk.Button(btn_frame, text=get_msg_fallback("Conferma", "Conferma"), command=conferma).pack(side='left', padx=10)
