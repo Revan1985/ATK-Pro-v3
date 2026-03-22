@@ -980,10 +980,12 @@ class MainWindow(QMainWindow):
         doc_indices = [i for i, r in enumerate(records) if str(r.get('modalita', '')).strip().upper() == 'D']
         reg_indices = [i for i, r in enumerate(records) if str(r.get('modalita', '')).strip().upper() == 'R']
         if len(output_folders_doc) != len(doc_indices):
-            show_msgbox_localized(self, glossario, lingua, "ATK-Pro", f"Numero di cartelle documento selezionate ({len(output_folders_doc)}) diverso dal numero di record documento ({len(doc_indices)}).", QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
+            _tmpl_doc = get_msg(glossario, "Numero di cartelle documento selezionate ({doc_count}) diverso dal numero di record documento ({doc_total}).", lingua) or "Numero di cartelle documento selezionate ({doc_count}) diverso dal numero di record documento ({doc_total})."
+            show_msgbox_localized(self, glossario, lingua, "ATK-Pro", _tmpl_doc.format(doc_count=len(output_folders_doc), doc_total=len(doc_indices)), QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
             return
         if len(output_folders_reg) != len(reg_indices):
-            show_msgbox_localized(self, glossario, lingua, "ATK-Pro", f"Numero di cartelle registro selezionate ({len(output_folders_reg)}) diverso dal numero di record registro ({len(reg_indices)}).", QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
+            _tmpl_reg = get_msg(glossario, "Numero di cartelle registro selezionate ({reg_count}) diverso dal numero di record registro ({reg_total}).", lingua) or "Numero di cartelle registro selezionate ({reg_count}) diverso dal numero di record registro ({reg_total})."
+            show_msgbox_localized(self, glossario, lingua, "ATK-Pro", _tmpl_reg.format(reg_count=len(output_folders_reg), reg_total=len(reg_indices)), QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
             return
 
         doc_counter = 0
@@ -2257,16 +2259,18 @@ def action_process(glossario_data, lingua, parent=None):
         output_folders_reg = state.get('output_folders_reg', [])
         # Blocca se nessuna cartella valida
         if not output_folder and not (output_folders_doc and len(output_folders_doc) > 0) and not (output_folders_reg and len(output_folders_reg) > 0):
-            show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", "Nessuna cartella di output valida selezionata!", QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
+            show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", get_msg(glossario_data, "Nessuna cartella di output valida selezionata!", lingua) or "Nessuna cartella di output valida selezionata!", QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
             return
         # Conta i record per modalità
         doc_indices = [i for i, r in enumerate(records) if str(r.get('modalita', '')).strip().upper() == 'D']
         reg_indices = [i for i, r in enumerate(records) if str(r.get('modalita', '')).strip().upper() == 'R']
         if len(output_folders_doc) != len(doc_indices):
-            show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", f"Numero di cartelle documento selezionate ({len(output_folders_doc)}) diverso dal numero di record documento ({len(doc_indices)}).", QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
+            _tmpl_doc = get_msg(glossario_data, "Numero di cartelle documento selezionate ({doc_count}) diverso dal numero di record documento ({doc_total}).", lingua) or "Numero di cartelle documento selezionate ({doc_count}) diverso dal numero di record documento ({doc_total})."
+            show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", _tmpl_doc.format(doc_count=len(output_folders_doc), doc_total=len(doc_indices)), QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
             return
         if len(output_folders_reg) != len(reg_indices):
-            show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", f"Numero di cartelle registro selezionate ({len(output_folders_reg)}) diverso dal numero di record registro ({len(reg_indices)}).", QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
+            _tmpl_reg = get_msg(glossario_data, "Numero di cartelle registro selezionate ({reg_count}) diverso dal numero di record registro ({reg_total}).", lingua) or "Numero di cartelle registro selezionate ({reg_count}) diverso dal numero di record registro ({reg_total})."
+            show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", _tmpl_reg.format(reg_count=len(output_folders_reg), reg_total=len(reg_indices)), QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
             return
         doc_counter = 0
         reg_counter = 0
