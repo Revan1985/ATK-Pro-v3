@@ -579,10 +579,11 @@ class Elaborazione:
                 service_info = canvas['images'][0]['resource'].get('service')
                 service_id = service_info[0].get('@id') if isinstance(service_info, list) else service_info.get('@id')
                 image_info_url = service_id.rstrip('/') + '/info.json'
+                nome_base = f"{self.nome_file}_canvas_{idx}"
+                tile_dir = os.path.join(self.output_dir, f"tiles_canvas_{idx}")
 
                 try:
                     info = download_info_json(image_info_url)
-                    tile_dir = os.path.join(self.output_dir, f"tiles_canvas_{idx}")
                     os.makedirs(tile_dir, exist_ok=True)
                     tiles_ok, tiles_missing = download_tiles(info, tile_dir)
                     if tiles_missing:
@@ -593,7 +594,6 @@ class Elaborazione:
                             self.tiles_missing_all = []
                         self.tiles_missing_all.extend(tiles_missing)
                     final_img = rebuild_image(info, tile_dir)
-                    nome_base = f"{self.nome_file}_canvas_{idx}"
                     ua = _parse_ua_from_url(self.ark_url)
                     ark = _parse_ark_from_url(self.ark_url)
                     canvas_tail = _last_segment(service_id)
@@ -623,6 +623,20 @@ class Elaborazione:
                     logger.info(f"[Cleanup] Cartella tiles eliminata: {tile_dir}")
                 except Exception as e:
                     logger.error(f"[Error] Errore canvas {idx}: {e}", exc_info=True)
+                    # Genera placeholder per questo canvas e pulisce la cartella tile
+                    try:
+                        _ph = _make_placeholder_image(service_id, glossario_data=self.glossario_data, lingua=self.lingua)
+                        if image_formats:
+                            save_image_variants(_ph, self.output_dir, nome_base, image_formats)
+                        if pdf_in_formats:
+                            _pdf_save_dir = temp_pdf_dir if only_pdf else self.output_dir
+                            _ph.save(os.path.join(_pdf_save_dir, f"{nome_base}_pdftmp.png"), format='PNG')
+                            logger.info(f"[PDF] Placeholder salvato per canvas {idx} fallito")
+                    except Exception as _ep:
+                        logger.error(f"[Error] Errore salvataggio placeholder canvas {idx}: {_ep}")
+                    finally:
+                        shutil.rmtree(tile_dir, ignore_errors=True)
+                        logger.info(f"[Cleanup] Cartella tiles eliminata (dopo errore): {tile_dir}")
 
             # Parallelizzazione automatica: usa metà dei core disponibili, minimo 2, massimo 8
             # import os rimosso, già presente in testa al file
@@ -722,11 +736,12 @@ class Elaborazione:
                         ]
                         pdf_path = self._generate_register_pdf(_pdf_imgs, image_dir=temp_pdf_dir)
                     else:
-                        # PDF + altri formati: usa immagini già in output_dir
+                        # PDF + altri formati: usa immagini già in output_dir (ordinate per idx canvas)
                         _pdf_src = sorted(
-                            f for f in os.listdir(self.output_dir)
+                            (f for f in os.listdir(self.output_dir)
                             if f.startswith(f"{self.nome_file}_canvas_")
-                            and not f.endswith('.json') and not f.endswith('.pdf')
+                            and not f.endswith('.json') and not f.endswith('.pdf')),
+                            key=lambda x: int(re.search(r'_canvas_(\d+)', x).group(1)) if re.search(r'_canvas_(\d+)', x) else 0
                         )
                         pdf_path = self._generate_register_pdf(_pdf_src)
                     if pdf_path:
@@ -827,7 +842,10 @@ class Elaborazione:
 
                 preferred_order = ['.tif', '.tiff', '.png', '.jpg', '.jpeg']
                 selected_paths = []
-                for base in sorted(by_base.keys()):
+                def _canvas_sort_key(name):
+                    m = re.search(r'_canvas_(\d+)', name)
+                    return int(m.group(1)) if m else 0
+                for base in sorted(by_base.keys(), key=_canvas_sort_key):
                     exts_map = by_base[base]
                     chosen = None
                     for pe in preferred_order:
