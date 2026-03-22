@@ -5,7 +5,7 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTextEdit, QFileDialog, QMessageBox,
-    QMenuBar, QMenu, QDialog, QComboBox, QCheckBox, QSizePolicy, QInputDialog
+    QMenuBar, QMenu, QDialog, QComboBox, QCheckBox, QSizePolicy, QInputDialog, QFrame
 )
 
 # Versione corrente dell'applicazione
@@ -1884,10 +1884,10 @@ def ask_language(glossario_data, lingua_attuale, parent):
 
 def ask_image_formats(glossario_data, lingua):
     dlg = QDialog()
-    dlg.resize(270, 260)  # finestra compatta, sufficiente per le etichette localizzate
+    dlg.resize(270, 310)  # altezza aumentata per checkbox PDF
     dlg.setWindowTitle(get_msg(glossario_data, "Seleziona formati immagine", lingua.upper()))
     dlg.setWindowIcon(QIcon(get_pixmap_cached(asset_path("assets/common/grafici/ATK-Pro.ico"))))
-    _setup_dialog_pergamena(dlg, 270, 260)
+    _setup_dialog_pergamena(dlg, 270, 310)
 
     layout = QVBoxLayout(dlg)
     checks_layout = QHBoxLayout()
@@ -1908,6 +1908,22 @@ def ask_image_formats(glossario_data, lingua):
     checks_layout.addWidget(tiff)
     layout.addLayout(checks_layout)
 
+    # Separatore e checkbox PDF
+    separator = QFrame()
+    separator.setFrameShape(QFrame.HLine)
+    separator.setFrameShadow(QFrame.Sunken)
+    separator.setStyleSheet("color: #a67c52;")
+    layout.addWidget(separator)
+
+    pdf_label = QLabel(get_msg(glossario_data, "Documento PDF", lingua.upper()) or "Documento PDF")
+    pdf_label.setStyleSheet("font-weight: bold; font-size: 12px;")
+    layout.addWidget(pdf_label)
+
+    pdf_cb = QCheckBox("PDF")
+    if "PDF" in _saved_fmts_upper:
+        pdf_cb.setChecked(True)
+    layout.addWidget(pdf_cb)
+
     btns = QHBoxLayout()
     ok_btn = QPushButton(get_msg(glossario_data, "Conferma", lingua.upper()))
     cancel_btn = QPushButton(get_msg(glossario_data, "Annulla", lingua.upper()))
@@ -1922,6 +1938,7 @@ def ask_image_formats(glossario_data, lingua):
         if png.isChecked(): scelti.append("PNG")
         if jpg.isChecked(): scelti.append("JPG")
         if tiff.isChecked(): scelti.append("TIF")
+        if pdf_cb.isChecked(): scelti.append("PDF")
 
         if scelti:
             state["formats"] = scelti
