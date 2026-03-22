@@ -23,6 +23,8 @@ scripts/.venv*/
 *.tmp
 *.bak
 *.log
+*.log.[0-9]*
+Immagine*.png
 
 # 🔧 Script di setup e lavoro (per development locale, non per release)
 *.bat
