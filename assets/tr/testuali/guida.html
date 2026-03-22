@@ -372,7 +372,7 @@
             <h4>KURULUM</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>İndir: Resmi depolardan <code>ATK-Pro-Setup-v2.0.exe</code></li>
+                <li>İndir: Resmi depolardan <code>ATK-Pro-Setup-vx.x.x.exe</code></li>
                 <li>Kurulum dosyasına çift tıklayın</li>
                 <li>Gerekirse "Yönetici olarak çalıştır"ı seçin</li>
                 <li>Sihirbazı takip edin (İleri → İleri → Yükle)</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>İndir: <code>ATK-Pro-v2.0.deb</code> (veya <code>.tar.gz</code>)</li>
-                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>İndir: <code>ATK-Pro-vx.x.x.deb</code> (veya <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>: <code>/opt/ATK-Pro/</code> içine çıkartın ve <code>./ATK-Pro</code> çalıştırın</li>
                 <li>İlk başlatmada 20 seçenek arasından dil seçin</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>İndir: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>İndir: <code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li><code>.dmg</code>'yi açın ve <code>ATK-Pro.app</code>'ı <em>Uygulamalar</em> klasörüne sürükleyin</li>
                 <li>İlk başlatmada: sağ tık → Aç, Gatekeeper uyarısını kabul edin</li>
                 <li>20 seçenek arasından dil seçin</li>
@@ -678,7 +678,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  Kayıpsız format, daha iyi kalite, daha büyük dosyalar</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  Sıkıştırılmış format (kayıplı), iyi kalite/boyut dengesi</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Arşiv formatı, maksimum kalite, çok büyük dosyalar</p>
-            <h3>4. En az bir format seçin (birden fazla seçebilirsiniz)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>PDF Belgesi</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → Seçilen görüntü formatlarına ek olarak (veya hiçbir görüntü formatı seçilmemişse tek çıktı olarak) kaydın veya belgenin tüm sayfalarını içeren eksiksiz bir PDF oluşturur</p>
+            <h3>4. En az bir görüntü formatı veya PDF seçin (birden fazla seçebilirsiniz)</h3>
             <h3>5. "Onayla"ya tıklayın</h3>
             <h3>6. Program seçilen formatlarla bir mesaj gösterir</h3>
                         <p>✅ <strong>Seçilen formatlar kaydedilir</strong> ve programı bir sonraki açışınızda otomatik olarak önceden seçilir.</p>
@@ -687,6 +689,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Önizleme/danışma için: JPG (açması hızlı, daha az yer kaplar)</li>
                 <li>Arşivleme için: PNG (kayıpsız, yer kazanımı) veya TIFF (maksimum kalite)</li>
                 <li>Her ikisi için de: hem PNG hem de TIFF'i seçin</li>
+                <li>PDF için: PDF'yi bir veya daha fazla görüntü formatıyla birlikte seçin ya da yalnızca PDF'yi seçerek ayrı görüntü dosyaları olmadan yalnızca PDF belgesi oluşturun</li>
             </ul>
                         <h4>ADIM 2: ÇIKTI KLASÖRLERINI SEÇİN</h4>
             <p>─────────────────────────────────────</p>
@@ -765,27 +768,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. Kısmi dosyalar kaldırılır</h3>
             <h3>3. Pencere kapanıyor</h3>
             <h3>4. Menü → Çıktı → İşle'den yeniden başlayabilirsiniz</h3>
-            <h4>📋 KAYITLAR VE BELGELER İÇİN PDF İSTEĞİ</h4>
-            <p>Bir veya daha fazla Kayıt (R) veya Belge (D) işlenirken, görüntüler indirildikten sonra "Tam PDF'yi oluşturmak istiyor musunuz?" diye soran bir pencere belirir.</p>
-            <p>Bu pencere, moddan (R veya D) bağımsız olarak, işlenen her kayıt veya belge için indirme işleminin sonunda görünür:</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — İŞLEM SIRASINDA OTOMATİK OLUŞTURMA</h4>
+            <p><strong>PDF</strong>'yi format seçim iletişim kutusunda (ADIM 1) seçtiyseniz, her kayıt veya belgenin indirmesinin sonunda PDF otomatik olarak oluşturulur; herhangi bir ek onay penceresi açılmaz.</p>
             <h4>📌 DAVRANIŞ:</h4>
             <ul>
-                <li>[Evet]'i tıklayın: Görüntüler indirildikten hemen sonra PDF oluşturulacaktır.<br/>
-                <span style="margin-left: 20px; display: inline-block;">(kayıt veya belgenin tüm indirilen sayfalarıyla birlikte)</span></li>
-            </ul>
-            <ul>
-                <li>Tıklayın [Hayır]: Yalnızca indirilen resimler, PDF yok</li>
-                <li>2 dakika içinde yanıt vermezseniz: Sistem [Hayır] varsayacak ve PDF olmadan devam edecektir</li>
-            </ul>
-            <p>✅ Evet [Evet] diye yanıtlarsanız:</p>
-            <ul>
-                <li>Görüntüler normal şekilde indirilir.</li>
-                <li>Tamamlandığında, PDF istemi görünür.</li>
-                <li>Onaylarsanız, PDF dosyası otomatik olarak oluşturulur.</li>
-                <li>Çıktı: [seçilen_klasör]\[kayıt_veya_belge_adı]\[kayıt_veya_belge_adı].pdf</li>
+                <li>✅ <strong>Format iletişim kutusunda PDF seçildi:</strong> indirme sonunda PDF otomatik olarak oluşturulur; ek onay gerekmez</li>
+                <li>❌ <strong>PDF seçilmedi:</strong> yalnızca seçilen formatlarda görseller, PDF yok</li>
             </ul>
             <h4>⚠️ İŞLEME SIRASINDA YAPILMAMASI GEREKENLER:</h4>
             <ul>
@@ -1065,7 +1053,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>3 satırlı pencereyi göster:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (sürüm numarası)</li>
+                        <li>1. ATK-Pro vx.x.x (sürüm numarası)</li>
                         <li>2. ©2026 Daniele Pigoli (telif hakkı ve yazar)</li>
                         <li>3. Destek e-postası (bildirimler/öneriler için)</li>
                     </ul>
@@ -1289,7 +1277,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | Sürüm 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

@@ -19,5 +19,5 @@ Prosjektets forfatter fraskriver seg ethvert ansvar for feil bruk, feilfortolkni
 Konsultasjonsnoden skal forstås som et arkiv med begrenset sirkulasjon, kun ment for studieformål og ikke for offentlig eller systematisk distribusjon.
 Denne erklæringen er en integrert del av prosjektets dokumentasjonsarkitektur.
 
-© 2026 Antenati Toolkit Pro | Versjon 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

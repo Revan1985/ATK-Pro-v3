@@ -370,7 +370,7 @@
             <h4>CÀI ĐẶT</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>Tải xuống: <code>ATK-Pro-Setup-v2.0.exe</code> từ các kho lưu trữ chính thức</li>
+                <li>Tải xuống: <code>ATK-Pro-Setup-vx.x.x.exe</code> từ các kho lưu trữ chính thức</li>
                 <li>Nhấp đúp vào tệp cài đặt</li>
                 <li>Chọn "Chạy với tư cách Quản trị viên" nếu được yêu cầu</li>
                 <li>Làm theo trình hướng dẫn (Tiếp theo → Tiếp theo → Cài đặt)</li>
@@ -380,14 +380,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>Tải xuống: <code>ATK-Pro-v2.0.deb</code> (hoặc <code>.tar.gz</code>)</li>
-                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>Tải xuống: <code>ATK-Pro-vx.x.x.deb</code> (hoặc <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>: Giải nén vào <code>/opt/ATK-Pro/</code> và chạy <code>./ATK-Pro</code></li>
                 <li>Chọn ngôn ngữ ở lần khởi động đầu tiên từ 20 tùy chọn</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>Tải xuống: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Tải xuống: <code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li>Mở <code>.dmg</code> và kéo <code>ATK-Pro.app</code> vào thư mục <em>Ứng dụng</em></li>
                 <li>Ở lần khởi động đầu tiên: nhấp chuột phải → Mở, chấp nhận cảnh báo Gatekeeper</li>
                 <li>Chọn ngôn ngữ từ 20 tùy chọn</li>
@@ -678,7 +678,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Định dạng không mất dữ liệu (lossless), chất lượng tốt hơn, tệp lớn hơn</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Định dạng nén (mất mát), cân bằng tốt giữa chất lượng/kích thước</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Định dạng lưu trữ, chất lượng tối đa, tệp rất lớn</p>
-            <h3>4. Chọn ít nhất một định dạng (bạn có thể chọn nhiều hơn một)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>Tài liệu PDF</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → Tạo PDF đầy đủ với tất cả các trang của sổ đăng ký hoặc tài liệu, ngoài các định dạng hình ảnh đã chọn (hoặc là đầu ra duy nhất nếu không có định dạng hình ảnh nào được chọn)</p>
+            <h3>4. Chọn ít nhất một định dạng hình ảnh hoặc PDF (bạn có thể chọn nhiều hơn một)</h3>
             <h3>5. Nhấp vào "Xác nhận"</h3>
             <h3>6. Chương trình hiển thị một thông báo với các định dạng đã chọn</h3>
                         <p>✅ <strong>Các định dạng đã chọn được lưu</strong> và tự động chọn trước lần tiếp theo bạn mở chương trình.</p>
@@ -687,6 +689,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Để xem trước/tham khảo: JPG (nhanh mở, dung lượng nhỏ)</li>
                 <li>Để lưu trữ bảo tồn: PNG (không mất dữ liệu, tiết kiệm dung lượng) hoặc TIFF (chất lượng cao nhất)</li>
                 <li>Đối với cả hai: chọn cả PNG và TIFF</li>
+                <li>Đối với PDF: chọn PDF cùng với một hoặc nhiều định dạng hình ảnh, hoặc chỉ chọn PDF để tạo duy nhất tài liệu PDF mà không có tệp hình ảnh riêng biệt</li>
             </ul>
                         <h4>BƯỚC 2: CHỌN THƯ MỤC ĐẦU RA</h4>
             <p>─────────────────────────────────────</p>
@@ -765,27 +768,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. Các tệp một phần sẽ bị xóa</h3>
             <h3>3. Cửa sổ đóng</h3>
             <h3>4. Bạn có thể bắt đầu lại từ Menu → Output → Elabora</h3>
-            <h4>📋 YÊU CẦU PDF CHO SỔ ĐĂNG KÝ VÀ TÀI LIỆU</h4>
-            <p>Khi xử lý một hoặc nhiều Sổ đăng ký (R) hoặc Tài liệu (D), một cửa sổ sẽ hiện ra hỏi: "Bạn có muốn tạo toàn bộ tệp PDF không?" sau khi hình ảnh đã được tải xuống.</p>
-            <p>Cửa sổ này xuất hiện ở cuối quá trình tải xuống, đối với mỗi sổ đăng ký hoặc tài liệu được xử lý, bất kể chế độ (R hoặc D):</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — TỰ ĐỘNG TẠO TRONG QUÁ TRÌNH XỬ LÝ</h4>
+            <p>Nếu bạn đã chọn <strong>PDF</strong> trong hộp thoại chọn định dạng (BƯỚC 1), PDF được tạo tự động vào cuối quá trình tải xuống của mỗi sổ đăng ký hoặc tài liệu, mà không cần cửa sổ xác nhận bổ sung.</p>
             <h4>📌 HÀNH VI:</h4>
             <ul>
-                <li>Nhấp vào [Có]: Tệp PDF sẽ được tạo ngay sau khi hình ảnh được tải xuống<br/>
-                <span style="margin-left: 20px; display: inline-block;">(với tất cả các trang đã tải xuống của sổ đăng ký hoặc tài liệu)</span></li>
-            </ul>
-            <ul>
-                <li>Nhấn [Không]: Chỉ hình ảnh đã tải xuống, không có PDF</li>
-                <li>Nếu bạn không trả lời trong vòng 2 phút: Hệ thống mặc định là [Không] và tiếp tục mà không có PDF</li>
-            </ul>
-            <p>✅ Nếu bạn trả lời [Có]:</p>
-            <ul>
-                <li>Hình ảnh được tải xuống bình thường.</li>
-                <li>Khi hoàn tất, lời nhắc tạo PDF sẽ xuất hiện.</li>
-                <li>Nếu bạn xác nhận, tệp PDF sẽ được tạo tự động.</li>
-                <li>Đầu ra: [thư mục đã chọn]\[tên sổ đăng ký hoặc tài liệu]\[tên sổ đăng ký hoặc tài liệu].pdf</li>
+                <li>✅ <strong>PDF được chọn trong hộp thoại định dạng:</strong> PDF được tạo tự động vào cuối quá trình tải xuống; không cần xác nhận thêm</li>
+                <li>❌ <strong>PDF không được chọn:</strong> chỉ hình ảnh ở các định dạng đã chọn, không có PDF</li>
             </ul>
             <h4>⚠️ NHỮNG ĐIỀU KHÔNG NÊN LÀM TRONG QUÁ TRÌNH XỬ LÝ:</h4>
             <ul>
@@ -1065,7 +1053,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Hiển thị cửa sổ với 3 dòng:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (số phiên bản)</li>
+                        <li>1. ATK-Pro vx.x.x (số phiên bản)</li>
                         <li>2. ©2026 Daniele Pigoli (bản quyền và tác giả)</li>
                         <li>3. Email hỗ trợ (dành cho báo cáo/góp ý)</li>
                     </ul>
@@ -1289,7 +1277,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | Phiên bản 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

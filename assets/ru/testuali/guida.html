@@ -372,7 +372,7 @@
             <h4>УСТАНОВКА</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>Скачать: <code>ATK-Pro-Setup-v2.0.exe</code> из официальных репозиториев</li>
+                <li>Скачать: <code>ATK-Pro-Setup-vx.x.x.exe</code> из официальных репозиториев</li>
                 <li>Дважды щёлкнуть на файл установщика</li>
                 <li>Выбрать «Запуск от имени администратора», если требуется</li>
                 <li>Следовать мастеру (Далее → Далее → Установить)</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>Скачать: <code>ATK-Pro-v2.0.deb</code> (или <code>.tar.gz</code>)</li>
-                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>Скачать: <code>ATK-Pro-vx.x.x.deb</code> (или <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>: Распаковать в <code>/opt/ATK-Pro/</code> и запустить <code>./ATK-Pro</code></li>
                 <li>Выбрать язык при первом запуске из 20 вариантов</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>Скачать: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Скачать: <code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li>Открыть <code>.dmg</code> и перетащить <code>ATK-Pro.app</code> в папку <em>Программы</em></li>
                 <li>При первом запуске: правый клик → Открыть, принять предупреждение Gatekeeper</li>
                 <li>Выбрать язык из 20 вариантов</li>
@@ -678,7 +678,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Формат без потерь (lossless), лучшее качество, большие файлы</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  Сжатый формат (с потерями), хороший компромисс между качеством и размером</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Архивный формат, максимальное качество, очень большие файлы</p>
-            <h3>4. Выберите как минимум один формат (можно выбрать несколько)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>Документ PDF</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → Создаёт полный PDF со всеми страницами реестра или документа, в дополнение к выбранным форматам изображений (или как единственный вывод, если формат изображения не выбран)</p>
+            <h3>4. Выберите как минимум один формат изображения или PDF (можно выбрать несколько)</h3>
             <h3>5. Нажмите «Подтвердить»</h3>
             <h3>6. Программа отображает сообщение с выбранными форматами</h3>
                         <p>✅ <strong>Выбранные форматы сохраняются</strong> и автоматически предвыбираются при следующем открытии программы.</p>
@@ -687,6 +689,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Для предварительного просмотра/консультации: JPG (быстро открывается, меньше места)</li>
                 <li>Для консервативного архива: PNG (без потерь, компромисс по размеру) или TIFF (максимальное качество)</li>
                 <li>Для обоих: выберите PNG и TIFF</li>
+                <li>Для PDF: выберите PDF вместе с одним или несколькими форматами изображений, или выберите только PDF для генерации исключительно PDF-документа без отдельных файлов изображений</li>
             </ul>
                         <h4>ШАГ 2: ВЫБЕРИТЕ ПАПКИ ВЫВОДА</h4>
             <p>─────────────────────────────────────</p>
@@ -765,27 +768,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. Частичные файлы удаляются</h3>
             <h3>3. Окно закрывается</h3>
             <h3>4. Вы можете начать заново через Меню → Вывод → Обработка</h3>
-            <h4>📋 ЗАПРОС НА СОЗДАНИЕ PDF-ФАЙЛА ДЛЯ РЕГИСТРОВ И ДОКУМЕНТОВ</h4>
-            <p>При обработке одного или нескольких Реестров (R) или Документов (D) после загрузки изображений появляется окно с вопросом: «Хотите ли вы сгенерировать полный PDF-файл?»</p>
-            <p>Это окно появляется в конце загрузки для каждого обработанного Реестра или Документа, независимо от режима (R или D):</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — АВТОМАТИЧЕСКАЯ ГЕНЕРАЦИЯ ВО ВРЕМЯ ОБРАБОТКИ</h4>
+            <p>Если вы выбрали <strong>PDF</strong> в диалоге выбора форматов (ШАГ 1), PDF генерируется автоматически по завершении загрузки каждого реестра или документа, без дополнительного окна подтверждения.</p>
             <h4>📌 ПОВЕДЕНИЕ:</h4>
             <ul>
-                <li>Нажмите [Да]: PDF-файл будет создан сразу после загрузки изображений<br/>
-                <span style="margin-left: 20px; display: inline-block;">(со всеми загруженными страницами реестра или документа)</span></li>
-            </ul>
-            <ul>
-                <li>Нажмите [Нет]: Только скачанные изображения, без PDF</li>
-                <li>Если вы не ответите в течение 2 минут: Система принимает [Нет] и продолжает без PDF</li>
-            </ul>
-            <p>✅ Если вы ответите [Да]:</p>
-            <ul>
-                <li>Загрузка изображений происходит в обычном режиме.</li>
-                <li>После завершения появится запрос на создание PDF-файла.</li>
-                <li>Если вы подтвердите, PDF-файл будет создан автоматически.</li>
-                <li>Вывод: [выбранная_папка]\[имя_реестра_или_документа]\[имя_реестра_или_документа].pdf</li>
+                <li>✅ <strong>PDF выбран в диалоге форматов:</strong> PDF генерируется автоматически по завершении загрузки; дополнительное подтверждение не требуется</li>
+                <li>❌ <strong>PDF не выбран:</strong> только изображения в выбранных форматах, без PDF</li>
             </ul>
             <h4>⚠️ ЧТО НЕЛЬЗЯ ДЕЛАТЬ ВО ВРЕМЯ ОБРАБОТКИ:</h4>
             <ul>
@@ -1065,7 +1053,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Показать окно с 3 строками:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (номер версии)</li>
+                        <li>1. ATK-Pro vx.x.x (номер версии)</li>
                         <li>2. ©2026 Даниэле Пиголи (авторские права и автор)</li>
                         <li>3. Служба поддержки по электронной почте (для сообщений/предложений)</li>
                     </ul>
@@ -1289,7 +1277,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | Версия 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

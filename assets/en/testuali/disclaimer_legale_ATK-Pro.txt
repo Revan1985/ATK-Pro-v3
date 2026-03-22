@@ -18,5 +18,5 @@ The author of the project disclaims any responsibility regarding the improper us
 The consultative node is to be understood as a limited circulation archive, intended exclusively for study purposes and not for public or systematic dissemination.
 This declaration is an integral part of the project's documentation architecture.
 
-© 2026 Antenati Toolkit Pro | Version 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

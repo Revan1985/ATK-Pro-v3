@@ -372,7 +372,7 @@
             <h4>安装</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>下载：从官方仓库获取<code>ATK-Pro-Setup-v2.0.exe</code></li>
+                <li>下载：从官方仓库获取<code>ATK-Pro-Setup-vx.x.x.exe</code></li>
                 <li>双击安装文件</li>
                 <li>如需要，选择"以管理员身份运行"</li>
                 <li>按照安装向导操作（下一步 → 下一步 → 安装）</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>下载：<code>ATK-Pro-v2.0.deb</code>（或<code>.tar.gz</code>）</li>
-                <li><code>.deb</code>：<code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>下载：<code>ATK-Pro-vx.x.x.deb</code>（或<code>.tar.gz</code>）</li>
+                <li><code>.deb</code>：<code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>：解压到<code>/opt/ATK-Pro/</code>并执行<code>./ATK-Pro</code></li>
                 <li>首次启动时从20个选项中选择语言</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>下载：<code>ATK-Pro-v2.0.dmg</code></li>
+                <li>下载：<code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li>打开<code>.dmg</code>并将<code>ATK-Pro.app</code>拖到<em>应用程序</em>文件夹</li>
                 <li>首次启动：右键 → 打开，接受Gatekeeper警告</li>
                 <li>从20个选项中选择语言</li>
@@ -678,7 +678,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  无损格式，更高质量，更大的文件</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → 有损压缩格式，质量/大小折衷方案</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → 归档格式，最高质量，文件非常大</p>
-            <h3>4. 选择至少一种格式（您可以选择多种格式）</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>PDF 文档</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → 生成包含登记簿或文件所有页面的完整 PDF，作为所选图片格式的补充（如果未选择任何图片格式，则作为唯一输出）</p>
+            <h3>4. 选择至少一种图片格式或 PDF（您可以选择多种格式）</h3>
             <h3>5. 点击“确认”</h3>
             <h3>6. 程序显示所选格式的消息</h3>
                         <p>✅ <strong>所选格式已保存</strong>，下次打开程序时自动预选。</p>
@@ -687,6 +689,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>预览/参考：JPG（打开速度快，占用空间小）</li>
                 <li>用于保守存档：PNG（无损，牺牲空间）或 TIFF（最高质量）</li>
                 <li>两者都选：选择 PNG 和 TIFF</li>
+                <li>对于 PDF：选择 PDF 和一种或多种图片格式，或仅选择 PDF 来生成专用 PDF 文档而不生成单独的图片文件</li>
             </ul>
                         <h4>步骤 2：选择输出文件夹</h4>
             <p>─────────────────────────────────────</p>
@@ -765,27 +768,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. 部分文件被移除</h3>
             <h3>3. 窗口关闭</h3>
             <h3>4. 您可以从菜单 → 输出 → 处理重新开始</h3>
-            <h4>📋 登记簿和文件的 PDF 请求</h4>
-            <p>处理一个或多个登记簿 (R) 或文件 (D) 时，图像下载完成后会弹出一个窗口询问：“是否要生成完整的 PDF？”</p>
-            <p>无论模式 (R 或 D) 如何，每个已处理的登记簿或文件在下载完成后都会出现此窗口：</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
-            <h4>📌 行为：</h4>
+            <h4>📋 PDF — 处理过程中自动生成</h4>
+            <p>如果您在格式选择对话框（第 1 步）中选择了 <strong>PDF</strong>，系统将在每个登记簿或文件下载完成后自动生成 PDF，无需任何额外的确认窗口。</p>
+            <h4>📌 行为:</h4>
             <ul>
-                <li>点击【是】：图片下载完成后，PDF 文件将立即生成。<br/>
-                <span style="margin-left: 20px; display: inline-block;">（包含登记册或文档的所有已下载页面）</span></li>
-            </ul>
-            <ul>
-                <li>点击 [否]：仅下载图片，无 PDF</li>
-                <li>如果在2分钟内未回复：系统将默认为[否]并继续处理，不含PDF</li>
-            </ul>
-            <p>✅ 如果您回答 [是]：</p>
-            <ul>
-                <li>图片正常下载。</li>
-                <li>下载完成后，将出现 PDF 提示。</li>
-                <li>确认后，PDF 文件将自动生成。</li>
-                <li>输出：[选择文件夹]\[登记册或文档名称]\[登记册或文档名称].pdf</li>
+                <li>✅ <strong>在格式对话框中选择了 PDF：</strong>下载完成后自动生成 PDF；无需额外确认</li>
+                <li>❌ <strong>未选择 PDF：</strong>仅生成所选格式的图片，不生成 PDF</li>
             </ul>
             <h4>⚠️ 处理过程中不要做的事情：</h4>
             <ul>
@@ -1065,7 +1053,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>显示带 3 行的窗口：
                     <ul>
-                        <li>1. ATK-Pro v2.0 (版本号)</li>
+                        <li>1. ATK-Pro vx.x.x (版本号)</li>
                         <li>2. ©2026 丹尼尔·皮戈利（版权和作者）</li>
                         <li>3. 支持邮箱（用于报告/建议）</li>
                     </ul>
@@ -1289,7 +1277,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | 版本 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

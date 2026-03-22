@@ -19,5 +19,5 @@ De auteur van het project wijst elke verantwoordelijkheid af voor onjuist gebrui
 De consultatieve node moet worden beschouwd als een archief met beperkte circulatie, uitsluitend bedoeld voor studiedoeleinden en niet voor openbare of systematische verspreiding.
 Deze verklaring maakt integraal deel uit van de documentatiearchitectuur van het project.
 
-© 2026 Antenati Toolkit Pro | Versie 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

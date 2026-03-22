@@ -19,5 +19,5 @@ El autor del proyecto declina toda responsabilidad por el uso indebido, la inter
 El nodo consultivo debe entenderse como un archivo de circulación limitada, destinado exclusivamente a fines de estudio y no a la difusión pública o sistemática.
 La presente declaración forma parte integrante de la arquitectura documental del proyecto.
 
-© 2026 Antenati Toolkit Pro | Versión 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

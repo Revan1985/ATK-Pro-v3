@@ -19,5 +19,5 @@ L’autore del progetto declina ogni responsabilità in merito all’uso impropr
 Il nodo consultativo è da intendersi come un archivio a circolazione limitata, destinato esclusivamente a finalità di studio e non alla diffusione pubblica o sistematica.
 La presente dichiarazione fa parte integrante dell’architettura documentale del progetto.
 
-© 2026 Antenati Toolkit Pro | Versione 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

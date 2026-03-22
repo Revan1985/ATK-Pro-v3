@@ -372,7 +372,7 @@
             <h4>INSTALLATION</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>Download <code>ATK-Pro-Setup-v2.0.x.exe</code> from the official Release page</li>
+                <li>Download <code>ATK-Pro-Setup-vx.x.x.exe</code> from the official Release page</li>
                 <li>Double-click the installer file</li>
                 <li>Select "Run as administrator", if prompted</li>
                 <li>Follow the wizard (Next → Next → Install)</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>Download <code>ATK-Pro-v2.0.x.deb</code> (Debian/Ubuntu) or <code>.tar.gz</code> from the Release page</li>
-                <li><strong>.deb package:</strong> <code>sudo dpkg -i ATK-Pro-v2.0.x.deb</code> or double-click in Nautilus/Files</li>
+                <li>Download <code>ATK-Pro-vx.x.x.deb</code> (Debian/Ubuntu) or <code>.tar.gz</code> from the Release page</li>
+                <li><strong>.deb package:</strong> <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code> or double-click in Nautilus/Files</li>
                 <li><strong>.tar.gz archive:</strong> extract and run <code>./ATK-Pro</code> from the extracted folder</li>
                 <li>Language selected on first launch, saved in user config file</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>Download <code>ATK-Pro-v2.0.x.dmg</code> from the Release page</li>
+                <li>Download <code>ATK-Pro-vx.x.x.dmg</code> from the Release page</li>
                 <li>Open the .dmg and drag ATK-Pro to the Applications folder</li>
                 <li>On first launch: right-click → Open (required for non-notarized apps)</li>
                 <li>Language selected on first launch, saved in user config file</li>
@@ -691,7 +691,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Lossless format, better quality, larger files</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Compressed format (lossy), good quality/size compromise</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Archival format, maximum quality, very large files</p>
-            <h3>4. Select at least one format (you can choose more than one)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>PDF Document</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → Generates a complete PDF with all pages of the register or document, in addition to the selected image formats (or as the only output if no image format is selected)</p>
+            <h3>4. Select at least one image format or PDF (you can choose more than one)</h3>
             <h3>5. Click "Confirm"</h3>
             <p>✅ <strong>The selected formats are saved</strong> and pre-selected automatically the next time you open the program.</p>
             <h4>📝 TIPS:</h4>
@@ -699,6 +701,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>For preview/consultation: JPG (quick to open, less space)</li>
                 <li>For archival purposes: PNG (lossless, space compromise) or TIFF (maximum quality)</li>
                 <li>For both: select both PNG and TIFF</li>
+                <li>For PDF: select PDF together with one or more image formats, or select only PDF to generate exclusively the PDF document without separate image files</li>
             </ul>
             <h4>STEP 2: SELECT OUTPUT FOLDERS</h4>
             <p>──────────────────────────────────────</p>
@@ -777,27 +780,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. Partial files are removed</h3>
             <h3>3. Window closes</h3>
             <h3>4. You can restart from Menu → Output → Process</h3>
-            <h4>📋 PDF REQUEST FOR REGISTERS AND DOCUMENTS</h4>
-            <p>When processing one or more Registers (R) or Documents (D), a window appears asking: "Do you want to generate the complete PDF?" after the images have been downloaded.</p>
-            <p>This window appears at the end of the download, for each processed register or document, regardless of the mode (R or D):</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — AUTOMATIC GENERATION DURING PROCESSING</h4>
+            <p>If you selected <strong>PDF</strong> in the format selection dialog (STEP 1), the PDF is generated automatically at the end of the download of each register or document, without any additional confirmation window.</p>
             <h4>📌 BEHAVIOR:</h4>
             <ul>
-                <li>Click [Yes]: The PDF will be generated immediately after the images are downloaded.<br/>
-                <span style="margin-left: 20px; display: inline-block;">(with all downloaded pages of the log or document)</span></li>
-            </ul>
-            <ul>
-                <li>Click [No]: Only downloaded images, no PDFs</li>
-                <li>If you don't reply within 2 minutes: The system assumes [No] and proceeds without PDF</li>
-            </ul>
-            <p>✅ If you reply [Yes]:</p>
-            <ul>
-                <li>The images are downloaded normally.</li>
-                <li>When complete, the PDF prompt appears.</li>
-                <li>If you confirm, the PDF file is created automatically.</li>
-                <li>Output: [chosen_folder]\[register_or_document_name]\[register_or_document_name].pdf</li>
+                <li>✅ <strong>PDF selected in the formats dialog:</strong> the PDF is generated automatically at the end of the download; no additional confirmation is required</li>
+                <li>❌ <strong>PDF not selected:</strong> only images in the chosen formats, no PDF</li>
             </ul>
             <h4>⚠️ WHAT NOT TO DO DURING PROCESSING:</h4>
             <ul>
@@ -1074,7 +1062,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Show window with 3 rows:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (version number)</li>
+                        <li>1. ATK-Pro vx.x.x (version number)</li>
                         <li>2. ©2026 Daniele Pigoli (copyright and author)</li>
                         <li>3. Support email (for reports/suggestions)</li>
                     </ul>
@@ -1298,7 +1286,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | Version 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

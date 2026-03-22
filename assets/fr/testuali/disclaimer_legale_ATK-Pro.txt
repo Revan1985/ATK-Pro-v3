@@ -19,5 +19,5 @@ L'auteur du projet décline toute responsabilité quant à l'utilisation abusive
 Le nœud consultatif doit être considéré comme une archive à circulation limitée, destinée exclusivement à des fins d'étude et non à une diffusion publique ou systématique.
 La présente déclaration fait partie intégrante de l'architecture documentaire du projet.
 
-© 2026 Antenati Toolkit Pro | Version 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

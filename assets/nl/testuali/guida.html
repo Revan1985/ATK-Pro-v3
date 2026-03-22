@@ -372,7 +372,7 @@
             <h4>INSTALLATIE</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>Downloaden: <code>ATK-Pro-Setup-v2.0.exe</code> uit de officiële repositories</li>
+                <li>Downloaden: <code>ATK-Pro-Setup-vx.x.x.exe</code> uit de officiële repositories</li>
                 <li>Dubbelklikken op het installatiebestand</li>
                 <li>Selecteer "Als administrator uitvoeren" indien gevraagd</li>
                 <li>Volg de wizard (Volgende → Volgende → Installeren)</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>Downloaden: <code>ATK-Pro-v2.0.deb</code> (of <code>.tar.gz</code>)</li>
-                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>Downloaden: <code>ATK-Pro-vx.x.x.deb</code> (of <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>: uitpakken naar <code>/opt/ATK-Pro/</code> en uitvoeren: <code>./ATK-Pro</code></li>
                 <li>Kies de taal bij de eerste start uit 20 opties</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>Downloaden: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Downloaden: <code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li>Open de <code>.dmg</code> en sleep <code>ATK-Pro.app</code> naar de map <em>Programma's</em></li>
                 <li>Bij eerste start: rechtermuisknop → Openen, Gatekeeper-waarschuwing accepteren</li>
                 <li>Kies de taal uit 20 opties</li>
@@ -678,7 +678,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Lossless formaat, betere kwaliteit, grotere bestanden</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Gecomprimeerd formaat (lossy), goed compromis kwaliteit/grootte</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Archiefformaat, maximale kwaliteit, zeer grote bestanden</p>
-            <h3>4. Selecteer minimaal één formaat (u kunt er meer dan één kiezen)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>PDF-document</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → Genereert een volledige PDF met alle pagina's van het register of document, naast de geselecteerde afbeeldingsformaten (of als enige uitvoer als er geen afbeeldingsformaat is geselecteerd)</p>
+            <h3>4. Selecteer minimaal één afbeeldingsformaat of PDF (u kunt er meer dan één kiezen)</h3>
             <h3>5. Klik op "Bevestigen"</h3>
             <h3>6. Het programma toont een bericht met de gekozen formaten</h3>
                         <p>✅ <strong>De geselecteerde indelingen worden opgeslagen</strong> en automatisch voorgeselecteerd de volgende keer dat u het programma opent.</p>
@@ -687,6 +689,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Ter preview/consultatie: JPG (snel te openen, minder ruimte)</li>
                 <li>Voor archivering: PNG (lossless, ruimtebesparend) of TIFF (maximale kwaliteit)</li>
                 <li>Voor beiden: selecteer zowel PNG als TIFF</li>
+                <li>Voor PDF: selecteer PDF samen met een of meer afbeeldingsformaten, of selecteer alleen PDF om uitsluitend het PDF-document zonder afzonderlijke afbeeldingsbestanden te genereren</li>
             </ul>
                         <h4>STAP 2: SELECTEER UITVOERMAPPEN</h4>
             <p>─────────────────────────────────────</p>
@@ -765,27 +768,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. Gedeeltelijke bestanden worden verwijderd</h3>
             <h3>3. Venster sluit</h3>
             <h3>4. U kunt opnieuw beginnen via Menu → Output → Elabora</h3>
-            <h4>📋 PDF-VERZOEK VOOR REGISTERS EN DOCUMENTEN</h4>
-            <p>Bij het verwerken van een of meer registers (R) of documenten (D) verschijnt een venster met de vraag: "Wilt u de volledige PDF genereren?" nadat de afbeeldingen zijn gedownload.</p>
-            <p>Dit venster verschijnt aan het einde van de download, voor elk verwerkt register of document, ongeacht de modus (R of D):</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — AUTOMATISCHE GENERERING TIJDENS VERWERKING</h4>
+            <p>Als u <strong>PDF</strong> hebt geselecteerd in het dialoogvenster voor formaatselectie (STAP 1), wordt het PDF automatisch gegenereerd aan het einde van de download van elk register of document, zonder extra bevestigingsvenster.</p>
             <h4>📌 GEDRAG:</h4>
             <ul>
-                <li>Klik op [Ja]: De PDF wordt direct gegenereerd nadat de afbeeldingen zijn gedownload.<br/>
-                <span style="margin-left: 20px; display: inline-block;">(met alle gedownloade pagina's van het register of document)</span></li>
-            </ul>
-            <ul>
-                <li>Klik op [Nee]: Alleen gedownloade afbeeldingen, geen PDF</li>
-                <li>Als je niet binnen 2 minuten antwoordt: Het systeem gaat uit van [Nee] en gaat verder zonder PDF</li>
-            </ul>
-            <p>✅ Als u [Ja] antwoordt:</p>
-            <ul>
-                <li>De afbeeldingen worden normaal gedownload.</li>
-                <li>Wanneer het downloaden is voltooid, verschijnt de PDF-prompt.</li>
-                <li>Als u bevestigt, wordt het PDF-bestand automatisch aangemaakt.</li>
-                <li>Uitvoer: [gekozen_map]\[naam_van_register_of_document]\[naam_van_register_of_document].pdf</li>
+                <li>✅ <strong>PDF geselecteerd in het formaatdialoogvenster:</strong> het PDF wordt automatisch gegenereerd aan het einde van de download; geen aanvullende bevestiging vereist</li>
+                <li>❌ <strong>PDF niet geselecteerd:</strong> alleen afbeeldingen in de gekozen formaten, geen PDF</li>
             </ul>
             <h4>⚠️ WAT NIET TE DOEN TIJDENS DE VERWERKING:</h4>
             <ul>
@@ -1065,7 +1053,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Venster met 3 regels weergeven:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (versienummer)</li>
+                        <li>1. ATK-Pro vx.x.x (versienummer)</li>
                         <li>2. ©2026 Daniele Pigoli (auteursrecht en auteur)</li>
                         <li>3. E-mailondersteuning (voor meldingen/suggesties)</li>
                     </ul>
@@ -1289,7 +1277,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>&copy; 2026 Antenati Toolkit Pro | Versie 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>&copy; 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

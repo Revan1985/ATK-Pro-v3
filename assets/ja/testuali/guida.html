@@ -372,7 +372,7 @@
             <h4>設置</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>ダウンロード：公式リポジトリから<code>ATK-Pro-Setup-v2.0.exe</code></li>
+                <li>ダウンロード：公式リポジトリから<code>ATK-Pro-Setup-vx.x.x.exe</code></li>
                 <li>インストーラーファイルをダブルクリック</li>
                 <li>必要に応じて「管理者として実行」を選択</li>
                 <li>ウィザードに従う（次へ → 次へ → インストール）</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>ダウンロード：<code>ATK-Pro-v2.0.deb</code>（または<code>.tar.gz</code>）</li>
-                <li><code>.deb</code>：<code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>ダウンロード：<code>ATK-Pro-vx.x.x.deb</code>（または<code>.tar.gz</code>）</li>
+                <li><code>.deb</code>：<code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>：<code>/opt/ATK-Pro/</code>に展開して<code>./ATK-Pro</code>を実行</li>
                 <li>初回起動時に20言語から言語を選択</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>ダウンロード：<code>ATK-Pro-v2.0.dmg</code></li>
+                <li>ダウンロード：<code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li><code>.dmg</code>を開き、<code>ATK-Pro.app</code>を<em>アプリケーション</em>フォルダへドラッグ</li>
                 <li>初回起動時：右クリック → 開く、Gatekeeperの警告を許可</li>
                 <li>20言語から言語を選択</li>
@@ -678,7 +678,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  ロスレス形式、高音質、大容量ファイル</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → 圧縮形式（ロッシー）、品質とサイズのバランスが良い</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → アーカイブ形式、最高品質、非常に大きなファイル</p>
-            <h3>4. 少なくとも1つのフォーマットを選択してください（複数選択も可能です）</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>PDF ドキュメント</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → 選択した画像フォーマットに加えて（または画像フォーマットが選択されていない場合は唯一の出力として）、登録簿または文書のすべてのページを含む完全な PDF を生成します</p>
+            <h3>4. 少なくとも1つのイメージフォーマットまたはPDFを選択してください（複数選択も可能です）</h3>
             <h3>5. 「確認」をクリック</h3>
             <h3>6. プログラムは選択されたフォーマットのメッセージを表示します</h3>
                         <p>✅ <strong>選択したフォーマットは保存され</strong>、次回プログラムを開いたときに自動的に事前選択されます。</p>
@@ -687,6 +689,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>プレビュー/参照用：JPG（開きやすく、容量が小さい）</li>
                 <li>アーカイブ保存用：PNG（ロスレス、容量圧縮あり）またはTIFF（最高品質）</li>
                 <li>両方とも：PNGとTIFFの両方を選択</li>
+                <li>PDF の場合：PDF と 1 つ以上の画像フォーマットを選択するか、PDF のみを選択して個別の画像ファイルなしで PDF ドキュメントのみを生成します</li>
             </ul>
                         <h4>ステップ2：出力フォルダーを選択</h4>
             <p>─────────────────────────────────────</p>
@@ -765,27 +768,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. 部分ファイルが削除されます</h3>
             <h3>3. ウィンドウが閉じる</h3>
             <h3>4. メニュー → 出力 → 処理 から再開できます</h3>
-            <h4>📋 登録簿および文書のPDFリクエスト</h4>
-            <p>登録簿（R）または文書（D）を1つ以上処理する場合、画像のダウンロード後に「完全なPDFを生成しますか？」というウィンドウが表示されます。</p>
-            <p>このウィンドウは、モード（RまたはD）に関係なく、処理済みの登録簿または文書ごとにダウンロードの最後に表示されます。</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
-            <h4>📌 行動</h4>
+            <h4>📋 PDF — 処理中の自動生成</h4>
+            <p>フォーマット選択ダイアログ（ステップ 1）で <strong>PDF</strong> を選択した場合、各登録簿または文書のダウンロード終了時に、追加の確認ウィンドウなしで PDF が自動生成されます。</p>
+            <h4>📌 動作:</h4>
             <ul>
-                <li>[はい] をクリックすると、画像のダウンロード後すぐに PDF が生成されます。<br/>
-                <span style="margin-left: 20px; display: inline-block;">（登録簿または文書のダウンロード済みページすべてを含む）</span></li>
-            </ul>
-            <ul>
-                <li>[いいえ]をクリック：ダウンロードされた画像のみ、PDFなし</li>
-                <li>2分以内に返信がない場合：システムは「いいえ」とみなし、PDFなしで続行します</li>
-            </ul>
-            <p>✅ はいと答える場合：</p>
-            <ul>
-                <li>画像は通常どおりダウンロードされます。</li>
-                <li>完了すると、PDF の確認メッセージが表示されます。</li>
-                <li>確認すると、PDF ファイルが自動的に作成されます。</li>
-                <li>出力: [選択したフォルダ]\[登録簿または文書名]\[登録簿または文書名].pdf</li>
+                <li>✅ <strong>フォーマットダイアログで PDF を選択済み：</strong>ダウンロード完了後に PDF が自動生成されます。追加の確認は不要です</li>
+                <li>❌ <strong>PDF を選択していない：</strong>選択したフォーマットの画像のみ、PDF なし</li>
             </ul>
             <h4>⚠️ 処理中にやってはいけないこと：</h4>
             <ul>
@@ -1065,7 +1053,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>3行のウィンドウを表示
                     <ul>
-                        <li>1. ATK-Pro v2.0 (バージョン番号)</li>
+                        <li>1. ATK-Pro vx.x.x (バージョン番号)</li>
                         <li>2. ©2026 ダニエレ・ピゴリ（著作権および著者）</li>
                         <li>3. サポートメール（報告・提案用）</li>
                     </ul>
@@ -1289,7 +1277,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | バージョン 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

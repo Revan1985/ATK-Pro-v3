@@ -372,7 +372,7 @@
             <h4>INSTALLASJON</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>Last ned: <code>ATK-Pro-Setup-v2.0.exe</code> fra de offisielle repositoriene</li>
+                <li>Last ned: <code>ATK-Pro-Setup-vx.x.x.exe</code> fra de offisielle repositoriene</li>
                 <li>Dobbeltklikk på installasjonsfilen</li>
                 <li>Velg "Kjør som administrator" hvis nødvendig</li>
                 <li>Følg veiviseren (Neste → Neste → Installer)</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>Last ned: <code>ATK-Pro-v2.0.deb</code> (eller <code>.tar.gz</code>)</li>
-                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>Last ned: <code>ATK-Pro-vx.x.x.deb</code> (eller <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>: Pakk ut til <code>/opt/ATK-Pro/</code> og kjør <code>./ATK-Pro</code></li>
                 <li>Velg språk ved første oppstart blant 20 alternativer</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>Last ned: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Last ned: <code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li>Åpne <code>.dmg</code> og dra <code>ATK-Pro.app</code> til <em>Programmer</em>-mappen</li>
                 <li>Ved første oppstart: høyreklikk → Åpne, aksepter Gatekeeper-advarsel</li>
                 <li>Velg språk blant 20 alternativer</li>
@@ -678,7 +678,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Tapsfritt format (lossless), bedre kvalitet, større filer</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Komprimert format (med tap), god balanse mellom kvalitet/størrelse</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Arkivformat, maksimal kvalitet, veldig store filer</p>
-            <h3>4. Velg minst ett format (du kan velge flere)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>PDF-dokument</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → Genererer en fullstendig PDF med alle sider i registeret eller dokumentet, i tillegg til de valgte bildeformatene (eller som eneste utdata hvis ingen bildeformat er valgt)</p>
+            <h3>4. Velg minst ett bildeformat eller PDF (du kan velge flere)</h3>
             <h3>5. Klikk «Bekreft»</h3>
             <h3>6. Programmet viser en melding med de valgte formatene</h3>
                         <p>✅ <strong>De valgte formatene lagres</strong> og forhåndsvelges automatisk neste gang du åpner programmet.</p>
@@ -687,6 +689,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>For forhåndsvisning/konsultasjon: JPG (rask å åpne, mindre plass)</li>
                 <li>For arkivering: PNG (tapsfri, kompromiss med lagringsplass) eller TIFF (maksimal kvalitet)</li>
                 <li>For begge: velg både PNG og TIFF</li>
+                <li>For PDF: velg PDF sammen med ett eller flere bildeformater, eller velg bare PDF for å generere utelukkende PDF-dokumentet uten separate bildefiler</li>
             </ul>
                         <h4>STEG 2: VELG UTDATAMAPPER</h4>
             <p>─────────────────────────────────────</p>
@@ -765,27 +768,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. Delvise filer fjernes</h3>
             <h3>3. Vindu lukkes</h3>
             <h3>4. Du kan starte på nytt fra Meny → Utdata → Behandle</h3>
-            <h4>📋 PDF-FORESPØRSEL FOR REGISTRE OG DOKUMENTER</h4>
-            <p>Når du behandler ett eller flere registre (R) eller dokumenter (D), vises et vindu som spør: "Vil du generere den komplette PDF-filen?" etter at bildene er lastet ned.</p>
-            <p>Dette vinduet vises på slutten av nedlastingen, for hvert behandlede register eller dokument, uavhengig av modus (R eller D):</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — AUTOMATISK GENERERING UNDER BEHANDLING</h4>
+            <p>Hvis du valgte <strong>PDF</strong> i formatvalgsdialogen (TRINN 1), genereres PDF-en automatisk ved slutten av nedlastingen av hvert register eller dokument, uten noe ekstra bekreftelsesvindu.</p>
             <h4>📌 ADFERD:</h4>
             <ul>
-                <li>Klikk på [Ja]: PDF-filen genereres umiddelbart etter at bildene er lastet ned<br/>
-                <span style="margin-left: 20px; display: inline-block;">(med alle nedlastede sider i registeret eller dokumentet)</span></li>
-            </ul>
-            <ul>
-                <li>Klikk [Nei]: Kun nedlastede bilder, ingen PDF</li>
-                <li>Hvis du ikke svarer innen 2 minutter: Systemet antar [Nei] og fortsetter uten PDF</li>
-            </ul>
-            <p>✅ Hvis du svarer [Ja]:</p>
-            <ul>
-                <li>Bildene lastes ned normalt.</li>
-                <li>Når det er fullført, vises PDF-spørringen.</li>
-                <li>Hvis du bekrefter, opprettes PDF-filen automatisk.</li>
-                <li>Utdata: [valgt_mappe]\[register_eller_dokumentnavn]\[register_eller_dokumentnavn].pdf</li>
+                <li>✅ <strong>PDF valgt i formatdialogen:</strong> PDF-en genereres automatisk ved slutten av nedlastingen; ingen ytterligere bekreftelse er nødvendig</li>
+                <li>❌ <strong>PDF ikke valgt:</strong> kun bilder i de valgte formatene, ingen PDF</li>
             </ul>
             <h4>⚠️ HVA DU IKKE SKAL GJØRE UNDER BEHANDLING:</h4>
             <ul>
@@ -1065,7 +1053,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Vis vindu med 3 rader:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (versjonsnummer)</li>
+                        <li>1. ATK-Pro vx.x.x (versjonsnummer)</li>
                         <li>2. ©2026 Daniele Pigoli (opphavsrett og forfatter)</li>
                         <li>3. E-poststøtte (for rapporter/forslag)</li>
                     </ul>
@@ -1289,7 +1277,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | Versjon 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

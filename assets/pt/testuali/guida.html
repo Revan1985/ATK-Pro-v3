@@ -372,7 +372,7 @@
             <h4>INSTALAÇÃO</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>Baixar: <code>ATK-Pro-Setup-v2.0.exe</code> dos repositórios oficiais</li>
+                <li>Baixar: <code>ATK-Pro-Setup-vx.x.x.exe</code> dos repositórios oficiais</li>
                 <li>Clicar duas vezes no arquivo instalador</li>
                 <li>Selecionar "Executar como administrador" se solicitado</li>
                 <li>Seguir o assistente (Avançar → Avançar → Instalar)</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>Baixar: <code>ATK-Pro-v2.0.deb</code> (ou <code>.tar.gz</code>)</li>
-                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>Baixar: <code>ATK-Pro-vx.x.x.deb</code> (ou <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>: Descompactar em <code>/opt/ATK-Pro/</code> e executar <code>./ATK-Pro</code></li>
                 <li>Escolher o idioma no primeiro início entre 20 opções</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>Baixar: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Baixar: <code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li>Abrir o <code>.dmg</code> e arrastar <code>ATK-Pro.app</code> para a pasta <em>Aplicativos</em></li>
                 <li>No primeiro início: clique com o botão direito → Abrir, aceitar aviso do Gatekeeper</li>
                 <li>Escolher o idioma entre 20 opções</li>
@@ -678,7 +678,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Formato sem perdas (lossless), melhor qualidade, arquivos maiores</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Formato comprimido (com perdas), bom compromisso qualidade/tamanho</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Formato de arquivo, qualidade máxima, arquivos muito grandes</p>
-            <h3>4. Selecione pelo menos um formato (você pode escolher mais de um)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>Documento PDF</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → Gera um PDF completo com todas as páginas do registo ou documento, para além dos formatos de imagem selecionados (ou como única saída se não for selecionado qualquer formato de imagem)</p>
+            <h3>4. Selecione pelo menos um formato de imagem ou PDF (você pode escolher mais de um)</h3>
             <h3>5. Clique em "Confirmar"</h3>
             <h3>6. O programa exibe uma mensagem com os formatos escolhidos</h3>
                         <p>✅ <strong>Os formatos selecionados são salvos</strong> e pré-selecionados automaticamente na próxima vez que abrir o programa.</p>
@@ -687,6 +689,8 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Para pré-visualização/consulta: JPG (rápido de abrir, menor espaço)</li>
                 <li>Para arquivo conservador: PNG (sem perdas, compromisso de espaço) ou TIFF (qualidade máxima)</li>
                 <li>Para ambos: selecione PNG e TIFF</li>
+                <li>Para PDF: selecione PDF juntamente com um ou mais formatos de imagem, ou selecione apenas PDF para gerar exclusivamente o documento PDF sem ficheiros de imagem separados</li>
+                <li>Para PDF: selecione PDF juntamente com um ou mais formatos de imagem, ou selecione apenas PDF para gerar exclusivamente o documento PDF sem ficheiros de imagem separados</li>
             </ul>
                         <h4>PASSO 2: SELECIONAR PASTAS DE SAÍDA</h4>
             <p>─────────────────────────────────────</p>
@@ -765,27 +769,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. Arquivos parciais são removidos</h3>
             <h3>3. Janela fecha</h3>
             <h3>4. Você pode recomeçar em Menu → Saída → Processar</h3>
-            <h4>📋 PEDIDO DE PDF PARA REGISTOS E DOCUMENTOS</h4>
-            <p>Ao processar um ou mais Registos (R) ou Documentos (D), surge uma janela a perguntar: "Deseja gerar o PDF completo?" após o download das imagens.</p>
-            <p>Esta janela surge no final do download, para cada registo ou documento processado, independentemente do modo (R ou D):</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — GERAÇÃO AUTOMÁTICA DURANTE O PROCESSAMENTO</h4>
+            <p>Se selecionou <strong>PDF</strong> na caixa de diálogo de seleção de formatos (ETAPA 1), o PDF é gerado automaticamente no final do download de cada registo ou documento, sem qualquer janela de confirmação adicional.</p>
             <h4>📌 COMPORTAMENTO:</h4>
             <ul>
-                <li>Clique em [Sim]: O PDF será gerado imediatamente após o download das imagens<br/>
-                <span style="margin-left: 20px; display: inline-block;">(com todas as páginas descarregadas do registo ou documento)</span></li>
-            </ul>
-            <ul>
-                <li>Clique em [Não]: Apenas imagens baixadas, sem PDF</li>
-                <li>Se não responder em 2 minutos: O sistema assume [Não] e prossegue sem PDF</li>
-            </ul>
-            <p>✅ Se responder [Sim]:</p>
-            <ul>
-                <li>As imagens são descarregadas normalmente.</li>
-                <li>Ao concluir, será apresentada a janela PDF.</li>
-                <li>Se confirmar, o ficheiro PDF será criado automaticamente.</li>
-                <li>Output: [pasta_selecionada]\[nome_do_registo_ou_documento]\[nome_do_registo_ou_documento].pdf</li>
+                <li>✅ <strong>PDF selecionado na caixa de diálogo de formatos:</strong> o PDF é gerado automaticamente no final do download; não é necessária confirmação adicional</li>
+                <li>❌ <strong>PDF não selecionado:</strong> apenas imagens nos formatos escolhidos, sem PDF</li>
             </ul>
             <h4>⚠️ O QUE NÃO FAZER DURANTE O PROCESSAMENTO:</h4>
             <ul>
@@ -1065,7 +1054,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Mostrar janela com 3 linhas:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (número da versão)</li>
+                        <li>1. ATK-Pro vx.x.x (número da versão)</li>
                         <li>2. ©2026 Daniele Pigoli (copyright e autor)</li>
                         <li>3. E-mail de suporte (para relatórios/sugestões)</li>
                     </ul>
@@ -1289,7 +1278,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | Versão 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

@@ -372,7 +372,7 @@
             <h4>INSTALARE</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>Descarcă: <code>ATK-Pro-Setup-v2.0.exe</code> din depozitele oficiale</li>
+                <li>Descarcă: <code>ATK-Pro-Setup-vx.x.x.exe</code> din depozitele oficiale</li>
                 <li>Faceți dublu clic pe fișierul de instalare</li>
                 <li>Selectați „Executare ca administrator" dacă este necesar</li>
                 <li>Urmați asistentul (Următorul → Următorul → Instalare)</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>Descarcă: <code>ATK-Pro-v2.0.deb</code> (sau <code>.tar.gz</code>)</li>
-                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>Descarcă: <code>ATK-Pro-vx.x.x.deb</code> (sau <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>: Dezarhivați în <code>/opt/ATK-Pro/</code> și rulați <code>./ATK-Pro</code></li>
                 <li>Alegeți limba la prima pornire din 20 de opțiuni</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>Descarcă: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>Descarcă: <code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li>Deschideți <code>.dmg</code> și trageți <code>ATK-Pro.app</code> în folderul <em>Aplicații</em></li>
                 <li>La prima pornire: clic dreapta → Deschidere, acceptați avertismentul Gatekeeper</li>
                 <li>Alegeți limba din 20 de opțiuni</li>
@@ -678,7 +678,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Format fără pierderi (lossless), calitate mai bună, fișiere mai mari</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Format comprimat (cu pierderi), compromis bun calitate/dimensiune</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Format arhivă, calitate maximă, fișiere foarte mari</p>
-            <h3>4. Selectați cel puțin un format (puteți alege mai multe)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>Document PDF</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → Generează un PDF complet cu toate paginile registrului sau documentului, pe lângă formatele de imagine selectate (sau ca singură ieșire dacă nu este selectat niciun format de imagine)</p>
+            <h3>4. Selectați cel puțin un format de imagine sau PDF (puteți alege mai multe)</h3>
             <h3>5. Apăsați „Confirmare”</h3>
             <h3>6. Programul afișează un mesaj cu formatele alese</h3>
                         <p>✅ <strong>Formatele selectate sunt salvate</strong> și preselectate automat data viitoare când deschizi programul.</p>
@@ -687,6 +689,8 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Pentru previzualizare/consultare: JPG (rapid de deschis, spațiu mai mic)</li>
                 <li>Pentru arhivare conservatoare: PNG (fără pierderi, compromis de spațiu) sau TIFF (calitate maximă)</li>
                 <li>Pentru amândoi: selectați atât PNG, cât și TIFF</li>
+                <li>Pentru PDF: selectați PDF împreună cu unul sau mai multe formate de imagine, sau selectați doar PDF pentru a genera exclusiv documentul PDF fără fișiere imagine separate</li>
+                <li>Pentru PDF: selectați PDF împreună cu unul sau mai multe formate de imagine, sau selectați doar PDF pentru a genera exclusiv documentul PDF fără fișiere imagine separate</li>
             </ul>
                         <h4>PASUL 2: SELECTAȚI FOLDERELE DE IEȘIRE</h4>
             <p>─────────────────────────────────────</p>
@@ -765,27 +769,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. Fișierele parțiale sunt eliminate</h3>
             <h3>3. Fereastra se închide</h3>
             <h3>4. Poți relua din Meniu → Ieșire → Procesare</h3>
-            <h4>📋 CERERE PDF PENTRU REGISTRE ȘI DOCUMENTE</h4>
-            <p>La procesarea unuia sau mai multor Registre (R) sau Documente (D), apare o fereastră care întreabă: „Doriți să generați PDF-ul complet?” după ce imaginile au fost descărcate.</p>
-            <p>Această fereastră apare la sfârșitul descărcării, pentru fiecare registru sau document procesat, indiferent de modul (R sau D):</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — GENERARE AUTOMATĂ ÎN TIMPUL PROCESĂRII</h4>
+            <p>Dacă ai selectat <strong>PDF</strong> în caseta de dialog pentru selectarea formatelor (PASUL 1), PDF-ul este generat automat la sfârșitul descărcării fiecărui registru sau document, fără nicio fereastră de confirmare suplimentară.</p>
             <h4>📌 COMPORTAMENT:</h4>
             <ul>
-                <li>Faceți clic pe [Da]: Fișierul PDF va fi generat imediat după descărcarea imaginilor<br/>
-                <span style="margin-left: 20px; display: inline-block;">(cu toate paginile descărcate ale registrului sau documentului)</span></li>
-            </ul>
-            <ul>
-                <li>Apăsați [Nu]: Doar imagini descărcate, fără PDF</li>
-                <li>Dacă nu răspundeți în 2 minute: Sistemul presupune [Nu] și continuă fără PDF</li>
-            </ul>
-            <p>✅ Dacă răspundeți [Da]:</p>
-            <ul>
-                <li>Imaginile sunt descărcate normal.</li>
-                <li>După finalizare, apare fereastra PDF.</li>
-                <li>Dacă confirmați, fișierul PDF este creat automat.</li>
-                <li>Ieșire: [dosar_ales]\[nume_registru_sau_document]\[nume_registru_sau_document].pdf</li>
+                <li>✅ <strong>PDF selectat în caseta de dialog pentru formate:</strong> PDF-ul este generat automat la sfârșitul descărcării; nu este necesară nicio confirmare suplimentară</li>
+                <li>❌ <strong>PDF neselectat:</strong> doar imagini în formatele alese, niciun PDF</li>
             </ul>
             <h4>⚠️ CE SĂ NU FACI ÎN TIMPUL PROCESĂRII:</h4>
             <ul>
@@ -1065,7 +1054,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Afișează fereastra cu 3 rânduri:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (număr versiune)</li>
+                        <li>1. ATK-Pro vx.x.x (număr versiune)</li>
                         <li>2. ©2026 Daniele Pigoli (drepturi de autor și autor)</li>
                         <li>3. Email suport (pentru raportări/sugestii)</li>
                     </ul>
@@ -1289,7 +1278,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | Versiunea 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

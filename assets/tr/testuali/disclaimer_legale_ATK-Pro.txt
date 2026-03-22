@@ -19,5 +19,5 @@ Proje yazarı, dahil edilen belgelerin ve araçların yanlış kullanımı, yanl
 Danışma düğümü, yalnızca çalışma amaçlı ve kamuya açık veya sistematik dağıtım için değil, sınırlı dolaşıma sahip bir arşiv olarak anlaşılmalıdır.
 Bu bildirim, projenin dokümantasyon mimarisinin ayrılmaz bir parçasıdır.
 
-© 2026 Antenati Toolkit Pro | Sürüm 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

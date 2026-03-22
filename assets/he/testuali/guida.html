@@ -374,7 +374,7 @@
             <h4>התקנה</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>הורדה: <code>ATK-Pro-Setup-v2.0.exe</code> מהמאגרים הרשמיים</li>
+                <li>הורדה: <code>ATK-Pro-Setup-vx.x.x.exe</code> מהמאגרים הרשמיים</li>
                 <li>לחץ פעמיים על קובץ ההתקנה</li>
                 <li>בחר "הפעל כמנהל מערכת" אם נדרש</li>
                 <li>עקוב אחר הוויזארד (הבא → הבא → התקן)</li>
@@ -384,14 +384,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>הורדה: <code>ATK-Pro-v2.0.deb</code> (או <code>.tar.gz</code>)</li>
-                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-v2.0.deb</code></li>
+                <li>הורדה: <code>ATK-Pro-vx.x.x.deb</code> (או <code>.tar.gz</code>)</li>
+                <li><code>.deb</code>: <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code></li>
                 <li><code>.tar.gz</code>: פתח בספרייה <code>/opt/ATK-Pro/</code> והפעל <code>./ATK-Pro</code></li>
                 <li>בחר שפה בהפעלה הראשונה מתוך 20 אפשרויות</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>הורדה: <code>ATK-Pro-v2.0.dmg</code></li>
+                <li>הורדה: <code>ATK-Pro-vx.x.x.dmg</code></li>
                 <li>פתח את <code>.dmg</code> וגרור את <code>ATK-Pro.app</code> לתיקיית <em>יישומים</em></li>
                 <li>בהפעלה הראשונה: לחיצה ימנית → פתח, אשר אזהרת Gatekeeper</li>
                 <li>בחר שפה מתוך 20 אפשרויות</li>
@@ -680,7 +680,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → פורמט ללא אובדן (lossless), איכות טובה יותר, קבצים גדולים יותר</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → פורמט דחוס (עם איבוד נתונים), פשרה טובה בין איכות לגודל</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → פורמט ארכיוני, איכות מקסימלית, קבצים גדולים מאוד</p>
-            <h3>4. בחר לפחות פורמט אחד (ניתן לבחור יותר מאחד)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>מסמך PDF</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → מייצר PDF מלא עם כל עמודי הרישום או המסמך, בנוסף לפורמטי התמונה שנבחרו (או כפלט היחיד אם לא נבחר פורמט תמונה)</p>
+            <h3>4. בחר לפחות פורמט תמונה אחד או PDF (ניתן לבחור יותר מאחד)</h3>
             <h3>5. לחץ "אשר"</h3>
             <h3>6. התוכנית מציגה הודעה עם הפורמטים שנבחרו</h3>
                         <p>✅ <strong>הפורמטים הנבחרים נשמרים</strong> ומסומנים מראש אוטומטית בפעם הבאה שתפתח את התוכנית.</p>
@@ -689,6 +691,8 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>לתצוגה מקדימה/עיון: JPG (מהיר לפתיחה, פחות מקום)</li>
                 <li>לארכיון שמרני: PNG (ללא איבוד נתונים, פשרה על שטח) או TIFF (איכות מקסימלית)</li>
                 <li>עבור שניהם: בחר גם PNG וגם TIFF</li>
+                <li>ל-PDF: בחר PDF יחד עם פורמט תמונה אחד או יותר, או בחר רק PDF כדי ליצור אך ורק את מסמך ה-PDF ללא קבצי תמונה נפרדים</li>
+                <li>ל-PDF: בחר PDF יחד עם פורמט תמונה אחד או יותר, או בחר רק PDF כדי ליצור אך ורק את מסמך ה-PDF ללא קבצי תמונה נפרדים</li>
             </ul>
                         <h4>שלב 2: בחר תיקיות פלט</h4>
             <p>─────────────────────────────────────</p>
@@ -767,27 +771,12 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. קבצים חלקיים מוסרים</h3>
             <h3>3. החלון נסגר</h3>
             <h3>4. ניתן להתחיל מחדש מתוך תפריט → פלט → עיבוד</h3>
-            <h4>📋 בקשת PDF לרישומים ומסמכים</h4>
-            <p>בעת עיבוד רישום (R) או מסמך (D) אחד או יותר, מופיע חלון השואל: "האם ברצונך ליצור את קובץ ה-PDF המלא?" לאחר הורדת התמונות.</p>
-            <p>חלון זה מופיע בסוף ההורדה, עבור כל רישום או מסמך שעבר עיבוד, ללא קשר למצב (R או D):</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — יצירה אוטומטית במהלך העיבוד</h4>
+            <p>אם בחרת <strong>PDF</strong> בחלון בחירת הפורמטים (שלב 1), ה-PDF נוצר אוטומטית בסוף ההורדה של כל רישום או מסמך, ללא חלון אישור נוסף.</p>
             <h4>📌 התנהגות:</h4>
             <ul>
-                <li>לחץ על [כן]: קובץ ה-PDF ייווצר מיד לאחר הורדת התמונות<br/>
-                <span style="margin-left: 20px; display: inline-block;">(עם כל העמודים שהורדו של הרישום או המסמך)</span></li>
-            </ul>
-            <ul>
-                <li>לחץ [לא]: רק תמונות שהורדו, ללא קבצי PDF</li>
-                <li>אם לא תענה תוך 2 דקות: המערכת תניח [לא] ותמשיך ללא PDF</li>
-            </ul>
-            <p>✅ אם תענה [כן]:</p>
-            <ul>
-                <li>התמונות יורדו כרגיל.</li>
-                <li>לאחר השלמת ההורדה, תופיע בקשת PDF.</li>
-                <li>אם תאשר, קובץ ה-PDF ייווצר אוטומטית.</li>
-                <li>פלט: [chosen_folder]\[register_or_document_name]\[register_or_document_name].pdf</li>
+                <li>✅ <strong>PDF נבחר בחלונית הפורמטים:</strong> ה-PDF נוצר אוטומטית בסוף ההורדה; אין צורך באישור נוסף</li>
+                <li>❌ <strong>PDF לא נבחר:</strong> רק תמונות בפורמטים שנבחרו, ללא PDF</li>
             </ul>
             <h4>⚠️ מה לא לעשות במהלך העיבוד:</h4>
             <ul>
@@ -1067,7 +1056,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>הצג חלון עם 3 שורות:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (מספר גרסה)</li>
+                        <li>1. ATK-Pro vx.x.x (מספר גרסה)</li>
                         <li>2. ©2026 דניאלה פיגולי (זכויות יוצרים ומחבר)</li>
                         <li>3. דוא"ל תמיכה (לדיווחים/הצעות)</li>
                     </ul>
@@ -1291,7 +1280,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>© 2026 Antenati Toolkit Pro | גרסה 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>© 2026 Antenati Toolkit Pro antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>

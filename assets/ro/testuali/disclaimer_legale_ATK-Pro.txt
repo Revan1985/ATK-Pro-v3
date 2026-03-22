@@ -19,5 +19,5 @@ O autor do projeto declina toda responsabilidade pelo uso indevido, interpretaç
 O nó consultivo deve ser entendido como um arquivo de circulação limitada, destinado exclusivamente a fins de estudo e não à divulgação pública ou sistemática.
 A presente declaração faz parte integrante da arquitetura documental do projeto.
 
-© 2026 Antenati Toolkit Pro | Versão 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

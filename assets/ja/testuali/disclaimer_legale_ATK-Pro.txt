@@ -18,5 +18,5 @@ ATK-Pro構造内のすべてのファイル（.txt、.md、.html、.pdf形式）
 コンサルテーションノードは、限定的な流通のアーカイブとして理解され、研究目的のみに使用され、公開や体系的な配布には使用されません。
 この声明は、プロジェクトのドキュメント構造の不可欠な部分です。
 
-© 2026 Antenati Toolkit Pro | バージョン 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

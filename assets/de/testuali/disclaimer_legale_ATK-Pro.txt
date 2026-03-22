@@ -19,5 +19,5 @@ Der Projektverantwortliche lehnt jegliche Haftung für missbräuchliche Nutzung,
 Der Beratungsbereich ist als Archiv mit begrenztem Umlauf zu verstehen, das ausschließlich zu Studienzwecken und nicht zur öffentlichen oder systematischen Verbreitung bestimmt ist.
 Diese Erklärung ist integraler Bestandteil der Dokumentationsarchitektur des Projekts.
 
-© 2026 Antenati Toolkit Pro | Version 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com

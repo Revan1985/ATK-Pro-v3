@@ -19,5 +19,5 @@ Projektets forfatter fraskriver sig ethvert ansvar for forkert brug, fejltolknin
 Konsulentnoden skal forstås som et arkiv med begrænset cirkulation, kun beregnet til studieformål og ikke til offentlig eller systematisk distribution.
 Denne erklæring er en integreret del af projektets dokumentationsarkitektur.
 
-© 2026 Antenati Toolkit Pro | Version 2.0
+© 2026 Antenati Toolkit Pro
 antenati.toolkit.pro@gmail.com
