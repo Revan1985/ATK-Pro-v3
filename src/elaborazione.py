@@ -841,7 +841,7 @@ class Elaborazione:
                 return None
 
             titolo_pulito = re.sub(r'[\\/*?:"<>|]', "", self.nome_file).replace(" ", "_")
-            pdf_filename = f"{titolo_pulito}_registro_completo.pdf"
+            pdf_filename = f"{titolo_pulito}.pdf"
             pdf_full_path = os.path.join(self.output_dir, pdf_filename)
 
             # Filtra le immagini scegliendo una sola variante per pagina
