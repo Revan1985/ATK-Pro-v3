@@ -372,7 +372,7 @@
             <h4>INSTALLAZIONE</h4>
             <p><strong>🪟 Windows</strong></p>
             <ol>
-                <li>Scarica <code>ATK-Pro-Setup-v2.0.x.exe</code> dalla pagina Release ufficiale</li>
+                <li>Scarica <code>ATK-Pro-Setup-vx.x.x.exe</code> dalla pagina Release ufficiale</li>
                 <li>Fai doppio click sul file installer</li>
                 <li>Seleziona "Esegui con privilegi di amministratore", se richiesto</li>
                 <li>Segui la procedura guidata (Next → Next → Install)</li>
@@ -382,14 +382,14 @@
             </ol>
             <p><strong>🐧 Linux</strong></p>
             <ol>
-                <li>Scarica <code>ATK-Pro-v2.0.x.deb</code> (Debian/Ubuntu) o <code>.tar.gz</code> dalla pagina Release</li>
-                <li><strong>Pacchetto .deb:</strong> <code>sudo dpkg -i ATK-Pro-v2.0.x.deb</code> oppure doppio click in Nautilus/Files</li>
+                <li>Scarica <code>ATK-Pro-vx.x.x.deb</code> (Debian/Ubuntu) o <code>.tar.gz</code> dalla pagina Release</li>
+                <li><strong>Pacchetto .deb:</strong> <code>sudo dpkg -i ATK-Pro-vx.x.x.deb</code> oppure doppio click in Nautilus/Files</li>
                 <li><strong>Archivio .tar.gz:</strong> estrai e avvia <code>./ATK-Pro</code> dalla cartella estratta</li>
                 <li>La lingua viene selezionata al primo avvio e salvata nel file di configurazione utente</li>
             </ol>
             <p><strong>🍎 macOS</strong></p>
             <ol>
-                <li>Scarica <code>ATK-Pro-v2.0.x.dmg</code> dalla pagina Release</li>
+                <li>Scarica <code>ATK-Pro-vx.x.x.dmg</code> dalla pagina Release</li>
                 <li>Apri il file .dmg e trascina ATK-Pro nella cartella Applicazioni</li>
                 <li>Al primo avvio: clic destro → Apri (necessario per applicazioni non notarizzate)</li>
                 <li>La lingua viene selezionata al primo avvio e salvata nel file di configurazione utente</li>
@@ -467,9 +467,9 @@
                 <li><strong>Linux/macOS:</strong> analoghe sotto <code>~/Documents/ATK-Pro/output/</code></li>
                 <li>Cartella <code>input\</code> analoga (opzionale, per input file)</li>
             </ul>
-            <p>Durante l'elaborazione vengono create cartelle temporanee per i tile scaricati (tiles_canvas_X/).
+            <p>Durante l'elaborazione vengono create cartelle temporanee per i tile scaricati (<code>tiles_canvas_X/</code>) e, se richiesto il PDF, file temporanei per la sua generazione.
             </p>
-            <p>Queste cartelle temporanee vengono eliminate automaticamente al termine dell'elaborazione.
+            <p>Tutte le cartelle e i file temporanei vengono eliminati automaticamente al termine dell'elaborazione.
             </p>
             <p>Rimangono solo i file finali elaborati (immagini nei formati scelti, PDF, manifest e metadati).
             </p>
@@ -551,7 +551,8 @@
             <pre class="file-structure">├─ Cambia lingua
 │  └─ Seleziona la lingua dell'interfaccia (richiede riavvio)
 ├─ Seleziona formati immagine
-│  └─ Scegli tra PNG, JPG, TIFF (almeno 1 obbligatorio)
+│  └─ Scegli tra PNG, JPG, TIFF e PDF (almeno 1 obbligatorio)
+│     PDF può essere selezionato da solo o insieme ai formati immagine
 │     La scelta viene memorizzata e pre-selezionata automaticamente alla sessione successiva
 ├─ Seleziona cartelle output
 │  └─ Apre prima la scelta della modalità cartelle, poi le finestre di selezione:
@@ -691,7 +692,9 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PNG</span>  → Formato senza perdita (lossless), migliore qualità, file più grandi</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ JPG</span>  → Formato compresso (lossy), buon compromesso qualità/dimensione</p>
             <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ TIFF</span> → Formato archiviale, massima qualità, file molto grandi</p>
-            <h3>4. Seleziona almeno un formato (puoi sceglierne più di uno)</h3>
+            <p style="margin-top: 8px; border-top: 1px solid #ccc; padding-top: 8px;"><strong>Documento PDF</strong></p>
+            <p><span style="background: #f0f0f0; padding: 4px 8px; border-radius: 3px; font-weight: bold; display: inline-block; margin: 0 4px;">☐ PDF</span> → Genera un PDF completo con tutte le pagine del registro o documento, in aggiunta ai formati immagine selezionati (o come unico output se nessun formato immagine è selezionato)</p>
+            <h3>4. Seleziona almeno un formato immagine o PDF (puoi sceglierne più di uno)</h3>
             <h3>5. Clicca "Conferma"</h3>
             <p>✅ <strong>I formati scelti vengono memorizzati</strong> e pre-selezionati automaticamente alla prossima apertura del programma.</p>
             <h4>📝 CONSIGLI:</h4>
@@ -699,6 +702,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
                 <li>Per preview/consultazione: JPG (veloce da aprire, minore spazio)</li>
                 <li>Per archivio conservativo: PNG (lossless, compromesso di spazio) o TIFF (massima qualità)</li>
                 <li>Per entrambi: seleziona sia PNG che TIFF</li>
+                <li>Per PDF: seleziona PDF insieme a uno o più formati immagine, oppure seleziona solo PDF per generare esclusivamente il documento PDF senza file immagine separati</li>
             </ul>
             <h4>PASSO 2: SELEZIONA CARTELLE OUTPUT</h4>
             <p>──────────────────────────────────────</p>
@@ -777,27 +781,20 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <h3>2. File parziali vengono rimossi</h3>
             <h3>3. Finestra si chiude</h3>
             <h3>4. Puoi ricominciare da Menu → Output → Elabora</h3>
-            <h4>📋 RICHIESTA PDF PER REGISTRI E DOCUMENTI</h4>
-            <p>Durante l'elaborazione di uno o più Registri (R) o di Documenti (D), al termine del download delle immagini viene mostrata una finestra che chiede: "Vuoi generare il PDF completo?"</p>
-            <p>Questa finestra appare alla fine del download, per ogni registro o documento elaborato, indipendentemente dalla modalità (R o D):</p>
-            <div style="text-align: center; margin: 20px 0;">
-                <img src="images/window3.webp" alt="Finestra generazione PDF" style="max-width: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
-            </div>
+            <h4>📋 PDF — GENERAZIONE AUTOMATICA DURANTE L'ELABORAZIONE</h4>
+            <p>Se hai selezionato <strong>PDF</strong> nella maschera di scelta formati (PASSO 1), il PDF viene generato automaticamente al termine del download di ogni registro o documento, senza nessuna finestra di conferma aggiuntiva.</p>
             <h4>📌 COMPORTAMENTO:</h4>
             <ul>
-                <li>Clicca [Sì]: Il PDF sarà generato subito dopo il download delle immagini<br/>
-                <span style="margin-left: 20px; display: inline-block;">(con tutte le pagine scaricate del registro o documento)</span></li>
+                <li>✅ <strong>PDF selezionato nella maschera formati:</strong> il PDF viene generato automaticamente al termine del download; non viene chiesta nessuna conferma aggiuntiva</li>
+                <li>❌ <strong>PDF non selezionato:</strong> solo le immagini nei formati scelti, nessun PDF</li>
             </ul>
+            <p>Caratteristiche del PDF generato:</p>
             <ul>
-                <li>Clicca [No]: Solo immagini scaricate, nessun PDF</li>
-                <li>Se non rispondi entro 2 minuti: Il sistema assume [No] e procede senza PDF</li>
-            </ul>
-            <p>✅ Se rispondi [Sì]:</p>
-            <ul>
-                <li>Le immagini vengono scaricate normalmente</li>
-                <li>Al termine, viene mostrata la richiesta PDF</li>
-                <li>Se confermi, il file PDF viene creato automaticamente</li>
-                <li>Output: [cartella_scelta]\[nome_registro_o_documento]\[nome_registro_o_documento].pdf</li>
+                <li>Nome file: <code>[nome].pdf</code>, senza suffissi aggiuntivi (es. <code>Registro Matrimoni 1920.pdf</code>)</li>
+                <li>Salvato nella cartella output scelta, allo stesso livello delle immagini</li>
+                <li>Pagine in ordine numerico crescente (canvas 1 → canvas 2 → … → canvas N)</li>
+                <li>Se un canvas non è scaricabile, viene inserita una pagina <em>placeholder</em> localizzata con link diretto al canvas originale su Antenati</li>
+                <li>Nessun file temporaneo rimane nella cartella output al termine della generazione</li>
             </ul>
             <h4>⚠️ COSA NON FARE DURANTE ELABORAZIONE:</h4>
             <ul>
@@ -850,16 +847,28 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <div class="section-box">
             <h3>6. PDF PER REGISTRI E DOCUMENTI</h3>
             <p>────────────────────────────────────────────────────────────────────────────────</p>
-            <h4>GENERAZIONE PDF</h4>
-            <p>Durante l'elaborazione di un Registro (R) o di un Documento (D), il programma chiede se desideri generare il PDF.</p>
-            <p>Se rispondi [Sì], il PDF verrà creato automaticamente al termine del download di tutte le immagini, sia per i registri che per i documenti singoli.</p>
-            <p>Output: [cartella_scelta]\[nome_registro_o_documento]\[nome_registro_o_documento].pdf</p>
-            <p>Se rispondi [No]:</p>
+            <h4>COME ATTIVARE LA GENERAZIONE PDF</h4>
+            <p>La generazione del PDF si attiva selezionando la casella <strong>PDF</strong> nella maschera di scelta formati (Menu → Impostazioni → "Seleziona formati immagine").</p>
+            <p>Puoi combinare PDF con uno o più formati immagine (es. PDF + PNG), oppure selezionare solo PDF per ottenere esclusivamente il documento senza file immagine separati.</p>
+            <h4>📄 CARATTERISTICHE DEL PDF GENERATO</h4>
             <ul>
-                <li>Solo le immagini vengono scaricate</li>
+                <li><strong>Nome file:</strong> il PDF è denominato semplicemente <code>[nome].pdf</code>, senza suffissi aggiuntivi — ad esempio <code>Registro Matrimoni 1920.pdf</code></li>
+                <li><strong>Posizione:</strong> salvato nella cartella output scelta, allo stesso livello delle immagini: <code>[cartella_scelta]\[nome].pdf</code></li>
+                <li><strong>Ordine pagine:</strong> le pagine sono sempre in ordine numerico crescente (canvas 1 → canvas 2 → … → canvas N), indipendentemente dall'ordine in cui i tile vengono scaricati</li>
+                <li><strong>Pagine placeholder:</strong> se un canvas non è disponibile (errore di rete o risorsa temporaneamente non raggiungibile), al suo posto viene inserita automaticamente una pagina <em>placeholder</em> localizzata nella lingua selezionata. La pagina placeholder contiene:
+                    <ul>
+                        <li>Un testo di avviso localizzato (es. "Immagine non disponibile")</li>
+                        <li>Il link diretto al canvas originale su Antenati (<code>https://antenati.cultura.gov.it/ark:/…</code>), così da poter consultare la fonte in modo semplice</li>
+                    </ul>
+                    In questo modo viene sempre generato il PDF, con tutte le informazioni necessarie a completarlo in caso di immagini non scaricate.
+                </li>
+                <li><strong>Pulizia automatica:</strong> i file temporanei utilizzati per la generazione del PDF vengono eliminati automaticamente al termine del processo. Nella cartella output rimangono solo le immagini nei formati scelti, il PDF finale, i manifest e i metadati</li>
+            </ul>
+            <h4>🚫 Se PDF non è selezionato:</h4>
+            <ul>
+                <li>Solo le immagini vengono scaricate nei formati selezionati</li>
                 <li>Nessun PDF generato</li>
             </ul>
-            <!-- Nota rimossa: PDF disponibile per registri e documenti, la funzione è ormai standard -->
             </div>
             <div class="section-box">
             <h3>7. LOCALIZZAZIONE MULTILINGUE</h3>
@@ -1018,7 +1027,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Manifest IIIF, Immagini, PDF, Sidecar JSON: nel livello principale</li>
                 <li>SOLO metadati tecnici e genealogici: in sottocartelle [nome]/ (uno per record)</li>
-                <li>Le cartelle temporanee (tiles_canvas_X/) vengono eliminate automaticamente al termine dell'elaborazione</li>
+                <li>Le cartelle temporanee (<code>tiles_canvas_X/</code>) e i file temporanei utilizzati per la generazione del PDF vengono eliminati automaticamente al termine dell'elaborazione: nella cartella output non rimane nessun file di lavoro intermedio</li>
                 <li>Questa organizzazione consente di gestire molteplici record nella stessa cartella senza confusione tra file</li>
             </ul>
             <h4>📋 CONVENZIONE DI DENOMINAZIONE:</h4>
@@ -1074,7 +1083,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             <ul>
                 <li>Mostra finestra con 3 righe:
                     <ul>
-                        <li>1. ATK-Pro v2.0 (numero versione)</li>
+                        <li>1. ATK-Pro vx.x.x (numero versione)</li>
                         <li>2. ©2026 Daniele Pigoli (copyright e autore)</li>
                         <li>3. Email supporto (per segnalazioni/suggerimenti)</li>
                     </ul>
@@ -1303,7 +1312,7 @@ https://collections.example.org/iiif/foto789/manifest.json</pre>
             </ul>
         </div>
         <footer style="text-align: center;">
-            <p>&copy; 2026 Antenati Toolkit Pro | Versione 2.0 antenati.toolkit.pro@gmail.com</p>
+            <p>&copy; 2026 Antenati Toolkit Pro | antenati.toolkit.pro@gmail.com</p>
         </footer>
     </div>
     </div>
