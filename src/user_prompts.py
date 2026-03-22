@@ -17,12 +17,14 @@ def ask_generate_pdf_missing_images(missing_count, glossario_data=None, lingua="
     msg_default = f"Mancano {missing_count} immagini. Vuoi generare comunque il PDF?"
     si_text = "Sì"
     no_text = "No"
+    title_text = "PDF incompleto"
     if glossario_data is not None:
         try:
             from main_gui_qt import get_msg
             msg_default = get_msg(glossario_data, "Mancano alcune immagini. Vuoi generare comunque il PDF?", lingua.upper()).replace("{N}", str(missing_count))
             si_text = get_msg(glossario_data, "Si", lingua.upper())
             no_text = get_msg(glossario_data, "No", lingua.upper())
+            title_text = get_msg(glossario_data, "PDF incompleto", lingua.upper()) or "PDF incompleto"
         except Exception:
             pass
     if prefer_qt:
@@ -33,7 +35,7 @@ def ask_generate_pdf_missing_images(missing_count, glossario_data=None, lingua="
             from main_gui_qt import _setup_dialog_pergamena
             dlg = QDialog(parent) if parent is not None else QDialog()
             dlg.resize(420, 170)
-            dlg.setWindowTitle("PDF incompleto")
+            dlg.setWindowTitle(title_text)
             try:
                 dlg.setWindowIcon(QIcon(_ico()))
             except Exception:
@@ -323,8 +325,13 @@ def ask_generate_pdf(glossario_data=None, lingua="IT", parent=None, dark_mode=Fa
         try:
             import tkinter as tk
             import threading
+            try:
+                from main_gui_qt import get_msg as _gm_tk
+            except Exception:
+                _gm_tk = lambda g, k, l: None
             root = tk.Tk()
-            root.title("Generazione PDF")
+            _title_tk = (_gm_tk(glossario_data, "Generazione PDF", lingua.upper()) if glossario_data else None) or "Generazione PDF"
+            root.title(_title_tk)
             selected = {'val': None}
 
             def on_si():
@@ -341,12 +348,15 @@ def ask_generate_pdf(glossario_data=None, lingua="IT", parent=None, dark_mode=Fa
                 except Exception:
                     pass
 
-            lbl = tk.Label(root, text=("Vuoi generare il PDF completo del registro?" if glossario_data is None else glossario_data.get("Vuoi generare il PDF completo del registro?", "Vuoi generare il PDF completo del registro?")))
+            _q_tk = (_gm_tk(glossario_data, "Vuoi generare il PDF completo?", lingua.upper()) if glossario_data else None) or "Vuoi generare il PDF completo del registro?"
+            lbl = tk.Label(root, text=_q_tk)
             lbl.pack(pady=10)
             btn_frame = tk.Frame(root)
             btn_frame.pack(pady=10)
-            tk.Button(btn_frame, text=("Sì" if glossario_data is None else glossario_data.get("Si", "Sì")), command=on_si).pack(side='left', padx=10)
-            tk.Button(btn_frame, text=("No" if glossario_data is None else glossario_data.get("No", "No")), command=on_no).pack(side='right', padx=10)
+            _si_tk = (_gm_tk(glossario_data, "Si", lingua.upper()) if glossario_data else None) or "Sì"
+            _no_tk = (_gm_tk(glossario_data, "No", lingua.upper()) if glossario_data else None) or "No"
+            tk.Button(btn_frame, text=_si_tk, command=on_si).pack(side='left', padx=10)
+            tk.Button(btn_frame, text=_no_tk, command=on_no).pack(side='right', padx=10)
 
             def auto_accept():
                 if selected['val'] is None:
@@ -372,7 +382,13 @@ def ask_generate_pdf(glossario_data=None, lingua="IT", parent=None, dark_mode=Fa
 
         except Exception:
             # Fallback console se nessuna GUI disponibile
-            scelta = input("Vuoi generare anche il PDF completo del registro? (s/n): ").strip().lower()
+            try:
+                from main_gui_qt import get_msg as _gm_c
+                _prompt_c = (_gm_c(glossario_data, "Vuoi generare il PDF completo?", lingua.upper()) if glossario_data else None) or "Vuoi generare il PDF completo del registro?"
+                _prompt_c = _prompt_c.rstrip() + " (s/n): "
+            except Exception:
+                _prompt_c = "Vuoi generare anche il PDF completo del registro? (s/n): "
+            scelta = input(_prompt_c).strip().lower()
             return scelta == "s"
 
 
@@ -548,13 +564,17 @@ class ProgressDialog:
                 # Aggiorna barra di progresso (valore numerico)
                 self.pbar.setValue(min(cur, self.total))
                 # Testo principale: Record n/N — nome — pag. x/y (mai solo pag. x)
-                n_text = f"Record {cur}/{self.total}"
+                _rec_tmpl = self._get_msg(self.glossario, "Record {n}/{tot}", self.lingua.upper()) if self.glossario else None
+                _rec_tmpl = _rec_tmpl or "Record {n}/{tot}"
+                n_text = _rec_tmpl.format(n=cur, tot=self.total)
                 import re
                 if name:
                     name = re.sub(r'—?\s*pag\.\s*\d+\s*$', '', name).strip()
                     n_text += f" — {name}"
                 if page is not None and page_total is not None and page_total > 0:
-                    n_text += f" — pag. {page}/{page_total}"
+                    _pag = self._get_msg(self.glossario, "pag.", self.lingua.upper()) if self.glossario else None
+                    _pag = _pag or "pag."
+                    n_text += f" — {_pag} {page}/{page_total}"
                 self.label.setText(n_text)
                 self.n_label.setText(f"{cur}/{self.total}")
                 logger.debug(f"[ProgressDialog] update: cur={cur} total={self.total} name={name} text='{n_text}'")

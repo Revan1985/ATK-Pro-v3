@@ -570,6 +570,11 @@ def style_msgbox_pergamena(msgbox, w=820, h=200):
 
 def show_msgbox_localized(parent, glossario_data, lingua, title, text, icon=QMessageBox.Information, buttons=("Conferma",), default="Conferma"):
     from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
+    # Localizza le etichette dei pulsanti tramite il glossario (i valori di ritorno rimangono le chiavi originali)
+    if glossario_data is not None:
+        loc_buttons = tuple(get_msg(glossario_data, b, lingua) or b for b in buttons)
+    else:
+        loc_buttons = buttons
     dlg = QDialog(parent) if parent is not None else QDialog()
     dlg.setWindowTitle(title)
     dlg.setStyleSheet("""
@@ -601,13 +606,13 @@ def show_msgbox_localized(parent, glossario_data, lingua, title, text, icon=QMes
     layout.addWidget(label)
     btn_layout = QHBoxLayout()
     btns = []
-    for b in buttons:
-        btn = QPushButton(b)
+    for b_loc in loc_buttons:
+        btn = QPushButton(b_loc)
         btns.append(btn)
         btn_layout.addWidget(btn)
     layout.addLayout(btn_layout)
     dlg.setLayout(layout)
-    # Connessione pulsanti
+    # Connessione pulsanti — il valore di ritorno usa la chiave originale (IT)
     result = default
     for i, btn in enumerate(btns):
         def handler(idx=i):
@@ -971,7 +976,7 @@ class MainWindow(QMainWindow):
                 glossario,
                 lingua,
                 "Cartella output",
-                "Devi selezionare almeno una cartella di output valida per documenti o registri. Nessun file verrà salvato.",
+                get_msg(glossario, "Devi selezionare almeno una cartella di output valida per documenti o registri. Nessun file verrà salvato.", lingua) or "Devi selezionare almeno una cartella di output valida per documenti o registri. Nessun file verrà salvato.",
                 icon=QMessageBox.Warning
             )
             return
@@ -1003,7 +1008,8 @@ class MainWindow(QMainWindow):
                 out_dir = output_folders_reg[reg_counter]
                 reg_counter += 1
             else:
-                show_msgbox_localized(self, glossario, lingua, "ATK-Pro", f"Modalità record non riconosciuta: {modalita}", QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
+                _tmpl_m = get_msg(glossario, "Modalità record non riconosciuta: {modalita}", lingua) or "Modalità record non riconosciuta: {modalita}"
+                show_msgbox_localized(self, glossario, lingua, "ATK-Pro", _tmpl_m.format(modalita=modalita), QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
                 return
             try:
                 rec['output'] = out_dir
@@ -1121,7 +1127,7 @@ class MainWindow(QMainWindow):
     def apri_cartella_output(self):
         folder = state.get("output_folder")
         if not folder or not os.path.isdir(folder):
-            show_msgbox_localized(self, self.glossario_data, self.lingua, "Cartella output", "Nessuna cartella output selezionata o non esistente.", icon=QMessageBox.Warning)
+            show_msgbox_localized(self, self.glossario_data, self.lingua, "Cartella output", get_msg(self.glossario_data, "Nessuna cartella output selezionata o non esistente.", self.lingua) or "Nessuna cartella output selezionata o non esistente.", icon=QMessageBox.Warning)
             return
         import platform
         if platform.system() == "Windows":
@@ -1297,32 +1303,35 @@ class MainWindow(QMainWindow):
     def mostra_autore(self):
         percorso_html = asset_path(f"assets/{self.lingua}/testuali/presentazione_autore.html")
         percorso_txt = asset_path(f"assets/{self.lingua}/testuali/presentazione_autore.txt")
+        _titolo_au = get_msg(self.glossario_data, "Presentazione autore", self.lingua) or "Presentazione autore"
         if os.path.exists(percorso_html):
-            self._mostra_html("Presentazione autore", percorso_html)
+            self._mostra_html(_titolo_au, percorso_html)
         else:
             msg = get_msg(self.glossario_data, "Presentazione autore non disponibile", self.lingua)
             testo = carica_testo_asset(percorso_txt) or msg or "Presentazione autore non disponibile."
-            self._mostra_testo_lungo("Presentazione autore", testo)
+            self._mostra_testo_lungo(_titolo_au, testo)
 
     def mostra_progetto(self):
         percorso_html = asset_path(f"assets/{self.lingua}/testuali/presentazione_progetto_ATK-Pro.html")
         percorso_md = asset_path(f"assets/{self.lingua}/testuali/presentazione_progetto_ATK-Pro.md")
+        _titolo_pr = get_msg(self.glossario_data, "Presentazione progetto", self.lingua) or "Presentazione progetto"
         if os.path.exists(percorso_html):
-            self._mostra_html("Presentazione progetto", percorso_html)
+            self._mostra_html(_titolo_pr, percorso_html)
         else:
             msg = get_msg(self.glossario_data, "Presentazione progetto non disponibile", self.lingua)
             testo = carica_testo_asset(percorso_md) or msg or "Presentazione progetto non disponibile."
-            self._mostra_testo_lungo("Presentazione progetto", testo)
+            self._mostra_testo_lungo(_titolo_pr, testo)
 
     def mostra_guida(self):
         percorso_html = asset_path(f"assets/{self.lingua}/testuali/guida.html")
         percorso_txt = asset_path(f"assets/{self.lingua}/testuali/guida.txt")
+        _titolo_gu = get_msg(self.glossario_data, "Guida", self.lingua) or "Guida"
         if os.path.exists(percorso_html):
-            self._mostra_html("Guida", percorso_html)
+            self._mostra_html(_titolo_gu, percorso_html)
         else:
             msg = get_msg(self.glossario_data, "Guida non disponibile", self.lingua)
             testo = carica_testo_asset(percorso_txt) or msg or "Guida non disponibile."
-            self._mostra_testo_lungo("Guida", testo)
+            self._mostra_testo_lungo(_titolo_gu, testo)
 
     def mostra_info(self):
         # Mostra tre righe testuali come richiesto, stile "Operazione completata"
@@ -1390,7 +1399,8 @@ class MainWindow(QMainWindow):
             layout.addWidget(web)
         except Exception as e:
             from PySide6.QtWidgets import QLabel
-            layout.addWidget(QLabel(f"Errore caricamento HTML: {e}"))
+            _err_html = get_msg(self.glossario_data, "Errore caricamento HTML", self.lingua) or "Errore caricamento HTML"
+            layout.addWidget(QLabel(f"{_err_html}: {e}"))
         # Pulsanti di controllo in basso
         btn_layout = QHBoxLayout()
         btn_layout.addStretch()
@@ -2291,7 +2301,8 @@ def action_process(glossario_data, lingua, parent=None):
                 resp = ask_generate_pdf(glossario_data, lingua, parent)
                 rec['gen_pdf'] = bool(resp)
             else:
-                show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", f"Modalità record non riconosciuta: {modalita}", QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
+                _tmpl_m2 = get_msg(glossario_data, "Modalità record non riconosciuta: {modalita}", lingua) or "Modalità record non riconosciuta: {modalita}"
+                show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", _tmpl_m2.format(modalita=modalita), QMessageBox.Critical, buttons=("Conferma",), default="Conferma")
                 return
             try:
                 rec['output'] = out_dir
@@ -2469,7 +2480,7 @@ def action_process(glossario_data, lingua, parent=None):
                                 show_operation_completed_dialog(parent, glossario_data, lingua)
                                 logging.info("Elaborazione completata (worker)")
                             else:
-                                show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", "Operazione terminata con errori. Alcuni record non sono stati elaborati correttamente.", QMessageBox.Critical, buttons=("Chiudi",), default="Chiudi")
+                                show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", get_msg(glossario_data, "Operazione terminata con errori. Alcuni record non sono stati elaborati correttamente.", lingua) or "Operazione terminata con errori. Alcuni record non sono stati elaborati correttamente.", QMessageBox.Critical, buttons=("Chiudi",), default="Chiudi")
                                 logging.warning("Elaborazione terminata con errori (worker)")
                             try:
                                 worker.cancel()
@@ -2524,7 +2535,7 @@ def action_process(glossario_data, lingua, parent=None):
                         show_operation_completed_dialog(parent, glossario_data, lingua)
                         logging.info("Elaborazione completata (no worker)")
                     else:
-                        show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", "Operazione terminata con errori. Alcuni record non sono stati elaborati correttamente.", QMessageBox.Critical, buttons=("Chiudi",), default="Chiudi")
+                        show_msgbox_localized(parent, glossario_data, lingua, "ATK-Pro", get_msg(glossario_data, "Operazione terminata con errori. Alcuni record non sono stati elaborati correttamente.", lingua) or "Operazione terminata con errori. Alcuni record non sono stati elaborati correttamente.", QMessageBox.Critical, buttons=("Chiudi",), default="Chiudi")
                         logging.warning("Elaborazione terminata con errori (no worker)")
                 except Exception as e:
                     QMessageBox.critical(parent, get_msg(glossario_data, "Attenzione", lingua.upper()), f"{get_msg(glossario_data, 'Errore durante l\'elaborazione', lingua.upper())}: {str(e)}")
@@ -2542,7 +2553,7 @@ def action_placeholder(glossario_data, lingua, voce):
     documents_dir = str(Path.home() / 'Documents' / 'ATK-Pro')
     if voce == "Esporta configurazione":
         default_path = os.path.join(documents_dir, "ATK-Pro-config.json")
-        path, _ = QFileDialog.getSaveFileName(None, "Esporta configurazione", default_path, "File JSON (*.json)")
+        path, _ = QFileDialog.getSaveFileName(None, get_msg(glossario_data, "Esporta configurazione", lingua.upper()) or "Esporta configurazione", default_path, "File JSON (*.json)")
         if not path:
             return
         # Aggiorna lo stato prima di salvare: prendi i dati reali dai widget/variabili
@@ -2563,7 +2574,7 @@ def action_placeholder(glossario_data, lingua, voce):
         msg.exec()
     elif voce == "Importa configurazione":
         default_path = os.path.join(documents_dir, "ATK-Pro-config.json")
-        path, _ = QFileDialog.getOpenFileName(None, "Importa configurazione", default_path, "File JSON (*.json)")
+        path, _ = QFileDialog.getOpenFileName(None, get_msg(glossario_data, "Importa configurazione", lingua.upper()) or "Importa configurazione", default_path, "File JSON (*.json)")
         if not path:
             return
         for w in app.topLevelWidgets():
