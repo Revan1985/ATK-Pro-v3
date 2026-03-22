@@ -179,7 +179,8 @@ def save_image_variants(image: Image.Image, output_folder: str, base_filename: s
             logger.error(f"[Error] Errore salvataggio TIFF {path}: {e}")
 
 
-def _make_placeholder_image(service_id: str, width: int = 800, height: int = 1200) -> Image.Image:
+def _make_placeholder_image(service_id: str, width: int = 800, height: int = 1200,
+                             glossario_data=None, lingua: str = "IT") -> Image.Image:
     """Genera immagine placeholder per download falliti, da includere nel PDF."""
     from PIL import ImageDraw, ImageFont
     img = Image.new('RGB', (width, height), color=(240, 240, 240))
@@ -195,8 +196,10 @@ def _make_placeholder_image(service_id: str, width: int = 800, height: int = 120
             continue
     if font_large is None:
         font_large = font_medium = font_small = ImageFont.load_default()
-    draw.text((50, 80), "Download fallito", fill=(200, 0, 0), font=font_large)
-    draw.text((50, 160), "Riprova usando il seguente link:", fill=(60, 60, 60), font=font_medium)
+    title = get_msg(glossario_data, "Download fallito", lingua) or "Download fallito"
+    subtitle = get_msg(glossario_data, "Riprova usando il seguente link:", lingua) or "Riprova usando il seguente link:"
+    draw.text((50, 80), title, fill=(200, 0, 0), font=font_large)
+    draw.text((50, 160), subtitle, fill=(60, 60, 60), font=font_medium)
     url_parts = [service_id[i:i+70] for i in range(0, len(service_id), 70)]
     y = 220
     for part in url_parts:
@@ -417,7 +420,8 @@ class Elaborazione:
             if final_img is None:
                 if pdf_in_formats:
                     logger.warning(f"[PDF] Immagine non ricostruita, genero placeholder per {self.nome_file}")
-                    final_img = _make_placeholder_image(service_id)
+                    final_img = _make_placeholder_image(service_id,
+                        glossario_data=self.glossario_data, lingua=self.lingua)
                 else:
                     logger.error(f"[Error] Fallita ricostruzione immagine")
                     return False
@@ -603,7 +607,8 @@ class Elaborazione:
                         source_url=self.ark_url,
                         atk_version="2.0"
                     )
-                    _use_img = final_img if final_img is not None else _make_placeholder_image(service_id)
+                    _use_img = final_img if final_img is not None else _make_placeholder_image(
+                        service_id, glossario_data=self.glossario_data, lingua=self.lingua)
                     if image_formats:
                         save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)
                     if pdf_in_formats:
