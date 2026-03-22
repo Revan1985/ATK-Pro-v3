@@ -1,4 +1,13 @@
 # CHANGELOG – ATK-Pro
+
+## v2.2.0 (22 maart 2026)
+- **Nieuw**: PDF als zelfstandig uitvoerformaat — kies PDF alleen of gecombineerd met PNG/JPG/TIFF
+- PDF wordt volledig automatisch gegenereerd uit gereconstrueerde IIIF-afbeeldingen, zonder externe tools
+- PDF-selectievakje toegevoegd aan Stap 1 van de handleiding; PDF-sectie bijgewerkt in alle 20 talen
+- Versienummer verwijderd uit de voettekst van alle tekstbestanden
+- Verouderde `window3.webp`-schermafbeeldingen verwijderd uit alle taalassets
+- Bugfixes: tijdelijke `_pdftmp.png`-bestanden, volgorde van pagina's in PDF, gelokaliseerde plaatshouders
+
 ## v2.0 (2026)
 - Publieke release versie 2.0: reconstructie van afbeeldingen uit IIIF-tegels, meertalige ondersteuning, Qt-interface, EXE-build en installer
 - Batchoptimalisatie, foutafhandeling, geavanceerde logging, volledige automatisering

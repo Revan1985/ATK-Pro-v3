@@ -1,5 +1,5 @@
 ================================================================================
-  ATK-Pro v2.0 for macOS - Installation Instructions
+  ATK-Pro v2.2.0 for macOS - Installation Instructions
 ================================================================================
 
 IMPORTANT: This application is not signed with an Apple Developer certificate.
