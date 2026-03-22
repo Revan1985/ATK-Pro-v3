@@ -206,10 +206,14 @@ def _read_config_prefs() -> dict:
                 "last_input_file":    data.get("last_input_file", None),
                 "output_folders_doc": data.get("output_folders_doc", []),
                 "output_folders_reg": data.get("output_folders_reg", []),
+                "output_folder_single": data.get("output_folder_single", None),
+                "output_folder_doc":    data.get("output_folder_doc", None),
+                "output_folder_reg":    data.get("output_folder_reg", None),
             }
     except Exception as e:
         logging.debug(f"Errore lettura prefs config: {e}")
-    return {"formats": [], "last_input_file": None, "output_folders_doc": [], "output_folders_reg": []}
+    return {"formats": [], "last_input_file": None, "output_folders_doc": [], "output_folders_reg": [],
+            "output_folder_single": None, "output_folder_doc": None, "output_folder_reg": None}
 
 
 def _write_config_prefs(key: str, value) -> None:
@@ -2132,10 +2136,11 @@ def action_select_output(glossario_data, lingua):
     # Scelta modalità
     mode = ask_output_mode(glossario_data, lingua)
     folders_doc, folders_reg = [], []
+    _prefs = _read_config_prefs()
 
     if mode == "single":
         # --- Modalità: cartella unica per tutti ---
-        default = _get_default_output_dir()
+        default = _prefs.get("output_folder_single") or _get_default_output_dir()
         folder = None
         while not folder:
             folder = _pick_folder(
@@ -2156,7 +2161,7 @@ def action_select_output(glossario_data, lingua):
             while not folder_doc:
                 folder_doc = _pick_folder(
                     f"{lbl_docs} — {get_msg(glossario_data, 'Cartella output', lingua.upper()) or 'Cartella output'}",
-                    _get_default_output_dir("doc"))
+                    _prefs.get("output_folder_doc") or _get_default_output_dir("doc"))
                 if not folder_doc:
                     show_msgbox_localized(None, glossario_data, lingua, lbl_att, lbl_obbl,
                         QMessageBox.Warning, buttons=(lbl_conf,), default=lbl_conf)
@@ -2168,7 +2173,7 @@ def action_select_output(glossario_data, lingua):
             while not folder_reg:
                 folder_reg = _pick_folder(
                     f"{lbl_regs} — {get_msg(glossario_data, 'Cartella output', lingua.upper()) or 'Cartella output'}",
-                    _get_default_output_dir("reg"))
+                    _prefs.get("output_folder_reg") or _get_default_output_dir("reg"))
                 if not folder_reg:
                     show_msgbox_localized(None, glossario_data, lingua, lbl_att, lbl_obbl,
                         QMessageBox.Warning, buttons=(lbl_conf,), default=lbl_conf)
@@ -2179,27 +2184,31 @@ def action_select_output(glossario_data, lingua):
 
     else:
         # --- Modalità: una cartella per ogni record (comportamento originale) ---
+        _last_doc = _prefs.get("output_folder_doc") or _get_default_output_dir("doc")
         for i in range(num_doc):
             folder = None
             while not folder:
                 folder = _pick_folder(
                     f"{lbl_doc} {i+1}/{num_doc}",
-                    _get_default_output_dir("doc"))
+                    _last_doc)
                 if not folder:
                     show_msgbox_localized(None, glossario_data, lingua, lbl_att, lbl_obbl,
                         QMessageBox.Warning, buttons=(lbl_conf,), default=lbl_conf)
             folders_doc.append(folder)
+            _last_doc = folder  # la prossima apertura parte dall'ultima scelta
 
+        _last_reg = _prefs.get("output_folder_reg") or _get_default_output_dir("reg")
         for i in range(num_reg):
             folder = None
             while not folder:
                 folder = _pick_folder(
                     f"{lbl_reg} {i+1}/{num_reg}",
-                    _get_default_output_dir("reg"))
+                    _last_reg)
                 if not folder:
                     show_msgbox_localized(None, glossario_data, lingua, lbl_att, lbl_obbl,
                         QMessageBox.Warning, buttons=(lbl_conf,), default=lbl_conf)
             folders_reg.append(folder)
+            _last_reg = folder  # la prossima apertura parte dall'ultima scelta
 
         _write_config_prefs("output_mode", "per_record")
         _write_config_prefs("output_folders_doc", folders_doc)

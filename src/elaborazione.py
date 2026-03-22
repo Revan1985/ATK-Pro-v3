@@ -48,10 +48,22 @@ logger.setLevel(logging.DEBUG if ATKPRO_ENV != "production" else logging.WARNING
 # State globale per GUI/main
 
 def get_msg(glossario_data, chiave, lingua="IT"):
-    """Restituisce un messaggio localizzato dal glossario. Se non trovato, ritorna la chiave originale."""
+    """Restituisce un messaggio localizzato dal glossario.
+    Supporta il formato JSON del glossario ({sezione: [{messaggio, IT, FR, ...}]}).
+    Se non trovato, ritorna la chiave originale.
+    """
     try:
-        if glossario_data and lingua in glossario_data and chiave in glossario_data[lingua]:
-            return glossario_data[lingua][chiave]
+        if glossario_data:
+            lingua_up = lingua.upper() if lingua else "IT"
+            if lingua_up == "DK":
+                lingua_up = "DA"
+            if lingua_up == "VN":
+                lingua_up = "VI"
+            for section in glossario_data.values():
+                if isinstance(section, list):
+                    for voce in section:
+                        if voce.get("messaggio") == chiave:
+                            return voce.get(lingua_up, voce.get("IT", None))
     except Exception:
         pass
     return chiave
@@ -180,7 +192,8 @@ def save_image_variants(image: Image.Image, output_folder: str, base_filename: s
 
 
 def _make_placeholder_image(service_id: str, width: int = 800, height: int = 1200,
-                             glossario_data=None, lingua: str = "IT") -> Image.Image:
+                             glossario_data=None, lingua: str = "IT",
+                             canvas_url: str = None) -> Image.Image:
     """Genera immagine placeholder per download falliti, da includere nel PDF."""
     from PIL import ImageDraw, ImageFont
     img = Image.new('RGB', (width, height), color=(240, 240, 240))
@@ -200,7 +213,8 @@ def _make_placeholder_image(service_id: str, width: int = 800, height: int = 120
     subtitle = get_msg(glossario_data, "Riprova usando il seguente link:", lingua) or "Riprova usando il seguente link:"
     draw.text((50, 80), title, fill=(200, 0, 0), font=font_large)
     draw.text((50, 160), subtitle, fill=(60, 60, 60), font=font_medium)
-    url_parts = [service_id[i:i+70] for i in range(0, len(service_id), 70)]
+    url_to_show = canvas_url or service_id
+    url_parts = [url_to_show[i:i+70] for i in range(0, len(url_to_show), 70)]
     y = 220
     for part in url_parts:
         draw.text((50, y), part, fill=(0, 0, 180), font=font_small)
@@ -421,7 +435,8 @@ class Elaborazione:
                 if pdf_in_formats:
                     logger.warning(f"[PDF] Immagine non ricostruita, genero placeholder per {self.nome_file}")
                     final_img = _make_placeholder_image(service_id,
-                        glossario_data=self.glossario_data, lingua=self.lingua)
+                        glossario_data=self.glossario_data, lingua=self.lingua,
+                        canvas_url=canvas.get('@id') or canvas.get('id'))
                 else:
                     logger.error(f"[Error] Fallita ricostruzione immagine")
                     return False
@@ -608,7 +623,8 @@ class Elaborazione:
                         atk_version="2.0"
                     )
                     _use_img = final_img if final_img is not None else _make_placeholder_image(
-                        service_id, glossario_data=self.glossario_data, lingua=self.lingua)
+                        service_id, glossario_data=self.glossario_data, lingua=self.lingua,
+                        canvas_url=canvas.get('@id') or canvas.get('id'))
                     if image_formats:
                         save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)
                     if pdf_in_formats:
@@ -625,7 +641,8 @@ class Elaborazione:
                     logger.error(f"[Error] Errore canvas {idx}: {e}", exc_info=True)
                     # Genera placeholder per questo canvas e pulisce la cartella tile
                     try:
-                        _ph = _make_placeholder_image(service_id, glossario_data=self.glossario_data, lingua=self.lingua)
+                        _ph = _make_placeholder_image(service_id, glossario_data=self.glossario_data, lingua=self.lingua,
+                        canvas_url=canvas.get('@id') or canvas.get('id'))
                         if image_formats:
                             save_image_variants(_ph, self.output_dir, nome_base, image_formats)
                         if pdf_in_formats:
