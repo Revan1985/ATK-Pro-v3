@@ -571,7 +571,7 @@ class Elaborazione:
             pdf_in_formats = 'PDF' in _norm_formats
             image_formats = [f for f in formats if _normalize_format(f) != 'PDF']
             only_pdf = pdf_in_formats and not image_formats
-            temp_pdf_dir = os.path.join(self.output_dir, "_tmp_pdf_images") if only_pdf else None
+            temp_pdf_dir = os.path.join(self.output_dir, "_tmp_pdf_images") if pdf_in_formats else None
             if temp_pdf_dir:
                 os.makedirs(temp_pdf_dir, exist_ok=True)
 
@@ -628,8 +628,7 @@ class Elaborazione:
                     if image_formats:
                         save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)
                     if pdf_in_formats:
-                        _pdf_save_dir = temp_pdf_dir if only_pdf else self.output_dir
-                        _pdf_png_path = os.path.join(_pdf_save_dir, f"{nome_base}_pdftmp.png")
+                        _pdf_png_path = os.path.join(temp_pdf_dir, f"{nome_base}_pdftmp.png")
                         try:
                             _use_img.save(_pdf_png_path, format='PNG')
                         except Exception as _e:
@@ -646,8 +645,7 @@ class Elaborazione:
                         if image_formats:
                             save_image_variants(_ph, self.output_dir, nome_base, image_formats)
                         if pdf_in_formats:
-                            _pdf_save_dir = temp_pdf_dir if only_pdf else self.output_dir
-                            _ph.save(os.path.join(_pdf_save_dir, f"{nome_base}_pdftmp.png"), format='PNG')
+                            _ph.save(os.path.join(temp_pdf_dir, f"{nome_base}_pdftmp.png"), format='PNG')
                             logger.info(f"[PDF] Placeholder salvato per canvas {idx} fallito")
                     except Exception as _ep:
                         logger.error(f"[Error] Errore salvataggio placeholder canvas {idx}: {_ep}")
@@ -753,14 +751,14 @@ class Elaborazione:
                         ]
                         pdf_path = self._generate_register_pdf(_pdf_imgs, image_dir=temp_pdf_dir)
                     else:
-                        # PDF + altri formati: usa immagini già in output_dir (ordinate per idx canvas)
-                        _pdf_src = sorted(
-                            (f for f in os.listdir(self.output_dir)
-                            if f.startswith(f"{self.nome_file}_canvas_")
-                            and not f.endswith('.json') and not f.endswith('.pdf')),
-                            key=lambda x: int(re.search(r'_canvas_(\d+)', x).group(1)) if re.search(r'_canvas_(\d+)', x) else 0
-                        )
-                        pdf_path = self._generate_register_pdf(_pdf_src)
+                        # PDF + altri formati: usa PNG temporanee da temp_pdf_dir (ordinate per idx)
+                        _pdf_imgs = [
+                            f"{self.nome_file}_canvas_{i}_pdftmp.png"
+                            for i in range(1, len(tiles_info) + 1)
+                            if os.path.exists(os.path.join(temp_pdf_dir,
+                               f"{self.nome_file}_canvas_{i}_pdftmp.png"))
+                        ]
+                        pdf_path = self._generate_register_pdf(_pdf_imgs, image_dir=temp_pdf_dir)
                     if pdf_path:
                         immagini_generate.append(os.path.basename(pdf_path))
                 else:
@@ -786,7 +784,7 @@ class Elaborazione:
                         pdf_path = self._generate_register_pdf(immagini_attese)
                         if pdf_path:
                             immagini_generate.append(os.path.basename(pdf_path))
-            if only_pdf and temp_pdf_dir and os.path.exists(temp_pdf_dir):
+            if temp_pdf_dir and os.path.exists(temp_pdf_dir):
                 shutil.rmtree(temp_pdf_dir, ignore_errors=True)
                 logger.info(f"[Cleanup] Cartella temp PDF eliminata: {temp_pdf_dir}")
 
