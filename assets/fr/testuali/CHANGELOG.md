@@ -7,6 +7,7 @@
 - Numéro de version supprimé du pied de page de tous les fichiers texte
 - Captures d'écran `window3.webp` obsolètes supprimées de tous les assets de langue
 - Corrections : fichiers temporaires `_pdftmp.png`, ordre des pages dans le PDF, espaces réservés localisés
+- **Mise à jour automatique** : au démarrage, l'application vérifie silencieusement les nouvelles versions ; sous Windows, la mise à jour s'effectue en un clic sans étapes manuelles
 
 ## v2.0 (2026)
 - Publication publique version 2.0 : reconstruction d'images à partir de tuiles IIIF, support multilingue, interface Qt, build EXE et installateur

@@ -7,6 +7,7 @@
 - Número de versão removido do rodapé de todos os arquivos de texto
 - Capturas de tela obsoletas `window3.webp` removidas de todos os assets de idioma
 - Correções: arquivos temporários `_pdftmp.png`, ordem das páginas no PDF, marcadores de posição localizados
+- **Atualização automática**: em cada início, a aplicação verifica silenciosamente novas versões; no Windows a atualização ocorre com um clique sem passos manuais
 
 ## v2.0 (2026)
 - Lançamento público versão 2.0: reconstrução de imagens a partir de tiles IIIF, suporte multilíngua, interface Qt, build EXE e instalador

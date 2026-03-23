@@ -7,6 +7,7 @@
 - Numărul de versiune eliminat din subsolul tuturor fișierelor text
 - Capturi de ecran `window3.webp` învechite eliminate din toate resursele de limbă
 - Remedieri: fișiere temporare `_pdftmp.png`, ordinea paginilor în PDF, marcatori de poziție localizați
+- **Actualizare automată**: la fiecare pornire, aplicația verifică silențios versiuni noi; pe Windows actualizarea se face cu un singur clic fără pași manuali
 
 ## v2.0 (2026)
 - Lansare publică versiunea 2.0: reconstrucție imagini din tile IIIF, suport multilingv, interfață Qt, build EXE și installer

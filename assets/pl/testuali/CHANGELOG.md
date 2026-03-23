@@ -7,6 +7,7 @@
 - Numer wersji usunięty ze stopki wszystkich plików tekstowych
 - Przestarzałe zrzuty ekranu `window3.webp` usunięte ze wszystkich zasobów językowych
 - Poprawki: tymczasowe pliki `_pdftmp.png`, kolejność stron w PDF, zlokalizowane symbole zastępcze
+- **Automatyczna aktualizacja**: przy każdym uruchomieniu aplikacja cicho sprawdza dostępność nowej wersji; w systemie Windows aktualizacja odbywa się jednym kliknięciem bez ręcznych kroków
 
 ## v2.0 (2026)
 - Publiczne wydanie wersji 2.0: rekonstrukcja obrazów z kafelków IIIF, wsparcie wielojęzyczne, interfejs Qt, kompilacja EXE i instalator

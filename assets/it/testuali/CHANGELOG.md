@@ -7,6 +7,8 @@
 - **PDF as output format**: PDF export is now available as a dedicated output format in the format selection dialog.
   Users can select PDF alone or alongside PNG/JPG/TIFF to generate a complete multi-page PDF of all pages in a register or document.
 - **Automatic PDF generation**: PDF is generated fully automatically from the reconstructed IIIF images — no external tools or intermediate steps required.
+- **Automatic update check at startup**: On every launch, ATK-Pro silently checks for a newer version. If one is found, a dialog prompts the user to update.
+- **One-click automatic update (Windows)**: Clicking "Update automatically" downloads the new installer in the background and launches it silently — the app closes and restarts updated, with no manual steps required. On macOS/Linux, a direct link to the download page is provided.
 
 #### Improvements
 - Localized PDF label and placeholder texts in all 20 supported languages.
@@ -35,6 +37,8 @@
 - **PDF come formato di output**: l'esportazione PDF è ora disponibile come formato dedicato nel dialogo di scelta dei formati.
   È possibile selezionare PDF da solo o insieme a PNG/JPG/TIFF per generare un PDF multipagina completo di tutte le pagine di un registro o documento.
 - **Generazione PDF automatica**: il PDF viene generato in modo completamente automatico a partire dalle immagini IIIF ricostruite — senza strumenti esterni né passaggi intermedi.
+- **Controllo aggiornamenti automatico all'avvio**: ad ogni avvio, ATK-Pro verifica silenziosamente se è disponibile una versione più recente; se trovata, mostra un dialogo per procedere.
+- **Aggiornamento automatico con un clic (Windows)**: cliccando "Aggiorna automaticamente" l'installer viene scaricato in background e avviato silenziosamente — l'app si chiude e si riavvia già aggiornata, senza passaggi manuali. Su macOS/Linux viene fornito un link diretto alla pagina di download.
 
 #### Miglioramenti
 - Etichetta PDF e testi placeholder localizzati in tutte le 20 lingue supportate.

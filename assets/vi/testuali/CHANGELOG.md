@@ -7,6 +7,7 @@
 - Đã xóa số phiên bản khỏi chân trang của tất cả các tệp văn bản
 - Đã xóa ảnh chụp màn hình `window3.webp` cũ khỏi tất cả tài nguyên ngôn ngữ
 - Sửa lỗi: tệp tạm thời `_pdftmp.png`, thứ tự trang trong PDF, trình giữ chỗ đã được bản địa hóa
+- **Cập nhật tự động**: mỗi lần khởi động, ứng dụng kiểm tra phiên bản mới một cách im lặng; trên Windows, cập nhật thực hiện bằng một cú nhấp mà không cần thao tác thủ công
 
 ## v2.0 (2026)
 - Phát hành công khai phiên bản 2.0: tái tạo hình ảnh từ ô IIIF, hỗ trợ đa ngôn ngữ, giao diện Qt, bản dựng EXE và trình cài đặt

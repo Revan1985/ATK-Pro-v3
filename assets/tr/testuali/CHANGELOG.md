@@ -7,6 +7,7 @@
 - Sürüm numarası tüm metin dosyalarının alt bilgisinden kaldırıldı
 - Eski `window3.webp` ekran görüntüleri tüm dil varlıklarından kaldırıldı
 - Hata düzeltmeleri: geçici `_pdftmp.png` dosyaları, PDF sayfa sırası, yerelleştirilmiş yer tutucular
+- **Otomatik güncelleme**: her başlangıçta yeni sürüm sessizce kontrol edilir; Windows'ta güncelleme tek tıkla ve manuel adım gerekmeden gerçekleşir
 
 ## v2.0 (2026)
 - Sürüm 2.0 genel sürümü: IIIF döşemelerinden görüntü yeniden oluşturma, çok dilli destek, Qt arayüzü, EXE derlemesi ve yükleyici

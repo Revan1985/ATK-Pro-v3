@@ -7,6 +7,7 @@
 - Versionsnummer aus der Fußzeile aller Textdateien entfernt
 - Veraltete `window3.webp`-Screenshots aus allen Sprachassets entfernt
 - Fehlerbehebungen: temporäre `_pdftmp.png`-Dateien, Seitenreihenfolge im PDF, lokalisierte Platzhalter
+- **Automatisches Update**: beim Start wird lautlos auf neue Versionen geprüft; unter Windows erfolgt das Update mit einem Klick ohne manuelle Schritte
 
 ## v2.0 (2026)
 - Öffentliche Veröffentlichung Version 2.0: Bildrekonstruktion aus IIIF-Kacheln, Mehrsprachigkeitsunterstützung, Qt-Oberfläche, EXE-Build und Installer

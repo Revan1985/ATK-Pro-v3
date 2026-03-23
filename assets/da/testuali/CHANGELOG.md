@@ -7,6 +7,7 @@
 - Versionsnummer fjernet fra sidefoden i alle tekstfiler
 - Forældede `window3.webp`-skærmbilleder fjernet fra alle sprogaktiver
 - Fejlrettelser: midlertidige `_pdftmp.png`-filer, siderækkefølge i PDF, lokaliserede pladsholdere
+- **Automatisk opdatering**: ved hvert opstart kontrolleres der lydløst for nye versioner; på Windows kan opdateringen ske med ét klik uden manuelle trin
 
 ## v2.0 (2026)
 - Offentlig udgivelse version 2.0: billedrekonstruktion fra IIIF-fliser, flersproget support, Qt-interface, EXE-build og installationsprogram

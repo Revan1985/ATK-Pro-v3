@@ -7,6 +7,7 @@
 - Versienummer verwijderd uit de voettekst van alle tekstbestanden
 - Verouderde `window3.webp`-schermafbeeldingen verwijderd uit alle taalassets
 - Bugfixes: tijdelijke `_pdftmp.png`-bestanden, volgorde van pagina's in PDF, gelokaliseerde plaatshouders
+- **Automatische update**: bij elke start wordt stilletjes gecontroleerd op nieuwe versies; op Windows verloopt de update met één klik zonder handmatige stappen
 
 ## v2.0 (2026)
 - Publieke release versie 2.0: reconstructie van afbeeldingen uit IIIF-tegels, meertalige ondersteuning, Qt-interface, EXE-build en installer
