@@ -13,10 +13,10 @@
     <string>ATK-Pro</string>
     
     <key>CFBundleVersion</key>
-    <string>2.0.8</string>
+    <string>2.2.0</string>
     
     <key>CFBundleShortVersionString</key>
-    <string>2.0.8</string>
+    <string>2.2.0</string>
     
     <key>CFBundlePackageType</key>
     <string>APPL</string>
@@ -30,9 +30,15 @@
     <key>CFBundleIconFile</key>
     <string>ATK-Pro.icns</string>
     
-    <!-- macOS Version Requirements -->
+    <!-- macOS Version Requirements (x86_64 build, macOS 12+) -->
     <key>LSMinimumSystemVersion</key>
-    <string>10.13</string>
+    <string>12.0</string>
+    
+    <!-- Explicit platform: macOS only (prevents "designed for iOS" message) -->
+    <key>CFBundleSupportedPlatforms</key>
+    <array>
+        <string>MacOSX</string>
+    </array>
     
     <!-- High Resolution Display Support -->
     <key>NSHighResolutionCapable</key>

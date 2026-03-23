@@ -14,7 +14,12 @@ permissions:
 
 jobs:
   build-macos:
-    runs-on: macos-latest
+    # macos-13 = Intel x86_64 runner.
+    # Produces an x86_64 binary that runs natively on Intel Macs
+    # and via Rosetta 2 (transparent, seamless) on Apple Silicon.
+    # Switch to universal2 in a future release when Rosetta-free support
+    # for both architectures is needed.
+    runs-on: macos-13
     
     steps:
     - name: Checkout repository
@@ -48,12 +53,14 @@ jobs:
         ls -la docs_generali/
         
     - name: Build macOS app with PyInstaller
+      env:
+        MACOSX_DEPLOYMENT_TARGET: "12.0"   # macOS Monterey minimum
       run: |
-        # Build usando spec file (adattato per macOS con Info.plist)
         pyinstaller \
           --name ATK-Pro \
           --windowed \
           --onefile \
+          --target-arch x86_64 \
           --icon=assets/common/grafici/ATK-Pro.ico \
           --osx-bundle-identifier=com.atkpro.atkpro \
           --add-data "src/main_gui_qt.py:src" \
@@ -96,12 +103,26 @@ jobs:
           exit 1
         fi
         
+    - name: Ad-hoc code signing
+      run: |
+        # Firma ad-hoc: non richiede Apple Developer certificate.
+        # Permette a macOS di valutare l'app con Gatekeeper invece di bloccarla
+        # silenziosamente. Con questa firma, "Apri comunque" appare in
+        # Impostazioni di Sistema > Privacy e Sicurezza anche su macOS 15+,
+        # e il metodo xattr funziona in modo affidabile.
+        echo "=== Ad-hoc code signing ==="
+        codesign --deep --force --sign - dist/ATK-Pro.app
+        codesign --verify --verbose dist/ATK-Pro.app \
+          && echo "✓ Firma ad-hoc valida" \
+          || { echo "✗ Verifica firma fallita"; exit 1; }
+        
+        # Verifica architettura: deve essere x86_64
+        ARCH=$(lipo -archs dist/ATK-Pro.app/Contents/MacOS/ATK-Pro)
+        echo "Architettura binario: $ARCH"
+        [[ "$ARCH" == "x86_64" ]] && echo "✓ x86_64 confermato" || echo "⚠ Architettura inattesa: $ARCH"
+
     - name: Create DMG installer
       run: |
-        # Rimuovi attributi di quarantena dall'app (previene "app danneggiata")
-        echo "Rimozione attributi di quarantena..."
-        xattr -cr dist/ATK-Pro.app
-        
         # Crea directory per DMG
         mkdir -p dist/dmg
         cp -r dist/ATK-Pro.app dist/dmg/
@@ -118,13 +139,23 @@ jobs:
         # Installa create-dmg per SLA obbligatoria (legal disclaimer)
         brew install create-dmg
 
-        # Usa il file disclaimer già presente nel repo (no heredoc, no YAML issues)
+        # Leggi versione dall'app
+        APP_VERSION=$(python3 -c "
+import re, sys
+for line in open('src/main_gui_qt.py', encoding='utf-8'):
+    m = re.match(r'VERSION\s*=\s*[\"\']([^\"\']+)', line)
+    if m: print(m.group(1)); sys.exit(0)
+print('2.2.0')
+")
+        echo "Versione app: $APP_VERSION"
+
+        # Usa il file disclaimer già presente nel repo
         cp assets/en/testuali/disclaimer_legale_ATK-Pro.txt /tmp/atk-disclaimer.txt
 
         # Crea DMG con SLA integrata (il disclaimer appare al primo montaggio,
         # l'utente DEVE cliccare "Accetto" per procedere all'installazione)
         create-dmg \
-          --volname "ATK-Pro v2.0" \
+          --volname "ATK-Pro v${APP_VERSION}" \
           --eula /tmp/atk-disclaimer.txt \
           --no-internet-enable \
           dist/ATK-Pro-macOS.dmg \
