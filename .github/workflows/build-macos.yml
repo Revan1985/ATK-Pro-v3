@@ -139,14 +139,9 @@ jobs:
         # Installa create-dmg per SLA obbligatoria (legal disclaimer)
         brew install create-dmg
 
-        # Leggi versione dall'app
-        APP_VERSION=$(python3 -c "
-import re, sys
-for line in open('src/main_gui_qt.py', encoding='utf-8'):
-    m = re.match(r'VERSION\s*=\s*[\"\']([^\"\']+)', line)
-    if m: print(m.group(1)); sys.exit(0)
-print('2.2.0')
-")
+        # Leggi versione dall'app (grep + sed, no Python multiline issues)
+        APP_VERSION=$(grep -m1 'VERSION\s*=' src/main_gui_qt.py | sed "s/.*VERSION\s*=\s*['\"]//;s/['\"].*//")
+        [ -z "$APP_VERSION" ] && APP_VERSION="2.2.0"
         echo "Versione app: $APP_VERSION"
 
         # Usa il file disclaimer già presente nel repo
