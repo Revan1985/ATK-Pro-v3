@@ -1,4 +1,4 @@
-; ATK-Pro v2.1.0 Installer Script per Inno Setup
+; ATK-Pro v2.2.0 Installer Script per Inno Setup
 ; Supporta 10 lingue con testi Unicode completi (arabo, ebraico, russo)
 ; Legge i disclaimer direttamente da assets/ 
 
@@ -30,26 +30,26 @@ el.LicenseAcceptance=Αποδοχή Άδειας
 ro.LicenseAcceptance=Acceptarea Licenței
 sv.LicenseAcceptance=Licensacceptans
   ; Custom messages per localizzazione completa
-  en.NameAndVersion=ATK-Pro v2.1.0
-  it.NameAndVersion=ATK-Pro v2.1.0
-  es.NameAndVersion=ATK-Pro v2.1.0
-  de.NameAndVersion=ATK-Pro v2.1.0
-  fr.NameAndVersion=ATK-Pro v2.1.0
-  pt.NameAndVersion=ATK-Pro v2.1.0
-  nl.NameAndVersion=ATK-Pro v2.1.0
-  ar.NameAndVersion=ATK-Pro v2.1.0
-  he.NameAndVersion=ATK-Pro v2.1.0
-  ru.NameAndVersion=ATK-Pro v2.1.0
-  ja.NameAndVersion=ATK-Pro v2.1.0
-  zh.NameAndVersion=ATK-Pro v2.1.0
-  pl.NameAndVersion=ATK-Pro v2.1.0
-  tr.NameAndVersion=ATK-Pro v2.1.0
-  da.NameAndVersion=ATK-Pro v2.1.0
-  no.NameAndVersion=ATK-Pro v2.1.0
-  vi.NameAndVersion=ATK-Pro v2.1.0
-  el.NameAndVersion=ATK-Pro v2.1.0
-  ro.NameAndVersion=ATK-Pro v2.1.0
-  sv.NameAndVersion=ATK-Pro v2.1.0
+  en.NameAndVersion=ATK-Pro v2.2.0
+  it.NameAndVersion=ATK-Pro v2.2.0
+  es.NameAndVersion=ATK-Pro v2.2.0
+  de.NameAndVersion=ATK-Pro v2.2.0
+  fr.NameAndVersion=ATK-Pro v2.2.0
+  pt.NameAndVersion=ATK-Pro v2.2.0
+  nl.NameAndVersion=ATK-Pro v2.2.0
+  ar.NameAndVersion=ATK-Pro v2.2.0
+  he.NameAndVersion=ATK-Pro v2.2.0
+  ru.NameAndVersion=ATK-Pro v2.2.0
+  ja.NameAndVersion=ATK-Pro v2.2.0
+  zh.NameAndVersion=ATK-Pro v2.2.0
+  pl.NameAndVersion=ATK-Pro v2.2.0
+  tr.NameAndVersion=ATK-Pro v2.2.0
+  da.NameAndVersion=ATK-Pro v2.2.0
+  no.NameAndVersion=ATK-Pro v2.2.0
+  vi.NameAndVersion=ATK-Pro v2.2.0
+  el.NameAndVersion=ATK-Pro v2.2.0
+  ro.NameAndVersion=ATK-Pro v2.2.0
+  sv.NameAndVersion=ATK-Pro v2.2.0
 
   en.AdditionalIcons=Additional icons
   it.AdditionalIcons=Icone aggiuntive
