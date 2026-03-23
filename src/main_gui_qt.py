@@ -657,6 +657,7 @@ import json as _json_mod
 import re as _re_mod
 import tempfile as _tempfile_mod
 import subprocess as _subprocess_mod
+from PySide6.QtCore import QThread, Signal as _Signal
 
 
 class _UpdateCheckerThread(QThread):
@@ -828,12 +829,25 @@ class MainWindow(QMainWindow):
         layout.addWidget(msg_label)
 
         if is_newer:
-            if sys.platform == 'win32' and assets:
+            # "Aggiorna automaticamente" solo per versione installata su Windows (non portable)
+            # La portable deve scaricare lo ZIP dalla pagina GitHub manualmente
+            if sys.platform == 'win32' and assets and not IS_PORTABLE:
                 auto_btn = QPushButton(gm("Aggiorna automaticamente") or "Aggiorna automaticamente")
                 auto_btn.clicked.connect(
                     lambda: (dlg.accept(), self._avvia_aggiornamento_automatico(assets, latest_version))
                 )
                 layout.addWidget(auto_btn, alignment=Qt.AlignCenter)
+
+            if IS_PORTABLE:
+                portable_note = QLabel(
+                    gm("Versione Portable: scarica il nuovo ZIP dalla pagina GitHub.")
+                )
+                portable_note.setStyleSheet(
+                    "QLabel { background: transparent; color: #f0c060; font-size: 13px; }"
+                )
+                portable_note.setAlignment(Qt.AlignCenter)
+                portable_note.setWordWrap(True)
+                layout.addWidget(portable_note)
 
             web_btn = QPushButton(gm("Apri pagina di download") or "Apri pagina di download")
             web_btn.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(release_url)))
