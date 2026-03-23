@@ -885,7 +885,7 @@ class MainWindow(QMainWindow):
 
         progress_dlg = QProgressDialog(label_text, gm("Annulla") or "Annulla", 0, 100, self)
         progress_dlg.setWindowModality(Qt.WindowModal)
-        progress_dlg.setWindowTitle("Aggiornamento ATK-Pro")
+        progress_dlg.setWindowTitle((gm("Aggiornamento") or "Aggiornamento") + " ATK-Pro")
         progress_dlg.setMinimumWidth(420)
         progress_dlg.setValue(0)
         progress_dlg.show()
