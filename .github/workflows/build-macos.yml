@@ -14,32 +14,40 @@ permissions:
 
 jobs:
   build-macos:
-    # macos-13 = Intel x86_64 runner.
-    # Produces an x86_64 binary that runs natively on Intel Macs
-    # and via Rosetta 2 (transparent, seamless) on Apple Silicon.
-    # Switch to universal2 in a future release when Rosetta-free support
-    # for both architectures is needed.
-    runs-on: macos-13
+    # macos-latest = ARM64 (Apple Silicon) — l'unica opzione gratuita su repo pubblici.
+    # Usiamo il Python universal2 da python.org + arch -x86_64 per cross-compilare
+    # un binario x86_64 via Rosetta 2, che:
+    #   - gira nativamente su Intel Mac (macOS 12+)
+    #   - gira via Rosetta 2 (trasparente) su Apple Silicon
+    runs-on: macos-latest
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       
-    - name: Setup Python 3.12
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-        
-    - name: Install dependencies
+    - name: Install x86_64 Python 3.12 from python.org
       run: |
-        python -m pip install --upgrade pip
-        python -m pip install "setuptools<70.0" wheel
-        python -c "import pkg_resources; print('✓ pkg_resources disponibile')"
-        pip install --no-cache-dir pyinstaller -r requirements.txt
+        # Il pacchetto macOS di python.org e' universal2 (Intel + Silicon).
+        # Eseguito con 'arch -x86_64' installa pacchetti x86_64 e produce binari x86_64.
+        echo "Scarico Python 3.12 universal2..."
+        curl -fsSL -o /tmp/py312.pkg \
+          "https://www.python.org/ftp/python/3.12.9/python-3.12.9-macos11.pkg"
+        sudo installer -pkg /tmp/py312.pkg -target /
+        echo "--- Verifica installazione ---"
+        /usr/local/bin/python3.12 --version
+        file /usr/local/bin/python3.12
+        echo "--- Verifica modalita x86_64 via Rosetta ---"
+        arch -x86_64 /usr/local/bin/python3.12 -c "import platform; print('arch:', platform.machine())"
         
-    - name: Install Playwright browsers
+    - name: Install dependencies (x86_64 via Rosetta)
       run: |
-        playwright install chromium
+        arch -x86_64 /usr/local/bin/python3.12 -m pip install --upgrade pip
+        arch -x86_64 /usr/local/bin/python3.12 -m pip install "setuptools<70.0" wheel
+        arch -x86_64 /usr/local/bin/python3.12 -m pip install --no-cache-dir pyinstaller -r requirements.txt
+        
+    - name: Install Playwright browsers (x86_64)
+      run: |
+        arch -x86_64 /usr/local/bin/python3.12 -m playwright install chromium
         
     - name: Verify project structure
       run: |
@@ -52,15 +60,16 @@ jobs:
         echo "=== Docs generali ==="
         ls -la docs_generali/
         
-    - name: Build macOS app with PyInstaller
+    - name: Build macOS app with PyInstaller (x86_64 via Rosetta)
       env:
         MACOSX_DEPLOYMENT_TARGET: "12.0"   # macOS Monterey minimum
       run: |
-        pyinstaller \
+        # arch -x86_64: esegue PyInstaller in modalita x86_64 via Rosetta 2.
+        # Produce un binario x86_64 puro (nativo Intel, Rosetta su Silicon).
+        arch -x86_64 /usr/local/bin/python3.12 -m PyInstaller \
           --name ATK-Pro \
           --windowed \
           --onefile \
-          --target-arch x86_64 \
           --icon=assets/common/grafici/ATK-Pro.ico \
           --osx-bundle-identifier=com.atkpro.atkpro \
           --add-data "src/main_gui_qt.py:src" \
