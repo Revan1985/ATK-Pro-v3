@@ -5,11 +5,12 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTextEdit, QFileDialog, QMessageBox,
-    QMenuBar, QMenu, QDialog, QComboBox, QCheckBox, QSizePolicy, QInputDialog, QFrame
+    QMenuBar, QMenu, QDialog, QComboBox, QCheckBox, QSizePolicy, QInputDialog, QFrame,
+    QProgressDialog
 )
 
 # Versione corrente dell'applicazione
-VERSION = "2.1.0"
+VERSION = "2.2.0"
 GITHUB_REPO = "DanielePigoli/ATK-Pro-v2"
 
 # Stato globale
@@ -651,6 +652,65 @@ from PySide6.QtWidgets import (
     QMenuBar, QMenu, QDialog, QComboBox, QCheckBox, QSizePolicy
 )
 from PySide6.QtGui import QFontDatabase
+import urllib.request as _urllib_req
+import json as _json_mod
+import re as _re_mod
+import tempfile as _tempfile_mod
+import subprocess as _subprocess_mod
+
+
+class _UpdateCheckerThread(QThread):
+    """Controlla la versione disponibile su GitHub senza bloccare la UI."""
+    result = _Signal(bool, str, str, object)  # is_newer, latest_version, release_url, assets
+
+    def run(self):
+        try:
+            url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+            req = _urllib_req.Request(url, headers={'User-Agent': 'ATK-Pro'})
+            with _urllib_req.urlopen(req, timeout=10) as resp:
+                data = _json_mod.loads(resp.read().decode())
+            latest_version = data.get('tag_name', '').lstrip('v')
+            release_url = data.get('html_url', '')
+            assets = data.get('assets', [])
+            current = [int(x) for x in VERSION.split('.')]
+            latest  = [int(x) for x in latest_version.split('.')]
+            max_len = max(len(current), len(latest))
+            current += [0] * (max_len - len(current))
+            latest  += [0] * (max_len - len(latest))
+            self.result.emit(latest > current, latest_version, release_url, assets)
+        except Exception:
+            self.result.emit(False, '', '', [])
+
+
+class _DownloadThread(QThread):
+    """Scarica un file in background con progress reporting."""
+    progress = _Signal(int, int)    # bytes_scaricati, bytes_totali
+    finished = _Signal(str)         # percorso file scaricato
+    error_occurred = _Signal(str)   # messaggio errore
+
+    def __init__(self, url: str, dest_path: str):
+        super().__init__()
+        self._url = url
+        self._dest_path = dest_path
+
+    def run(self):
+        try:
+            req = _urllib_req.Request(self._url, headers={'User-Agent': 'ATK-Pro'})
+            with _urllib_req.urlopen(req, timeout=300) as resp:
+                total = int(resp.headers.get('Content-Length', 0))
+                downloaded = 0
+                with open(self._dest_path, 'wb') as fh:
+                    while True:
+                        chunk = resp.read(65536)
+                        if not chunk:
+                            break
+                        fh.write(chunk)
+                        downloaded += len(chunk)
+                        self.progress.emit(downloaded, total)
+            self.finished.emit(self._dest_path)
+        except Exception as exc:
+            self.error_occurred.emit(str(exc))
+
 
 class MainWindow(QMainWindow):
     def cambia_lingua(self):
@@ -690,71 +750,53 @@ class MainWindow(QMainWindow):
 
     def verifica_aggiornamenti(self):
         """Controlla se è disponibile una nuova versione su GitHub"""
-        from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton
-        from PySide6.QtCore import QTimer
-        import urllib.request
-        import json
-        
-        # Esegui la verifica prima di mostrare il dialogo
-        result_msg = ""
-        result_color = "#FFFFFF"
-        show_download_btn = False
-        release_url = ""
-        
+        import urllib.request, json
+        gm = lambda k: get_msg(self.glossario_data, k, self.lingua) or k
         try:
-            # Richiesta all'API di GitHub
             url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-            req = urllib.request.Request(url)
-            req.add_header('User-Agent', 'ATK-Pro')
-            
-            with urllib.request.urlopen(req, timeout=10) as response:
-                data = json.loads(response.read().decode())
-                latest_version = data.get('tag_name', '').lstrip('v')
-                release_name = data.get('name', '')
-                release_url = data.get('html_url', '')
-                
-                # Confronta versioni
-                current = VERSION.split('.')
-                latest = latest_version.split('.')
-                
-                is_newer = False
-                for i in range(max(len(current), len(latest))):
-                    c = int(current[i]) if i < len(current) else 0
-                    l = int(latest[i]) if i < len(latest) else 0
-                    if l > c:
-                        is_newer = True
-                        break
-                    elif l < c:
-                        break
-                
-                if is_newer:
-                    result_msg = (f"{get_msg(self.glossario_data, 'Nuova versione disponibile', self.lingua) or 'Nuova versione disponibile'}!\n\n"
-                                 f"{get_msg(self.glossario_data, 'Versione corrente', self.lingua) or 'Versione corrente'}: {VERSION}\n"
-                                 f"{get_msg(self.glossario_data, 'Ultima versione', self.lingua) or 'Ultima versione'}: {latest_version}")
-                    if release_name:
-                        result_msg += f"\n\n{release_name}"
-                    show_download_btn = True
-                else:
-                    result_msg = (f"{get_msg(self.glossario_data, 'Nessun aggiornamento disponibile', self.lingua) or 'Nessun aggiornamento disponibile'}\n\n"
-                                 f"{get_msg(self.glossario_data, 'Versione corrente', self.lingua) or 'Versione corrente'}: {VERSION}")
-                    
-        except urllib.error.HTTPError as e:
-            if e.code == 404:
-                # Nessuna release pubblicata su GitHub
-                result_msg = (f"{get_msg(self.glossario_data, 'Nessun aggiornamento disponibile', self.lingua) or 'Nessun aggiornamento disponibile'}\n\n"
-                             f"{get_msg(self.glossario_data, 'Versione corrente', self.lingua) or 'Versione corrente'}: {VERSION}\n\n"
-                             f"({get_msg(self.glossario_data, 'Nessuna release pubblicata', self.lingua) or 'Nessuna release pubblicata su GitHub'})")
+            req = urllib.request.Request(url, headers={'User-Agent': 'ATK-Pro'})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode())
+            latest_version = data.get('tag_name', '').lstrip('v')
+            release_url = data.get('html_url', '')
+            assets = data.get('assets', [])
+            current = [int(x) for x in VERSION.split('.')]
+            latest  = [int(x) for x in latest_version.split('.')]
+            max_len = max(len(current), len(latest))
+            current += [0] * (max_len - len(current))
+            latest  += [0] * (max_len - len(latest))
+            is_newer = latest > current
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                is_newer, latest_version, release_url, assets = False, VERSION, '', []
             else:
-                result_msg = f"{get_msg(self.glossario_data, 'Errore verifica aggiornamenti', self.lingua) or 'Errore durante la verifica degli aggiornamenti'}\n\nHTTP {e.code}"
-                result_color = "#FFB347"
-                    
-        except Exception as e:
-            result_msg = f"{get_msg(self.glossario_data, 'Errore verifica aggiornamenti', self.lingua) or 'Errore durante la verifica degli aggiornamenti'}\n\n{str(e)}"
-            result_color = "#FFB347"
-        
-        # Mostra il dialogo con il risultato
+                QMessageBox.warning(self, gm("Verifica aggiornamenti"),
+                    f"{gm('Errore verifica aggiornamenti')}\n\nHTTP {exc.code}")
+                return
+        except Exception as exc:
+            QMessageBox.warning(self, gm("Verifica aggiornamenti"),
+                f"{gm('Errore verifica aggiornamenti')}\n\n{exc}")
+            return
+        self._mostra_dialogo_aggiornamento(is_newer, latest_version, release_url, assets)
+
+    def _mostra_dialogo_aggiornamento(self, is_newer, latest_version, release_url, assets, silent_if_ok=False):
+        """Mostra il dialogo risultato verifica aggiornamenti.
+        silent_if_ok=True: non mostra nulla se la versione è già aggiornata."""
+        import sys
+        gm = lambda k: get_msg(self.glossario_data, k, self.lingua) or k
+
+        if not is_newer:
+            if silent_if_ok:
+                return
+            result_msg = (f"{gm('Nessun aggiornamento disponibile')}\n\n"
+                         f"{gm('Versione corrente')}: {VERSION}")
+        else:
+            result_msg = (f"{gm('Nuova versione disponibile')}!\n\n"
+                         f"{gm('Versione corrente')}: {VERSION}\n"
+                         f"{gm('Ultima versione')}: {latest_version}")
+
         dlg = QDialog(self)
-        dlg.setWindowTitle(get_msg(self.glossario_data, "Verifica aggiornamenti", self.lingua) or "Verifica aggiornamenti")
+        dlg.setWindowTitle(gm("Verifica aggiornamenti"))
         dlg.setStyleSheet("""
             QDialog {
                 background-color: #181818;
@@ -779,24 +821,114 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(dlg)
         layout.setContentsMargins(30, 25, 30, 25)
         layout.setSpacing(18)
-        
+
         msg_label = QLabel(result_msg)
-        msg_label.setStyleSheet(f"QLabel {{ background: transparent; color: {result_color}; font-size: 16px; }}")
+        msg_label.setStyleSheet("QLabel { background: transparent; color: #FFFFFF; font-size: 16px; }")
         msg_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(msg_label)
-        
-        if show_download_btn:
-            download_btn = QPushButton(get_msg(self.glossario_data, "Scarica aggiornamento", self.lingua) or "Scarica aggiornamento")
-            download_btn.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(release_url)))
-            layout.addWidget(download_btn, alignment=Qt.AlignCenter)
-        
-        close_btn = QPushButton(get_msg(self.glossario_data, "Chiudi", self.lingua) or "Chiudi")
+
+        if is_newer:
+            if sys.platform == 'win32' and assets:
+                auto_btn = QPushButton(gm("Aggiorna automaticamente") or "Aggiorna automaticamente")
+                auto_btn.clicked.connect(
+                    lambda: (dlg.accept(), self._avvia_aggiornamento_automatico(assets, latest_version))
+                )
+                layout.addWidget(auto_btn, alignment=Qt.AlignCenter)
+
+            web_btn = QPushButton(gm("Apri pagina di download") or "Apri pagina di download")
+            web_btn.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(release_url)))
+            layout.addWidget(web_btn, alignment=Qt.AlignCenter)
+
+        close_btn = QPushButton(gm("Chiudi") or "Chiudi")
         close_btn.clicked.connect(dlg.accept)
         layout.addWidget(close_btn, alignment=Qt.AlignCenter)
-        
+
         dlg.setLayout(layout)
         dlg.exec()
-    
+
+    def _avvia_aggiornamento_automatico(self, assets, latest_version):
+        """Scarica e installa automaticamente il nuovo installer (solo Windows)."""
+        gm = lambda k: get_msg(self.glossario_data, k, self.lingua) or k
+
+        installer_asset = None
+        for a in assets:
+            name = a.get('name', '')
+            if _re_mod.match(r'^ATK-Pro-Setup-v[\d.]+\.exe$', name):
+                installer_asset = a
+                break
+
+        if not installer_asset:
+            release_url = f"https://github.com/{GITHUB_REPO}/releases/latest"
+            QMessageBox.warning(
+                self, gm("Aggiornamento"),
+                gm("Installer Windows non trovato nella release.") + "\n" +
+                gm("Visita la pagina GitHub per scaricarlo manualmente."))
+            QDesktopServices.openUrl(QUrl(release_url))
+            return
+
+        download_url = installer_asset['browser_download_url']
+        asset_name = installer_asset['name']
+        if not _re_mod.match(r'^[A-Za-z0-9_.\-]+$', asset_name):
+            QMessageBox.critical(self, gm("Errore"), "Nome file installer non valido.")
+            return
+
+        tmp_dir = _tempfile_mod.mkdtemp(prefix='atkpro_update_')
+        dest_path = os.path.join(tmp_dir, asset_name)
+        if not os.path.abspath(dest_path).startswith(os.path.abspath(tmp_dir)):
+            QMessageBox.critical(self, gm("Errore"), "Errore di sicurezza nel percorso file.")
+            return
+
+        total_mb = installer_asset.get('size', 0) / (1024 * 1024)
+        label_text = gm("Download in corso") + f" — ATK-Pro v{latest_version}"
+        if total_mb > 0:
+            label_text += f"\n({total_mb:.0f} MB)"
+
+        progress_dlg = QProgressDialog(label_text, gm("Annulla") or "Annulla", 0, 100, self)
+        progress_dlg.setWindowModality(Qt.WindowModal)
+        progress_dlg.setWindowTitle("Aggiornamento ATK-Pro")
+        progress_dlg.setMinimumWidth(420)
+        progress_dlg.setValue(0)
+        progress_dlg.show()
+
+        self._download_thread = _DownloadThread(download_url, dest_path)
+        _tmp_dir_ref = tmp_dir
+
+        def on_progress(done, total):
+            if progress_dlg.wasCanceled():
+                self._download_thread.terminate()
+                import shutil
+                shutil.rmtree(_tmp_dir_ref, ignore_errors=True)
+                return
+            progress_dlg.setValue(int(done * 100 / total) if total > 0 else 0)
+            if not total:
+                progress_dlg.setMaximum(0)
+
+        def on_finished(path):
+            progress_dlg.reset()
+            progress_dlg.close()
+            try:
+                _subprocess_mod.Popen([path, '/SILENT', '/NORESTART'])
+            except Exception as exc:
+                QMessageBox.critical(
+                    self, gm("Errore"),
+                    gm("Impossibile avviare l'installer") + f":\n{exc}")
+                return
+            QApplication.instance().quit()
+
+        def on_error(msg):
+            progress_dlg.reset()
+            progress_dlg.close()
+            import shutil
+            shutil.rmtree(_tmp_dir_ref, ignore_errors=True)
+            QMessageBox.critical(
+                self, gm("Errore download"),
+                gm("Download fallito") + f":\n{msg}")
+
+        self._download_thread.progress.connect(on_progress)
+        self._download_thread.finished.connect(on_finished)
+        self._download_thread.error_occurred.connect(on_error)
+        self._download_thread.start()
+
     def __init__(self, glossario_data, lingua):
         super().__init__()
         self.glossario_data = glossario_data
@@ -2853,6 +2985,15 @@ def main():
     # Creazione finestra principale
     window = MainWindow(glossario_data, lingua)
     window.show()
+
+    # Check aggiornamenti automatico all'avvio (silenzioso se già aggiornato)
+    from PySide6.QtCore import QTimer
+    window._startup_checker = _UpdateCheckerThread()
+    def _on_startup_update(is_newer, latest_version, release_url, assets):
+        if is_newer:
+            window._mostra_dialogo_aggiornamento(is_newer, latest_version, release_url, assets, silent_if_ok=False)
+    window._startup_checker.result.connect(_on_startup_update)
+    QTimer.singleShot(3000, window._startup_checker.start)  # 3s dopo l'avvio
 
     # Mostra disclaimer al primo avvio oppure dopo installazione silente (GNOME Software)
     _PENDING_FLAG = "/var/lib/atk-pro/pending-disclaimer"
