@@ -65,8 +65,8 @@ jobs:
         arch -x86_64 /usr/local/bin/python3.12 -m PyInstaller \
           --name ATK-Pro \
           --windowed \
+          --paths src \
           --icon=/tmp/ATK-Pro.icns \
-          --osx-bundle-identifier=com.atkpro.atkpro \
           --add-data "src/main_gui_qt.py:src" \
           --add-data "src/user_prompts.py:src" \
           --add-data "assets:assets" \
@@ -203,6 +203,7 @@ jobs:
         /usr/local/bin/python3.12 -m PyInstaller \
           --name ATK-Pro \
           --windowed \
+          --paths src \
           --target-arch arm64 \
           --icon=/tmp/ATK-Pro.icns \
           --osx-bundle-identifier=com.atkpro.atkpro \
