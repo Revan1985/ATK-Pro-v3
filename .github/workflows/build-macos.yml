@@ -97,8 +97,8 @@ jobs:
     - name: Leggi versione
       id: ver
       run: |
-        VER=$(grep -m1 'VERSION\s*=' src/main_gui_qt.py | sed "s/.*VERSION\s*=\s*['\"]//;s/['\"].*//")
-        [ -z "$VER" ] && VER="3.0.0"
+        VER=$(grep -m1 'VERSION' src/main_gui_qt.py | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*')
+        [ -z "$VER" ] && VER="2.2.0"
         echo "version=$VER" >> $GITHUB_OUTPUT
         echo "Versione: $VER"
 
@@ -229,8 +229,8 @@ jobs:
     - name: Leggi versione
       id: ver
       run: |
-        VER=$(grep -m1 'VERSION\s*=' src/main_gui_qt.py | sed "s/.*VERSION\s*=\s*['\"]//;s/['\"].*//")
-        [ -z "$VER" ] && VER="3.0.0"
+        VER=$(grep -m1 'VERSION' src/main_gui_qt.py | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*')
+        [ -z "$VER" ] && VER="2.2.0"
         echo "version=$VER" >> $GITHUB_OUTPUT
         echo "Versione: $VER"
 
