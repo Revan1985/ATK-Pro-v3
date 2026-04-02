@@ -51,6 +51,22 @@ jobs:
     - name: Install Playwright (x86_64)
       run: arch -x86_64 /usr/local/bin/python3.12 -m playwright install chromium
 
+    - name: Converti icona .ico → .icns (Intel)
+      run: |
+        arch -x86_64 /usr/local/bin/python3.12 - <<'PYEOF'
+from PIL import Image
+import os, subprocess
+img = Image.open('assets/common/grafici/ATK-Pro.ico').convert('RGBA')
+iconset = '/tmp/ATK-Pro.iconset'
+os.makedirs(iconset, exist_ok=True)
+for sz, name in [(16,'icon_16x16'),(32,'icon_16x16@2x'),(32,'icon_32x32'),(64,'icon_32x32@2x'),
+                 (128,'icon_128x128'),(256,'icon_128x128@2x'),(256,'icon_256x256'),
+                 (512,'icon_256x256@2x'),(512,'icon_512x512'),(1024,'icon_512x512@2x')]:
+    img.resize((sz, sz), Image.LANCZOS).save(f'{iconset}/{name}.png')
+subprocess.run(['iconutil','-c','icns',iconset,'-o','/tmp/ATK-Pro.icns'], check=True)
+print('✓ ATK-Pro.icns generato')
+PYEOF
+
     - name: Build app x86_64 (Intel / Rosetta)
       env:
         MACOSX_DEPLOYMENT_TARGET: "12.0"
@@ -58,8 +74,7 @@ jobs:
         arch -x86_64 /usr/local/bin/python3.12 -m PyInstaller \
           --name ATK-Pro \
           --windowed \
-          --onefile \
-          --icon=assets/common/grafici/ATK-Pro.ico \
+          --icon=/tmp/ATK-Pro.icns \
           --osx-bundle-identifier=com.atkpro.atkpro \
           --add-data "src/main_gui_qt.py:src" \
           --add-data "src/user_prompts.py:src" \
@@ -76,6 +91,7 @@ jobs:
           --hidden-import=urllib3 \
           --hidden-import=certifi \
           --hidden-import=src.main_gui_qt \
+          --hidden-import=src.user_prompts \
           --exclude-module=pytest \
           --exclude-module=matplotlib \
           --exclude-module=scipy \
@@ -182,6 +198,22 @@ jobs:
     - name: Install Playwright (arm64)
       run: /usr/local/bin/python3.12 -m playwright install chromium
 
+    - name: Converti icona .ico → .icns (Silicon)
+      run: |
+        /usr/local/bin/python3.12 - <<'PYEOF'
+from PIL import Image
+import os, subprocess
+img = Image.open('assets/common/grafici/ATK-Pro.ico').convert('RGBA')
+iconset = '/tmp/ATK-Pro.iconset'
+os.makedirs(iconset, exist_ok=True)
+for sz, name in [(16,'icon_16x16'),(32,'icon_16x16@2x'),(32,'icon_32x32'),(64,'icon_32x32@2x'),
+                 (128,'icon_128x128'),(256,'icon_128x128@2x'),(256,'icon_256x256'),
+                 (512,'icon_256x256@2x'),(512,'icon_512x512'),(1024,'icon_512x512@2x')]:
+    img.resize((sz, sz), Image.LANCZOS).save(f'{iconset}/{name}.png')
+subprocess.run(['iconutil','-c','icns',iconset,'-o','/tmp/ATK-Pro.icns'], check=True)
+print('✓ ATK-Pro.icns generato')
+PYEOF
+
     - name: Build app arm64 (Apple Silicon nativo)
       env:
         MACOSX_DEPLOYMENT_TARGET: "12.0"
@@ -189,9 +221,8 @@ jobs:
         /usr/local/bin/python3.12 -m PyInstaller \
           --name ATK-Pro \
           --windowed \
-          --onefile \
           --target-arch arm64 \
-          --icon=assets/common/grafici/ATK-Pro.ico \
+          --icon=/tmp/ATK-Pro.icns \
           --osx-bundle-identifier=com.atkpro.atkpro \
           --add-data "src/main_gui_qt.py:src" \
           --add-data "src/user_prompts.py:src" \
@@ -208,6 +239,7 @@ jobs:
           --hidden-import=urllib3 \
           --hidden-import=certifi \
           --hidden-import=src.main_gui_qt \
+          --hidden-import=src.user_prompts \
           --exclude-module=pytest \
           --exclude-module=matplotlib \
           --exclude-module=scipy \
