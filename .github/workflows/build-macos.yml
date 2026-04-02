@@ -53,19 +53,10 @@ jobs:
 
     - name: Converti icona .ico → .icns (Intel)
       run: |
-        arch -x86_64 /usr/local/bin/python3.12 - <<'PYEOF'
-from PIL import Image
-import os, subprocess
-img = Image.open('assets/common/grafici/ATK-Pro.ico').convert('RGBA')
-iconset = '/tmp/ATK-Pro.iconset'
-os.makedirs(iconset, exist_ok=True)
-for sz, name in [(16,'icon_16x16'),(32,'icon_16x16@2x'),(32,'icon_32x32'),(64,'icon_32x32@2x'),
-                 (128,'icon_128x128'),(256,'icon_128x128@2x'),(256,'icon_256x256'),
-                 (512,'icon_256x256@2x'),(512,'icon_512x512'),(1024,'icon_512x512@2x')]:
-    img.resize((sz, sz), Image.LANCZOS).save(f'{iconset}/{name}.png')
-subprocess.run(['iconutil','-c','icns',iconset,'-o','/tmp/ATK-Pro.icns'], check=True)
-print('✓ ATK-Pro.icns generato')
-PYEOF
+        mkdir -p /tmp/ATK-Pro.iconset
+        arch -x86_64 /usr/local/bin/python3.12 -c "from PIL import Image; img=Image.open('assets/common/grafici/ATK-Pro.ico').convert('RGBA'); [img.resize((s,s),Image.LANCZOS).save(f'/tmp/ATK-Pro.iconset/{n}.png') for s,n in [(16,'icon_16x16'),(32,'icon_16x16@2x'),(32,'icon_32x32'),(64,'icon_32x32@2x'),(128,'icon_128x128'),(256,'icon_128x128@2x'),(256,'icon_256x256'),(512,'icon_256x256@2x'),(512,'icon_512x512'),(1024,'icon_512x512@2x')]]"
+        iconutil -c icns /tmp/ATK-Pro.iconset -o /tmp/ATK-Pro.icns
+        echo "✓ ATK-Pro.icns generato"
 
     - name: Build app x86_64 (Intel / Rosetta)
       env:
@@ -200,19 +191,10 @@ PYEOF
 
     - name: Converti icona .ico → .icns (Silicon)
       run: |
-        /usr/local/bin/python3.12 - <<'PYEOF'
-from PIL import Image
-import os, subprocess
-img = Image.open('assets/common/grafici/ATK-Pro.ico').convert('RGBA')
-iconset = '/tmp/ATK-Pro.iconset'
-os.makedirs(iconset, exist_ok=True)
-for sz, name in [(16,'icon_16x16'),(32,'icon_16x16@2x'),(32,'icon_32x32'),(64,'icon_32x32@2x'),
-                 (128,'icon_128x128'),(256,'icon_128x128@2x'),(256,'icon_256x256'),
-                 (512,'icon_256x256@2x'),(512,'icon_512x512'),(1024,'icon_512x512@2x')]:
-    img.resize((sz, sz), Image.LANCZOS).save(f'{iconset}/{name}.png')
-subprocess.run(['iconutil','-c','icns',iconset,'-o','/tmp/ATK-Pro.icns'], check=True)
-print('✓ ATK-Pro.icns generato')
-PYEOF
+        mkdir -p /tmp/ATK-Pro.iconset
+        /usr/local/bin/python3.12 -c "from PIL import Image; img=Image.open('assets/common/grafici/ATK-Pro.ico').convert('RGBA'); [img.resize((s,s),Image.LANCZOS).save(f'/tmp/ATK-Pro.iconset/{n}.png') for s,n in [(16,'icon_16x16'),(32,'icon_16x16@2x'),(32,'icon_32x32'),(64,'icon_32x32@2x'),(128,'icon_128x128'),(256,'icon_128x128@2x'),(256,'icon_256x256'),(512,'icon_256x256@2x'),(512,'icon_512x512'),(1024,'icon_512x512@2x')]]"
+        iconutil -c icns /tmp/ATK-Pro.iconset -o /tmp/ATK-Pro.icns
+        echo "✓ ATK-Pro.icns generato"
 
     - name: Build app arm64 (Apple Silicon nativo)
       env:
