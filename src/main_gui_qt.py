@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
 )
 
 # Versione corrente dell'applicazione
-VERSION = "2.2.0"
+VERSION = "3.0.0"
 GITHUB_REPO = "DanielePigoli/ATK-Pro-v2"
 
 # Stato globale
@@ -998,12 +998,11 @@ class MainWindow(QMainWindow):
 
         # --- Servizi ---
         servizi_menu = QMenu(gm("Servizi"), self)
-        servizi_menu.addAction(gm("Integrazione API Portale Antenati"), self.funzione_in_sviluppo)
         servizi_menu.addAction(gm("Visualizzazione Immagini"), self.apri_visualizzatore_immagini)
         servizi_menu.addAction(gm("Visualizzazione Metadati JSON"), self.apri_visualizzatore_metadati)
-        servizi_menu.addAction(gm("OCR Avanzato"), self.funzione_in_sviluppo)
-        servizi_menu.addAction(gm("Traduzione OCR"), self.funzione_in_sviluppo)
-        servizi_menu.addAction(gm("Esportazione GEDCOM"), self.funzione_in_sviluppo)
+        servizi_menu.addAction(gm("OCR Avanzato"), self.apri_ocr_avanzato)
+        servizi_menu.addAction(gm("Traduzione OCR"), self.apri_traduzione_ocr)
+        servizi_menu.addAction(gm("Esportazione GEDCOM"), self.avvia_analisi_genealogica)
         menubar.addMenu(servizi_menu)
 
         # --- Documenti ---
@@ -1026,10 +1025,16 @@ class MainWindow(QMainWindow):
         impostazioni_menu.addAction(gm("Chiudi"), self.close)
         menubar.addMenu(impostazioni_menu)
 
-        # Stile menubar originale (nessuna forzatura colore bianco sulle voci)
-        menubar.setStyleSheet("QMenuBar { background: #d2bb8a; color: #222; font-weight: bold; border: none; } "
-                  "QMenuBar::item:selected { background: #e5d3b3; color: #222; } "
-                  "QMenu { background: #f5e6c3; color: #222; } ")
+        # Su macOS la menubar è nativa (barra in cima allo schermo):
+        # applicare background/color via stylesheet la rende invisibile.
+        # Lo stylesheet viene applicato solo su Windows/Linux.
+        import platform as _platform
+        if _platform.system() != "Darwin":
+            menubar.setStyleSheet(
+                "QMenuBar { background: #d2bb8a; color: #222; font-weight: bold; border: none; } "
+                "QMenuBar::item:selected { background: #e5d3b3; color: #222; } "
+                "QMenu { background: #f5e6c3; color: #222; } "
+            )
 
         # Riga marrone sotto il menu (widget separato, non nel layout centrale)
         self.menu_separator = QLabel(self)
@@ -1365,6 +1370,57 @@ class MainWindow(QMainWindow):
         layout.addWidget(ok_btn, alignment=Qt.AlignCenter)
         dlg.setLayout(layout)
         dlg.exec()
+
+    def apri_ocr_avanzato(self):
+        try:
+            from ocr_dialog import AdvancedOCRDialog
+            if hasattr(self, 'ocr_adv_dialog') and getattr(self, 'ocr_adv_dialog').isVisible():
+                self.ocr_adv_dialog.raise_()
+                self.ocr_adv_dialog.activateWindow()
+                return
+            self.ocr_adv_dialog = AdvancedOCRDialog(self, self.glossario_data, self.lingua)
+            from PySide6.QtCore import Qt
+            self.ocr_adv_dialog.setWindowFlags(Qt.Window) # Rende la finestra indipendente e riducibile
+            self.ocr_adv_dialog.show()
+        except Exception as e:
+            import logging
+            logging.error(f"Errore caricamento OCR Avanzato: {e}")
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Errore", f"Impossibile aprire l'OCR Avanzato: {e}")
+
+    def apri_traduzione_ocr(self):
+        try:
+            from translation_dialog import TranslationDialog
+            if hasattr(self, 'trad_ocr_dialog') and getattr(self, 'trad_ocr_dialog').isVisible():
+                self.trad_ocr_dialog.raise_()
+                self.trad_ocr_dialog.activateWindow()
+                return
+            self.trad_ocr_dialog = TranslationDialog(self, self.glossario_data, self.lingua)
+            from PySide6.QtCore import Qt
+            self.trad_ocr_dialog.setWindowFlags(Qt.Window) # Finestra indipendente
+            self.trad_ocr_dialog.show()
+        except Exception as e:
+            import logging
+            logging.error(f"Errore caricamento Traduzione OCR: {e}")
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Errore", f"Impossibile aprire la Traduzione OCR: {e}")
+
+    def avvia_analisi_genealogica(self):
+        try:
+            from genealogy_dialog import GenealogyDialog
+            if hasattr(self, 'genealogy_dialog') and getattr(self, 'genealogy_dialog').isVisible():
+                self.genealogy_dialog.raise_()
+                self.genealogy_dialog.activateWindow()
+                return
+            self.genealogy_dialog = GenealogyDialog(self, self.glossario_data, self.lingua)
+            from PySide6.QtCore import Qt
+            self.genealogy_dialog.setWindowFlags(Qt.Window) # Finestra indipendente
+            self.genealogy_dialog.show()
+        except Exception as e:
+            import logging
+            logging.error(f"Errore caricamento Analisi Genealogica: {e}")
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Errore", f"Impossibile aprire l'Analisi Genealogica: {e}")
 
     def funzione_in_sviluppo(self):
         # Messaggio placeholder localizzato per tutte le voci Servizi
@@ -2816,8 +2872,9 @@ def mostra_banner_chiusura(glossario_data, lingua, banner_path, paypal_url_path,
                                     logging.debug(f"PayPal: aperto con {_prog}")
                                     break
                         elif _sys == "Darwin":
-                            opened = QProcess.startDetached("open", [url])
-                            logging.debug(f"PayPal: open (macOS) -> {opened}")
+                            # Usa path assoluto: PATH è limitata dentro bundle Finder/Dock
+                            opened = QProcess.startDetached("/usr/bin/open", [url])
+                            logging.debug(f"PayPal: /usr/bin/open (macOS) -> {opened}")
                         else:
                             opened = QDesktopServices.openUrl(QUrl(url))
                             logging.debug(f"PayPal: QDesktopServices -> {opened}")
