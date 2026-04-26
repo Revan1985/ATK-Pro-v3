@@ -163,6 +163,8 @@ class GenealogyWorker(QThread):
 class GenealogyDialog(QDialog):
     def __init__(self, parent=None, glossario=None, lingua="it"):
         super().__init__(parent)
+        self.glossario = glossario
+        self.lingua = lingua
         self.selected_files = []
         self.output_folder = ""
         self.base_path = None
@@ -170,6 +172,14 @@ class GenealogyDialog(QDialog):
         self.init_ui()
         self.load_config()
         self.load_presets()
+
+    def gm(self, chiave):
+        try:
+            from main_gui_qt import get_msg as _gm
+            res = _gm(self.glossario, chiave, self.lingua)
+            return res if res and res != chiave else chiave
+        except Exception:
+            return chiave
 
     def init_ui(self):
         self.setWindowTitle("Factory Genealogica - ATK-Pro 3.0 Escape")
@@ -215,12 +225,12 @@ class GenealogyDialog(QDialog):
         self.combo_type = QComboBox(); self.combo_type.addItems(self._dtm.get_labels(service="gedcom")); self.combo_type.setStyleSheet(inp_css)
         self.combo_type.currentIndexChanged.connect(self._on_type_changed_geo)
         btn_add_type_geo = QPushButton("+")
-        btn_add_type_geo.setToolTip("Aggiungi tipologia personalizzata")
+        btn_add_type_geo.setToolTip(self.gm("Aggiungi tipologia personalizzata"))
         btn_add_type_geo.setFixedWidth(30)
         btn_add_type_geo.setStyleSheet("background-color: #3a8a3a; color: #ffffff; border-radius: 4px; font-weight: bold; font-family: Arial, sans-serif; font-size: 14px;")
         btn_add_type_geo.clicked.connect(self._add_custom_type)
         self.btn_edit_type = QPushButton("✏")
-        self.btn_edit_type.setToolTip("Modifica tipologia personalizzata selezionata")
+        self.btn_edit_type.setToolTip(self.gm("Modifica tipologia personalizzata selezionata"))
         self.btn_edit_type.setFixedWidth(30)
         self.btn_edit_type.setStyleSheet("background-color: #3a5a8a; color: #ffffff; border-radius: 4px; font-family: Arial, sans-serif; font-size: 13px;")
         self.btn_edit_type.clicked.connect(self._edit_custom_type)
@@ -283,7 +293,7 @@ class GenealogyDialog(QDialog):
                 self.combo_type.setCurrentText(label)
             else:
                 from PySide6.QtWidgets import QMessageBox
-                QMessageBox.warning(self, "Attenzione", "Una tipologia con questo nome esiste già.")
+                QMessageBox.warning(self, self.gm("Attenzione"), self.gm("Una tipologia con questo nome esiste già."))
 
     def _edit_custom_type(self):
         label = self.combo_type.currentText()
@@ -299,10 +309,10 @@ class GenealogyDialog(QDialog):
         from PySide6.QtWidgets import QMessageBox
         label = self.combo_type.currentText()
         msg = QMessageBox(self)
-        msg.setWindowTitle("Elimina Tipologia")
-        msg.setText(f"Rimuovere '{label}' dalla lista?")
-        btn_si = msg.addButton("S\u00ec", QMessageBox.ButtonRole.YesRole)
-        msg.addButton("No", QMessageBox.ButtonRole.NoRole)
+        msg.setWindowTitle(self.gm("Elimina Tipologia"))
+        msg.setText((self.gm("Rimuovere '%s' dalla lista?") % label))
+        btn_si = msg.addButton(self.gm("Si"), QMessageBox.ButtonRole.YesRole)
+        msg.addButton(self.gm("No"), QMessageBox.ButtonRole.NoRole)
         msg.exec()
         if msg.clickedButton() == btn_si:
             self._dtm.delete_custom_type(label)
