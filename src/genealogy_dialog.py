@@ -289,7 +289,13 @@ class GenealogyDialog(QDialog):
     def _delete_custom_type(self):
         from PySide6.QtWidgets import QMessageBox
         label = self.combo_type.currentText()
-        if QMessageBox.question(self, "Elimina Tipologia", f"Rimuovere '{label}' dalla lista?") == QMessageBox.StandardButton.Yes:
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Elimina Tipologia")
+        msg.setText(f"Rimuovere '{label}' dalla lista?")
+        btn_si = msg.addButton("S\u00ec", QMessageBox.ButtonRole.YesRole)
+        msg.addButton("No", QMessageBox.ButtonRole.NoRole)
+        msg.exec()
+        if msg.clickedButton() == btn_si:
             self._dtm.delete_custom_type(label)
             idx = self.combo_type.findText(label)
             if idx >= 0:

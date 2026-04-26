@@ -232,26 +232,28 @@ class AdvancedOCRDialog(QDialog):
         self.combo_type = QComboBox()
         self.combo_type.addItems(self._dtm.get_labels(service="ocr"))
         self.combo_type.currentIndexChanged.connect(self._on_type_changed_ocr)
+        _BTN_ADD = "QPushButton { background-color: #3a8a3a; color: #ffffff; border-radius: 4px; border: none; padding: 0px; font-family: 'Segoe UI Symbol'; font-size: 14pt; font-weight: bold; }"
+        _BTN_SYM = "QPushButton { color: #ffffff; border-radius: 4px; border: none; padding: 0px; font-family: 'Segoe UI Symbol'; font-size: 11pt; }"
         _bfont_add = QFont("Segoe UI Symbol", 10, QFont.Weight.Bold)
         _bfont_sym = QFont("Segoe UI Symbol", 9)
         btn_add_type = QPushButton("+")
         btn_add_type.setToolTip("Aggiungi tipologia personalizzata")
         btn_add_type.setFixedWidth(30)
         btn_add_type.setFont(_bfont_add)
-        btn_add_type.setStyleSheet("QPushButton { background-color: #3a8a3a; color: #ffffff; border-radius: 4px; border: none; }")
+        btn_add_type.setStyleSheet(_BTN_ADD)
         btn_add_type.clicked.connect(self._add_custom_type)
         self.btn_edit_type = QPushButton("\u270f")
         self.btn_edit_type.setToolTip("Modifica tipologia personalizzata selezionata")
         self.btn_edit_type.setFixedWidth(30)
         self.btn_edit_type.setFont(_bfont_sym)
-        self.btn_edit_type.setStyleSheet("QPushButton { background-color: #3a5a8a; color: #ffffff; border-radius: 4px; border: none; }")
+        self.btn_edit_type.setStyleSheet(_BTN_SYM.replace("color", "background-color: #3a5a8a; color"))
         self.btn_edit_type.clicked.connect(self._edit_custom_type)
         self.btn_edit_type.setVisible(False)
         self.btn_del_type = QPushButton("\u2715")
         self.btn_del_type.setToolTip("Elimina tipologia personalizzata selezionata")
         self.btn_del_type.setFixedWidth(30)
         self.btn_del_type.setFont(_bfont_sym)
-        self.btn_del_type.setStyleSheet("QPushButton { background-color: #8a3a3a; color: #ffffff; border-radius: 4px; border: none; }")
+        self.btn_del_type.setStyleSheet(_BTN_SYM.replace("color", "background-color: #8a3a3a; color"))
         self.btn_del_type.clicked.connect(self._delete_custom_type)
         self.btn_del_type.setVisible(False)
         type_layout.addWidget(lbl_type)
@@ -404,7 +406,13 @@ class AdvancedOCRDialog(QDialog):
 
     def _delete_custom_type(self):
         label = self.combo_type.currentText()
-        if QMessageBox.question(self, "Elimina Tipologia", f"Rimuovere '{label}' dalla lista?") == QMessageBox.StandardButton.Yes:
+        msg = QMessageBox(self)
+        msg.setWindowTitle("Elimina Tipologia")
+        msg.setText(f"Rimuovere '{label}' dalla lista?")
+        btn_si = msg.addButton("S\u00ec", QMessageBox.ButtonRole.YesRole)
+        msg.addButton("No", QMessageBox.ButtonRole.NoRole)
+        msg.exec()
+        if msg.clickedButton() == btn_si:
             self._dtm.delete_custom_type(label)
             idx = self.combo_type.findText(label)
             if idx >= 0:
