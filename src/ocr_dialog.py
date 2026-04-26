@@ -224,14 +224,29 @@ class AdvancedOCRDialog(QDialog):
         layout.addLayout(file_layout)
 
         # Tipologia Documentale
-        from ocr_prompts import get_available_types
+        from document_type_manager import DocumentTypeManager
+        self._dtm = DocumentTypeManager()
         type_layout = QHBoxLayout()
         lbl_type = QLabel(self.gm("Tipologia Documento:"))
         lbl_type.setStyleSheet("color: #f5f0e8; font-weight: bold;")
         self.combo_type = QComboBox()
-        self.combo_type.addItems(get_available_types())
+        self.combo_type.addItems(self._dtm.get_labels(service="ocr"))
+        self.combo_type.currentIndexChanged.connect(self._on_type_changed_ocr)
+        btn_add_type = QPushButton("＋")
+        btn_add_type.setToolTip("Aggiungi tipologia personalizzata")
+        btn_add_type.setFixedWidth(30)
+        btn_add_type.setStyleSheet("background-color: #2a5a2a; color: #fff; border-radius: 4px; font-weight: bold;")
+        btn_add_type.clicked.connect(self._add_custom_type)
+        self.btn_edit_type = QPushButton("✎")
+        self.btn_edit_type.setToolTip("Modifica tipologia personalizzata selezionata")
+        self.btn_edit_type.setFixedWidth(30)
+        self.btn_edit_type.setStyleSheet("background-color: #2a3a5a; color: #fff; border-radius: 4px;")
+        self.btn_edit_type.clicked.connect(self._edit_custom_type)
+        self.btn_edit_type.setVisible(False)
         type_layout.addWidget(lbl_type)
         type_layout.addWidget(self.combo_type, 1)
+        type_layout.addWidget(btn_add_type)
+        type_layout.addWidget(self.btn_edit_type)
         layout.addLayout(type_layout)
 
         # Provider Selection
@@ -346,6 +361,33 @@ class AdvancedOCRDialog(QDialog):
         btns.addWidget(self.btn_start)
         btns.addWidget(self.btn_close)
         layout.addLayout(btns)
+
+    def _on_type_changed_ocr(self):
+        """Mostra/nasconde il pulsante Modifica in base al tipo selezionato."""
+        is_custom = self._dtm.is_custom(self.combo_type.currentText())
+        self.btn_edit_type.setVisible(is_custom)
+
+    def _add_custom_type(self):
+        from new_doc_type_dialog import NewDocTypeDialog
+        dlg = NewDocTypeDialog(self)
+        if dlg.exec() and dlg.result_data:
+            ok = self._dtm.add_custom_type(**dlg.result_data)
+            if ok:
+                label = self._dtm.CUSTOM_PREFIX + dlg.result_data["label"]
+                self.combo_type.addItem(label)
+                self.combo_type.setCurrentText(label)
+            else:
+                QMessageBox.warning(self, "Attenzione", "Una tipologia con questo nome esiste già.")
+
+    def _edit_custom_type(self):
+        label = self.combo_type.currentText()
+        data = self._dtm.get_custom_data(label)
+        if not data:
+            return
+        from new_doc_type_dialog import NewDocTypeDialog
+        dlg = NewDocTypeDialog(self, existing_data=data)
+        if dlg.exec() and dlg.result_data:
+            self._dtm.update_custom_type(**dlg.result_data)
 
     def open_key_manager(self):
         from key_manager import KeyManager
@@ -479,11 +521,17 @@ class AdvancedOCRDialog(QDialog):
         elif "Anthropic" in self.combo_prov.currentText(): prov_str = "Claude"
 
         # Costruisce il prompt dalla tipologia documentale selezionata
-        from ocr_prompts import compose_ocr_prompt
         doc_type = self.combo_type.currentText()
         custom_p = self.txt_istruzioni.toPlainText().strip()
         ex_text = self.txt_esempio.toPlainText().strip()
-        final_prompt = compose_ocr_prompt(doc_type, custom_p, ex_text)
+        if self._dtm.is_custom(doc_type):
+            # Tipo custom: usa il prompt utente, con fallback al generico
+            custom_ocr = self._dtm.get_ocr_prompt(doc_type) or ""
+            from ocr_prompts import compose_ocr_prompt
+            final_prompt = compose_ocr_prompt("Manoscritto Generico / Altro", custom_ocr + ("\n" + custom_p if custom_p else ""), ex_text)
+        else:
+            from ocr_prompts import compose_ocr_prompt
+            final_prompt = compose_ocr_prompt(doc_type, custom_p, ex_text)
 
         self.btn_start.setEnabled(False)
         self.progress_bar.setValue(0)

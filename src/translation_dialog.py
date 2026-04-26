@@ -49,11 +49,13 @@ class TranslationDialog(QDialog):
         self.combo_prov.addItems(["Google Gemini (Free/Consigliato)", "OpenAI (GPT-4o)", "Anthropic (Claude 3.5)"])
 
         # Tipologia Documentale
-        from translation_prompts import get_available_types
+        from document_type_manager import DocumentTypeManager
+        self._dtm = DocumentTypeManager()
         lbl_type = QLabel(self.gm("Tipologia Documento:"))
         lbl_type.setStyleSheet("color: #f5f0e8; font-weight: bold;")
         self.combo_type = QComboBox()
-        self.combo_type.addItems(get_available_types())
+        self.combo_type.addItems(self._dtm.get_labels(service="translation"))
+        self.combo_type.currentIndexChanged.connect(self._on_type_changed_tr)
 
         self.lbl_api = QLabel(self.gm("API Key:"))
         api_inner_ly = QHBoxLayout()
@@ -81,8 +83,21 @@ class TranslationDialog(QDialog):
         top_layout.addWidget(lbl_prov)
         top_layout.addWidget(self.combo_prov)
         top_layout.addSpacing(20)
+        btn_add_type_tr = QPushButton("＋")
+        btn_add_type_tr.setToolTip("Aggiungi tipologia personalizzata")
+        btn_add_type_tr.setFixedWidth(30)
+        btn_add_type_tr.setStyleSheet("background-color: #2a5a2a; color: #fff; border-radius: 4px; font-weight: bold;")
+        btn_add_type_tr.clicked.connect(self._add_custom_type)
+        self.btn_edit_type = QPushButton("✎")
+        self.btn_edit_type.setToolTip("Modifica tipologia personalizzata selezionata")
+        self.btn_edit_type.setFixedWidth(30)
+        self.btn_edit_type.setStyleSheet("background-color: #2a3a5a; color: #fff; border-radius: 4px;")
+        self.btn_edit_type.clicked.connect(self._edit_custom_type)
+        self.btn_edit_type.setVisible(False)
         top_layout.addWidget(lbl_type)
         top_layout.addWidget(self.combo_type)
+        top_layout.addWidget(btn_add_type_tr)
+        top_layout.addWidget(self.btn_edit_type)
         top_layout.addSpacing(20)
         top_layout.addWidget(self.lbl_api)
         top_layout.addLayout(api_inner_ly)
@@ -168,6 +183,32 @@ class TranslationDialog(QDialog):
         
         main_layout.addLayout(bottom_ly)
 
+    def _on_type_changed_tr(self):
+        is_custom = self._dtm.is_custom(self.combo_type.currentText())
+        self.btn_edit_type.setVisible(is_custom)
+
+    def _add_custom_type(self):
+        from new_doc_type_dialog import NewDocTypeDialog
+        dlg = NewDocTypeDialog(self)
+        if dlg.exec() and dlg.result_data:
+            ok = self._dtm.add_custom_type(**dlg.result_data)
+            if ok:
+                label = self._dtm.CUSTOM_PREFIX + dlg.result_data["label"]
+                self.combo_type.addItem(label)
+                self.combo_type.setCurrentText(label)
+            else:
+                QMessageBox.warning(self, "Attenzione", "Una tipologia con questo nome esiste già.")
+
+    def _edit_custom_type(self):
+        label = self.combo_type.currentText()
+        data = self._dtm.get_custom_data(label)
+        if not data:
+            return
+        from new_doc_type_dialog import NewDocTypeDialog
+        dlg = NewDocTypeDialog(self, existing_data=data)
+        if dlg.exec() and dlg.result_data:
+            self._dtm.update_custom_type(**dlg.result_data)
+
     def load_settings(self):
         try:
             from config_utils import _config_file_path
@@ -236,13 +277,24 @@ class TranslationDialog(QDialog):
         elif prov_str == "Anthropic": prov_str = "Claude"
 
         # Costruisce il prompt dalla tipologia documentale selezionata
-        from translation_prompts import compose_translation_prompt
-        final_prompt_text = compose_translation_prompt(
-            doc_type=self.combo_type.currentText(),
-            source_text=src_text,
-            target_lang=self.combo_lingua.currentText(),
-            context_info=self.txt_ctx.toPlainText().strip()
-        )
+        doc_type = self.combo_type.currentText()
+        if self._dtm.is_custom(doc_type):
+            custom_tr = self._dtm.get_translation_prompt(doc_type) or ""
+            from translation_prompts import compose_translation_prompt
+            final_prompt_text = compose_translation_prompt(
+                doc_type="Traduzione Libera (Nessun Contesto Specifico)",
+                source_text=src_text,
+                target_lang=self.combo_lingua.currentText(),
+                context_info=(custom_tr + "\n" + self.txt_ctx.toPlainText().strip()).strip()
+            )
+        else:
+            from translation_prompts import compose_translation_prompt
+            final_prompt_text = compose_translation_prompt(
+                doc_type=doc_type,
+                source_text=src_text,
+                target_lang=self.combo_lingua.currentText(),
+                context_info=self.txt_ctx.toPlainText().strip()
+            )
 
         self.btn_traduci.setEnabled(False)
         self.progress_bar.setVisible(True)

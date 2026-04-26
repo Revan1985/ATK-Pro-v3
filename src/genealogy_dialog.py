@@ -16,7 +16,7 @@ try:
     import google.generativeai as genai
 except ImportError:
     pass
-from genealogy_prompts import get_available_types, compose_extraction_prompt
+from genealogy_prompts import compose_extraction_prompt
 from gedcom_factory import GedcomGenerator
 from key_manager import KeyManager
 from multi_provider_handlers import get_handler
@@ -200,8 +200,28 @@ class GenealogyDialog(QDialog):
 
         # 3. BANCA DATI NOTE
         fl.addWidget(QLabel("3. BANCA DATI NOTE PALEOGRAFICHE", styleSheet=t_css))
-        ft = QFormLayout(); self.combo_type = QComboBox(); self.combo_type.addItems(get_available_types()); self.combo_type.setStyleSheet(inp_css)
-        ft.addRow(QLabel("Atto:", styleSheet=lbl_css), self.combo_type)
+        ft = QFormLayout()
+        from document_type_manager import DocumentTypeManager
+        self._dtm = DocumentTypeManager()
+        self.combo_type = QComboBox(); self.combo_type.addItems(self._dtm.get_labels(service="gedcom")); self.combo_type.setStyleSheet(inp_css)
+        self.combo_type.currentIndexChanged.connect(self._on_type_changed_geo)
+        btn_add_type_geo = QPushButton("＋")
+        btn_add_type_geo.setToolTip("Aggiungi tipologia personalizzata")
+        btn_add_type_geo.setFixedWidth(30)
+        btn_add_type_geo.setStyleSheet("background-color: #2a5a2a; color: #fff; border-radius: 4px; font-weight: bold;")
+        btn_add_type_geo.clicked.connect(self._add_custom_type)
+        self.btn_edit_type = QPushButton("✎")
+        self.btn_edit_type.setToolTip("Modifica tipologia personalizzata selezionata")
+        self.btn_edit_type.setFixedWidth(30)
+        self.btn_edit_type.setStyleSheet("background-color: #2a3a5a; color: #fff; border-radius: 4px;")
+        self.btn_edit_type.clicked.connect(self._edit_custom_type)
+        self.btn_edit_type.setVisible(False)
+        type_row = QHBoxLayout()
+        type_row.addWidget(self.combo_type, 1)
+        type_row.addWidget(btn_add_type_geo)
+        type_row.addWidget(self.btn_edit_type)
+        type_widget = QWidget(); type_widget.setLayout(type_row)
+        ft.addRow(QLabel("Atto:", styleSheet=lbl_css), type_widget)
         self.combo_presets = QComboBox(); self.combo_presets.setStyleSheet(inp_css)
         ft.addRow(QLabel("Richiama Nota:", styleSheet=lbl_css), self.combo_presets); fl.addLayout(ft)
         self.txt_tips = QTextEdit(); self.txt_tips.setStyleSheet(inp_css); self.txt_tips.setMinimumHeight(120); fl.addWidget(self.txt_tips)
@@ -237,6 +257,33 @@ class GenealogyDialog(QDialog):
         self.combo_source.currentIndexChanged.connect(self.save_config)
         self.combo_type.currentIndexChanged.connect(self.save_config)
         self.combo_provider.currentIndexChanged.connect(self.save_config)
+
+    def _on_type_changed_geo(self):
+        is_custom = self._dtm.is_custom(self.combo_type.currentText())
+        self.btn_edit_type.setVisible(is_custom)
+
+    def _add_custom_type(self):
+        from new_doc_type_dialog import NewDocTypeDialog
+        dlg = NewDocTypeDialog(self)
+        if dlg.exec() and dlg.result_data:
+            ok = self._dtm.add_custom_type(**dlg.result_data)
+            if ok:
+                label = self._dtm.CUSTOM_PREFIX + dlg.result_data["label"]
+                self.combo_type.addItem(label)
+                self.combo_type.setCurrentText(label)
+            else:
+                from PySide6.QtWidgets import QMessageBox
+                QMessageBox.warning(self, "Attenzione", "Una tipologia con questo nome esiste già.")
+
+    def _edit_custom_type(self):
+        label = self.combo_type.currentText()
+        data = self._dtm.get_custom_data(label)
+        if not data:
+            return
+        from new_doc_type_dialog import NewDocTypeDialog
+        dlg = NewDocTypeDialog(self, existing_data=data)
+        if dlg.exec() and dlg.result_data:
+            self._dtm.update_custom_type(**dlg.result_data)
 
     def load_config(self):
         try:
@@ -336,11 +383,18 @@ class GenealogyDialog(QDialog):
             logging.info(f"[SINCRO] Output dirottato su cartella Base: {self.output_folder}")
 
         # SINCRO v15.1: Bonifica caratteri illegali per Windows (/)
-        tag = self.combo_type.currentText().replace(" ", "_").replace("/", "_").lower()
+        doc_type_raw = self.combo_type.currentText()
+        tag = doc_type_raw.replace(" ", "_").replace("/", "_").replace("★ ", "").lower()
         fp = os.path.join(self.output_folder, f"genealogia_{tag}.ged")
         self.btn_run.setEnabled(False); self.progress_bar.setVisible(True); self.progress_bar.setValue(1)
-        # Passiamo il Provider scelto invece della singola chiave
-        self.worker = GenealogyWorker(self.selected_files, self.combo_type.currentText(), self.txt_tips.toPlainText(), self.combo_provider.currentText(), fp, self.base_path)
+        # Per tipi custom, inietta il prompt gedcom nei tips aggiuntivi
+        tips_text = self.txt_tips.toPlainText()
+        if self._dtm.is_custom(doc_type_raw):
+            custom_gedcom = self._dtm.get_gedcom_prompt(doc_type_raw) or ""
+            if custom_gedcom:
+                tips_text = custom_gedcom + ("\n" + tips_text if tips_text else "")
+            doc_type_raw = "Ricerca Libera / Altro"  # fallback built-in nel worker
+        self.worker = GenealogyWorker(self.selected_files, doc_type_raw, tips_text, self.combo_provider.currentText(), fp, self.base_path)
         self.worker.progress.connect(lambda v,m: (self.progress_bar.setValue(v), self.progress_bar.setFormat(m)))
         self.worker.request_provider_change.connect(self.handle_provider_change)
         self.worker.finished.connect(self.process_finished); self.worker.error.connect(self.process_error); self.worker.start()
