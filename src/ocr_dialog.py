@@ -154,46 +154,7 @@ class AdvancedOCRDialog(QDialog):
 
     def gm(self, text):
         res = get_msg(self.glossario_data, text, self.lingua)
-        if res and res != text: return res
-        
-        # Override per lingua inglese per chiavi nuove non nel glossario
-        if self.lingua.lower() == 'en':
-            en_dict = {
-                "OCR Avanzato (Trascrizione Diplomatica)": "Advanced OCR (Diplomatic Transcription)",
-                "File Selezionati:": "Selected Files:",
-                "Nessun file selezionato": "No file selected",
-                "Seleziona File (Immagini/PDF)": "Select Files (Images/PDF)",
-                "Seleziona Provider IA:": "Select AI Provider:",
-                "Google Gemini (Free/Consigliato)": "Google Gemini (Free/Recommended)",
-                "API Key per il provider scelto:": "API Key for chosen provider:",
-                "Formati di Output:": "Output Formats:",
-                "Testo Semplice (.txt)": "Plain Text (.txt)",
-                "Documento Word (.docx)": "Word Document (.docx)",
-                "XML TEI per Trascrizione (.xml)": "TEI XML Transcription (.xml)",
-                "Avvia OCR": "Start OCR",
-                "Chiudi": "Close",
-                "Seleziona Immagini o PDF": "Select Images or PDF",
-                "file selezionati": "files selected",
-                "Seleziona cartella di destinazione": "Select destination folder",
-                "Attenzione": "Warning",
-                "Errore": "Error",
-                "Completato": "Completed",
-                "Estrazione OCR completata con successo.": "OCR extraction completed successfully.",
-                "Seleziona almeno un file.": "Please select at least one file.",
-                "Inserisci la API Key valida.": "Please enter a valid API Key.",
-                "Seleziona almeno un formato di output.": "Please check at least one output format.",
-                "Istruzioni Aggiuntive per l'IA (Opzionale):": "Additional AI Instructions (Optional):",
-                "Es: I nomi dei mesi sono in dialetto, ometti i timbri a margine...": "Ex: Month names are in dialect, ignore stamps on the margins...",
-                "Trascrizione di Riferimento (Opzionale, migliora la lettura):": "Reference Transcription (Optional, improves reading accuracy):",
-                "Copia qui la trascrizione esatta della primissima pagina. L'IA imparerà la calligrafia incrociandola con le tue parole.": "Paste the exact transcription of the very first page here. The AI will learn the handwriting by cross-referencing it with your words.",
-                "Salva": "Save",
-                "-- Istruzioni Salvate --": "-- Saved Instructions --",
-                "Istruzione salvata nell'archivio.": "Instruction saved in the archive.",
-                "Cassaforte": "Key Safe"
-            }
-            return en_dict.get(text, text)
-            
-        return text
+        return res if (res and res != text) else text
 
     def setup_ui(self):
         self.setWindowTitle(self.gm("OCR Avanzato (Trascrizione Diplomatica)"))
@@ -381,7 +342,7 @@ class AdvancedOCRDialog(QDialog):
 
     def _add_custom_type(self):
         from new_doc_type_dialog import NewDocTypeDialog
-        dlg = NewDocTypeDialog(self)
+        dlg = NewDocTypeDialog(self, lingua=self.lingua, glossario_data=self.glossario_data)
         if dlg.exec() and dlg.result_data:
             ok = self._dtm.add_custom_type(**dlg.result_data)
             if ok:
@@ -397,7 +358,7 @@ class AdvancedOCRDialog(QDialog):
         if not data:
             return
         from new_doc_type_dialog import NewDocTypeDialog
-        dlg = NewDocTypeDialog(self, existing_data=data)
+        dlg = NewDocTypeDialog(self, existing_data=data, lingua=self.lingua, glossario_data=self.glossario_data)
         if dlg.exec() and dlg.result_data:
             self._dtm.update_custom_type(**dlg.result_data)
 

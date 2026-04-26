@@ -202,7 +202,7 @@ class TranslationDialog(QDialog):
 
     def _add_custom_type(self):
         from new_doc_type_dialog import NewDocTypeDialog
-        dlg = NewDocTypeDialog(self)
+        dlg = NewDocTypeDialog(self, lingua=self.lingua, glossario_data=self.glossario_data)
         if dlg.exec() and dlg.result_data:
             ok = self._dtm.add_custom_type(**dlg.result_data)
             if ok:
@@ -218,7 +218,7 @@ class TranslationDialog(QDialog):
         if not data:
             return
         from new_doc_type_dialog import NewDocTypeDialog
-        dlg = NewDocTypeDialog(self, existing_data=data)
+        dlg = NewDocTypeDialog(self, existing_data=data, lingua=self.lingua, glossario_data=self.glossario_data)
         if dlg.exec() and dlg.result_data:
             self._dtm.update_custom_type(**dlg.result_data)
 

@@ -10,6 +10,19 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 
 
+def get_msg(glossario, chiave, lingua):
+    """Cerca chiave nel glossario e restituisce la traduzione nella lingua richiesta."""
+    if not glossario:
+        return None
+    for sezione in glossario.values():
+        if not isinstance(sezione, list):
+            continue
+        for voce in sezione:
+            if voce.get("messaggio") == chiave:
+                return voce.get(lingua) or voce.get("IT") or chiave
+    return None
+
+
 class NewDocTypeDialog(QDialog):
     """
     Dialogo per aggiungere o modificare una tipologia documentale custom.
@@ -66,13 +79,21 @@ class NewDocTypeDialog(QDialog):
         ),
     }
 
-    def __init__(self, parent=None, existing_data: dict | None = None):
+    def gm(self, chiave: str) -> str:
+        """Restituisce la traduzione di chiave nella lingua del dialog."""
+        result = get_msg(self.glossario_data, chiave, self.lingua)
+        return result if result else chiave
+
+    def __init__(self, parent=None, existing_data: dict | None = None,
+                 lingua: str = "it", glossario_data: dict | None = None):
         super().__init__(parent)
         self.existing_data = existing_data
         self.result_data: dict | None = None  # popolato al salvataggio
+        self.lingua = lingua.upper()
+        self.glossario_data = glossario_data or {}
 
         is_edit = existing_data is not None
-        self.setWindowTitle("Modifica Tipologia" if is_edit else "Nuova Tipologia Documentale")
+        self.setWindowTitle(self.gm("Modifica Tipologia") if is_edit else self.gm("Nuova Tipologia Documentale"))
         self.setMinimumWidth(560)
         self.setStyleSheet(self.STYLE)
 
@@ -81,7 +102,7 @@ class NewDocTypeDialog(QDialog):
         layout.setContentsMargins(16, 16, 16, 16)
 
         # --- Nome ---
-        lbl_name = QLabel("Nome della tipologia: *")
+        lbl_name = QLabel(self.gm("Nome della tipologia: *"))
         lbl_name.setStyleSheet("font-weight: bold;")
         self.txt_name = QLineEdit()
         self.txt_name.setPlaceholderText("Es: Catasto Napoleonico, Estimo Comunale, ...")
@@ -115,20 +136,20 @@ class NewDocTypeDialog(QDialog):
         layout.addWidget(tabs)
 
         # Nota esplicativa
-        note = QLabel(
+        note = QLabel(self.gm(
             "I campi prompt sono opzionali. Se lasciati vuoti, il servizio userà "
             "automaticamente il template \"Manoscritto Generico\"."
-        )
+        ))
         note.setWordWrap(True)
         note.setStyleSheet("color: #888; font-size: 11px;")
         layout.addWidget(note)
 
         # --- Pulsanti ---
         btns = QHBoxLayout()
-        btn_cancel = QPushButton("Annulla")
+        btn_cancel = QPushButton(self.gm("Annulla"))
         btn_cancel.clicked.connect(self.reject)
 
-        btn_save = QPushButton("✔ Salva Tipo" if not is_edit else "✔ Salva Modifiche")
+        btn_save = QPushButton(self.gm("✔ Salva Tipo") if not is_edit else self.gm("✔ Salva Modifiche"))
         btn_save.setObjectName("btn_save")
         btn_save.clicked.connect(self._save)
 
@@ -165,7 +186,7 @@ class NewDocTypeDialog(QDialog):
     def _save(self):
         label = self.txt_name.text().strip()
         if not label:
-            QMessageBox.warning(self, "Attenzione", "Il nome della tipologia è obbligatorio.")
+            QMessageBox.warning(self, self.gm("Attenzione"), self.gm("Il nome della tipologia è obbligatorio."))
             return
 
         self.result_data = {
