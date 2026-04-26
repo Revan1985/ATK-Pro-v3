@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                              QPushButton, QComboBox, QTextEdit, QFileDialog, 
                              QProgressBar, QMessageBox, QLineEdit, QFormLayout, QFrame, QWidget, QScrollArea, QInputDialog)
 from PySide6.QtCore import Qt, QThread, Signal, QBuffer, QIODevice, QMutex, QWaitCondition
-from PySide6.QtGui import QImage
+from PySide6.QtGui import QImage, QFont
 
 try:
     import google.generativeai as genai
@@ -261,6 +261,7 @@ class GenealogyDialog(QDialog):
     def _on_type_changed_geo(self):
         is_custom = self._dtm.is_custom(self.combo_type.currentText())
         self.btn_edit_type.setVisible(is_custom)
+        self.btn_del_type.setVisible(is_custom)
 
     def _add_custom_type(self):
         from new_doc_type_dialog import NewDocTypeDialog
@@ -284,6 +285,15 @@ class GenealogyDialog(QDialog):
         dlg = NewDocTypeDialog(self, existing_data=data)
         if dlg.exec() and dlg.result_data:
             self._dtm.update_custom_type(**dlg.result_data)
+
+    def _delete_custom_type(self):
+        from PySide6.QtWidgets import QMessageBox
+        label = self.combo_type.currentText()
+        if QMessageBox.question(self, "Elimina Tipologia", f"Rimuovere '{label}' dalla lista?") == QMessageBox.StandardButton.Yes:
+            self._dtm.delete_custom_type(label)
+            idx = self.combo_type.findText(label)
+            if idx >= 0:
+                self.combo_type.removeItem(idx)
 
     def load_config(self):
         try:
