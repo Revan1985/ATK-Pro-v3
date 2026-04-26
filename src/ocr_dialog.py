@@ -206,7 +206,7 @@ class AdvancedOCRDialog(QDialog):
             QPushButton:hover { background-color: #333; }
             QComboBox, QLineEdit, QCheckBox { background-color: #2a2a2a; color: #fff; padding: 4px; border: 1px solid #555; border-radius: 4px; }
             QTextEdit { background-color: #2a2a2a; color: #ccc; border: 1px solid #555; border-radius: 4px; }
-            QPushButton#btn_add_type { padding: 0px; font-family: 'Segoe UI Symbol'; font-size: 14pt; color: #a67c52; }
+            QPushButton#btn_add_type { padding: 0px 0px 3px 0px; font-family: 'Segoe UI Symbol'; font-size: 13pt; color: #a67c52; }
             QPushButton#btn_edit_type { padding: 0px; font-family: 'Segoe UI Symbol'; font-size: 11pt; }
             QPushButton#btn_del_type { background-color: #2a1818; border-color: #8a3a3a; padding: 0px; font-family: 'Segoe UI Symbol'; font-size: 11pt; color: #cc6666; }
             QPushButton#btn_del_type:hover { background-color: #3a2020; }
@@ -239,18 +239,18 @@ class AdvancedOCRDialog(QDialog):
         btn_add_type = QPushButton("+")
         btn_add_type.setObjectName("btn_add_type")
         btn_add_type.setToolTip(self.gm("Aggiungi tipologia personalizzata"))
-        btn_add_type.setFixedWidth(30)
+        btn_add_type.setFixedSize(30, 30)
         btn_add_type.clicked.connect(self._add_custom_type)
         self.btn_edit_type = QPushButton("\u270f")
         self.btn_edit_type.setObjectName("btn_edit_type")
         self.btn_edit_type.setToolTip(self.gm("Modifica tipologia personalizzata selezionata"))
-        self.btn_edit_type.setFixedWidth(30)
+        self.btn_edit_type.setFixedSize(30, 30)
         self.btn_edit_type.clicked.connect(self._edit_custom_type)
         self.btn_edit_type.setVisible(False)
         self.btn_del_type = QPushButton("\u2715")
         self.btn_del_type.setObjectName("btn_del_type")
         self.btn_del_type.setToolTip(self.gm("Elimina tipologia personalizzata selezionata"))
-        self.btn_del_type.setFixedWidth(30)
+        self.btn_del_type.setFixedSize(30, 30)
         self.btn_del_type.clicked.connect(self._delete_custom_type)
         self.btn_del_type.setVisible(False)
         type_layout.addWidget(lbl_type)

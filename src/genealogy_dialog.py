@@ -187,7 +187,7 @@ class GenealogyDialog(QDialog):
         self.setStyleSheet("""
             QDialog { background-color: #181818; color: #fff; border: 2px solid #a67c52; }
             QLabel { color: #fff; }
-            QPushButton#btn_add_type { background-color: #222; border: 1px solid #a67c52; padding: 0px; border-radius: 4px; font-family: 'Segoe UI Symbol'; font-size: 14pt; font-weight: bold; color: #a67c52; }
+            QPushButton#btn_add_type { background-color: #222; border: 1px solid #a67c52; padding: 0px 0px 3px 0px; border-radius: 4px; font-family: 'Segoe UI Symbol'; font-size: 13pt; font-weight: bold; color: #a67c52; }
             QPushButton#btn_add_type:hover { background-color: #333; }
             QPushButton#btn_edit_type { background-color: #222; border: 1px solid #a67c52; padding: 0px; border-radius: 4px; font-family: 'Segoe UI Symbol'; font-size: 11pt; color: #fff; }
             QPushButton#btn_edit_type:hover { background-color: #333; }
@@ -225,20 +225,27 @@ class GenealogyDialog(QDialog):
         self.combo_type = QComboBox(); self.combo_type.addItems(self._dtm.get_labels(service="gedcom")); self.combo_type.setStyleSheet(inp_css)
         self.combo_type.currentIndexChanged.connect(self._on_type_changed_geo)
         btn_add_type_geo = QPushButton("+")
+        btn_add_type_geo.setObjectName("btn_add_type")
         btn_add_type_geo.setToolTip(self.gm("Aggiungi tipologia personalizzata"))
-        btn_add_type_geo.setFixedWidth(30)
-        btn_add_type_geo.setStyleSheet("background-color: #3a8a3a; color: #ffffff; border-radius: 4px; font-weight: bold; font-family: Arial, sans-serif; font-size: 14px;")
+        btn_add_type_geo.setFixedSize(30, 30)
         btn_add_type_geo.clicked.connect(self._add_custom_type)
-        self.btn_edit_type = QPushButton("✏")
+        self.btn_edit_type = QPushButton("\u270f")
+        self.btn_edit_type.setObjectName("btn_edit_type")
         self.btn_edit_type.setToolTip(self.gm("Modifica tipologia personalizzata selezionata"))
-        self.btn_edit_type.setFixedWidth(30)
-        self.btn_edit_type.setStyleSheet("background-color: #3a5a8a; color: #ffffff; border-radius: 4px; font-family: Arial, sans-serif; font-size: 13px;")
+        self.btn_edit_type.setFixedSize(30, 30)
         self.btn_edit_type.clicked.connect(self._edit_custom_type)
         self.btn_edit_type.setVisible(False)
+        self.btn_del_type = QPushButton("\u2715")
+        self.btn_del_type.setObjectName("btn_del_type")
+        self.btn_del_type.setToolTip(self.gm("Elimina tipologia personalizzata selezionata"))
+        self.btn_del_type.setFixedSize(30, 30)
+        self.btn_del_type.clicked.connect(self._delete_custom_type)
+        self.btn_del_type.setVisible(False)
         type_row = QHBoxLayout()
         type_row.addWidget(self.combo_type, 1)
         type_row.addWidget(btn_add_type_geo)
         type_row.addWidget(self.btn_edit_type)
+        type_row.addWidget(self.btn_del_type)
         type_widget = QWidget(); type_widget.setLayout(type_row)
         ft.addRow(QLabel("Atto:", styleSheet=lbl_css), type_widget)
         self.combo_presets = QComboBox(); self.combo_presets.setStyleSheet(inp_css)
