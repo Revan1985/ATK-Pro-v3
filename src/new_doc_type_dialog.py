@@ -21,8 +21,8 @@ class NewDocTypeDialog(QDialog):
     """
 
     STYLE = """
-        QDialog { background-color: #1e1e1e; color: #f5f0e8; }
-        QLabel { color: #f5f0e8; }
+        QDialog { background-color: #181818; color: #fff; border: 2px solid #a67c52; }
+        QLabel { color: #fff; }
         QLineEdit, QTextEdit {
             background-color: #2a2a2a;
             color: #f5f0e8;
@@ -30,21 +30,21 @@ class NewDocTypeDialog(QDialog):
             border-radius: 4px;
             padding: 4px;
         }
-        QTabWidget::pane { border: 1px solid #555; }
+        QTabWidget::pane { border: 1px solid #a67c52; }
         QTabBar::tab {
             background: #2a2a2a; color: #aaa;
             padding: 6px 14px; border-radius: 3px;
         }
-        QTabBar::tab:selected { background: #3a3a3a; color: #f5f0e8; }
+        QTabBar::tab:selected { background: #333; color: #fff; }
         QPushButton {
-            background-color: #3a3a3a; color: #f5f0e8;
-            border: 1px solid #666; padding: 5px 14px; border-radius: 4px;
+            background-color: #222; color: #fff;
+            border: 1px solid #a67c52; padding: 5px 14px; border-radius: 4px;
         }
-        QPushButton:hover { background-color: #4a4a4a; }
+        QPushButton:hover { background-color: #333; }
         QPushButton#btn_save {
-            background-color: #2a5a2a; border-color: #4a9a4a; font-weight: bold;
+            background-color: #a67c52; border: none; color: #fff; font-weight: bold;
         }
-        QPushButton#btn_save:hover { background-color: #3a7a3a; }
+        QPushButton#btn_save:hover { background-color: #c09060; }
     """
 
     # Placeholder per ciascun tab (aiuta l'utente a capire cosa scrivere)

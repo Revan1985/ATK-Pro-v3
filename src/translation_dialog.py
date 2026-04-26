@@ -31,13 +31,17 @@ class TranslationDialog(QDialog):
 
     def setup_ui(self):
         self.setStyleSheet("""
-            QDialog { background-color: #1a1a1a; color: #fff; }
-            QLabel { color: #e6c891; font-weight: bold; font-size: 13px; }
-            QPushButton { background-color: #333; border: 1px solid #a67c52; padding: 6px 12px; border-radius: 4px; font-weight: bold; color: #fff; }
-            QPushButton:hover { background-color: #444; }
-            #btn_traduci { background-color: #a67c52; color: #fff; padding: 10px; font-size: 14px; }
-            QTextEdit { background-color: #262626; color: #ddd; border: 1px solid #555; border-radius: 3px; font-size: 14px; padding: 5px; }
-            QComboBox, QLineEdit { background-color: #333; color: #fff; border: 1px solid #555; border-radius: 3px; padding: 4px; }
+            QDialog { background-color: #181818; color: #fff; border: 2px solid #a67c52; }
+            QLabel { color: #fff; font-weight: bold; font-size: 13px; }
+            QPushButton { background-color: #222; border: 1px solid #a67c52; padding: 6px 18px; border-radius: 6px; font-weight: bold; color: #fff; }
+            QPushButton:hover { background-color: #333; }
+            #btn_traduci { background-color: #a67c52; color: #fff; padding: 10px; font-size: 14px; border: none; }
+            QTextEdit { background-color: #2a2a2a; color: #ccc; border: 1px solid #555; border-radius: 4px; font-size: 14px; padding: 5px; }
+            QComboBox, QLineEdit { background-color: #2a2a2a; color: #fff; border: 1px solid #555; border-radius: 4px; padding: 4px; }
+            QPushButton#btn_add_type { padding: 0px; font-family: 'Segoe UI Symbol'; font-size: 14pt; color: #a67c52; }
+            QPushButton#btn_edit_type { padding: 0px; font-family: 'Segoe UI Symbol'; font-size: 11pt; }
+            QPushButton#btn_del_type { background-color: #2a1818; border-color: #8a3a3a; padding: 0px; font-family: 'Segoe UI Symbol'; font-size: 11pt; color: #cc6666; }
+            QPushButton#btn_del_type:hover { background-color: #3a2020; }
         """)
 
         main_layout = QVBoxLayout(self)
@@ -53,7 +57,7 @@ class TranslationDialog(QDialog):
         from document_type_manager import DocumentTypeManager
         self._dtm = DocumentTypeManager()
         lbl_type = QLabel(self.gm("Tipologia Documento:"))
-        lbl_type.setStyleSheet("color: #f5f0e8; font-weight: bold;")
+        lbl_type.setStyleSheet("font-weight: bold;")
         self.combo_type = QComboBox()
         self.combo_type.addItems(self._dtm.get_labels(service="translation"))
         self.combo_type.currentIndexChanged.connect(self._on_type_changed_tr)
@@ -85,20 +89,27 @@ class TranslationDialog(QDialog):
         top_layout.addWidget(self.combo_prov)
         top_layout.addSpacing(20)
         btn_add_type_tr = QPushButton("+")
+        btn_add_type_tr.setObjectName("btn_add_type")
         btn_add_type_tr.setToolTip("Aggiungi tipologia personalizzata")
         btn_add_type_tr.setFixedWidth(30)
-        btn_add_type_tr.setStyleSheet("background-color: #3a8a3a; color: #ffffff; border-radius: 4px; font-weight: bold; font-family: Arial, sans-serif; font-size: 14px;")
         btn_add_type_tr.clicked.connect(self._add_custom_type)
-        self.btn_edit_type = QPushButton("✏")
+        self.btn_edit_type = QPushButton("\u270f")
+        self.btn_edit_type.setObjectName("btn_edit_type")
         self.btn_edit_type.setToolTip("Modifica tipologia personalizzata selezionata")
         self.btn_edit_type.setFixedWidth(30)
-        self.btn_edit_type.setStyleSheet("background-color: #3a5a8a; color: #ffffff; border-radius: 4px; font-family: Arial, sans-serif; font-size: 13px;")
         self.btn_edit_type.clicked.connect(self._edit_custom_type)
         self.btn_edit_type.setVisible(False)
+        self.btn_del_type = QPushButton("\u2715")
+        self.btn_del_type.setObjectName("btn_del_type")
+        self.btn_del_type.setToolTip("Elimina tipologia personalizzata selezionata")
+        self.btn_del_type.setFixedWidth(30)
+        self.btn_del_type.clicked.connect(self._delete_custom_type)
+        self.btn_del_type.setVisible(False)
         top_layout.addWidget(lbl_type)
         top_layout.addWidget(self.combo_type)
         top_layout.addWidget(btn_add_type_tr)
         top_layout.addWidget(self.btn_edit_type)
+        top_layout.addWidget(self.btn_del_type)
         top_layout.addSpacing(20)
         top_layout.addWidget(self.lbl_api)
         top_layout.addLayout(api_inner_ly)

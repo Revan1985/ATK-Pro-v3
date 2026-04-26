@@ -174,13 +174,22 @@ class GenealogyDialog(QDialog):
     def init_ui(self):
         self.setWindowTitle("Factory Genealogica - ATK-Pro 3.0 Escape")
         self.setMinimumSize(950, 850)
-        self.setStyleSheet("background-color: #0c0c0c; color: #ffffff;")
+        self.setStyleSheet("""
+            QDialog { background-color: #181818; color: #fff; border: 2px solid #a67c52; }
+            QLabel { color: #fff; }
+            QPushButton#btn_add_type { background-color: #222; border: 1px solid #a67c52; padding: 0px; border-radius: 4px; font-family: 'Segoe UI Symbol'; font-size: 14pt; font-weight: bold; color: #a67c52; }
+            QPushButton#btn_add_type:hover { background-color: #333; }
+            QPushButton#btn_edit_type { background-color: #222; border: 1px solid #a67c52; padding: 0px; border-radius: 4px; font-family: 'Segoe UI Symbol'; font-size: 11pt; color: #fff; }
+            QPushButton#btn_edit_type:hover { background-color: #333; }
+            QPushButton#btn_del_type { background-color: #2a1818; border: 1px solid #8a3a3a; padding: 0px; border-radius: 4px; font-family: 'Segoe UI Symbol'; font-size: 11pt; color: #cc6666; }
+            QPushButton#btn_del_type:hover { background-color: #3a2020; }
+        """)
         l = QVBoxLayout(self); l.setContentsMargins(15, 15, 15, 15)
         
-        t_css = "color: #3b82f6; font-size: 15px; font-weight: bold;"
-        lbl_css = "font-size: 13px; font-weight: bold; color: #9ca3af;"
-        inp_css = "background-color: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 7px; color: #fff;"
-        btn_css = "QPushButton { background-color: #262626; border: 1px solid #404040; border-radius: 4px; padding: 10px; font-weight: bold; } QPushButton:hover { background-color: #3b82f6; color: #000; }"
+        t_css = "color: #a67c52; font-size: 15px; font-weight: bold;"
+        lbl_css = "font-size: 13px; font-weight: bold; color: #fff;"
+        inp_css = "background-color: #2a2a2a; border: 1px solid #555; border-radius: 4px; padding: 7px; color: #fff;"
+        btn_css = "QPushButton { background-color: #222; border: 1px solid #a67c52; border-radius: 4px; padding: 10px; font-weight: bold; color: #fff; } QPushButton:hover { background-color: #333; }"
 
         scroll = QScrollArea(); scroll.setWidgetResizable(True); scroll.setStyleSheet("QScrollArea { border: none; }")
         cont = QWidget(); fl = QVBoxLayout(cont); fl.setSpacing(18)
@@ -190,13 +199,13 @@ class GenealogyDialog(QDialog):
         f_in = QFormLayout(); self.combo_source = QComboBox(); self.combo_source.addItems(["Auto-Discovery", "Vision IA", "Refinery LLM"])
         self.combo_source.setStyleSheet(inp_css); f_in.addRow(QLabel("Metodo:", styleSheet=lbl_css), self.combo_source)
         rs = QHBoxLayout(); self.btn_select = QPushButton("SFOGLIA L'ARCHIVIO 📂"); self.btn_select.setStyleSheet(btn_css); rs.addWidget(self.btn_select)
-        self.lbl_count = QLabel("0 atti pronti"); self.lbl_count.setStyleSheet("color: #f59e0b;"); rs.addWidget(self.lbl_count); rs.addStretch()
+        self.lbl_count = QLabel("0 atti pronti"); self.lbl_count.setStyleSheet("color: #a67c52;"); rs.addWidget(self.lbl_count); rs.addStretch()
         f_in.addRow(QLabel("Input:", styleSheet=lbl_css), rs); fl.addLayout(f_in)
 
         # 2. BASE INCREMENTALE
         fl.addWidget(QLabel("2. INCREMENTA BASE ESISTENTE (GEDCOM o CSV)", styleSheet=t_css))
         rb = QHBoxLayout(); self.btn_load_base = QPushButton("CARICA BASE 🧬📑"); self.btn_load_base.setStyleSheet(btn_css); rb.addWidget(self.btn_load_base)
-        self.lbl_base_path = QLabel("Lavoro nuovo"); self.lbl_base_path.setStyleSheet("color: #fbbf24; font-size: 11px;"); rb.addWidget(self.lbl_base_path); rb.addStretch(); fl.addLayout(rb)
+        self.lbl_base_path = QLabel("Lavoro nuovo"); self.lbl_base_path.setStyleSheet("color: #a67c52; font-size: 11px;"); rb.addWidget(self.lbl_base_path); rb.addStretch(); fl.addLayout(rb)
 
         # 3. BANCA DATI NOTE
         fl.addWidget(QLabel("3. BANCA DATI NOTE PALEOGRAFICHE", styleSheet=t_css))
@@ -225,13 +234,13 @@ class GenealogyDialog(QDialog):
         self.combo_presets = QComboBox(); self.combo_presets.setStyleSheet(inp_css)
         ft.addRow(QLabel("Richiama Nota:", styleSheet=lbl_css), self.combo_presets); fl.addLayout(ft)
         self.txt_tips = QTextEdit(); self.txt_tips.setStyleSheet(inp_css); self.txt_tips.setMinimumHeight(120); fl.addWidget(self.txt_tips)
-        rp = QHBoxLayout(); self.btn_save_p = QPushButton("💾 SALVA NOTA"); self.btn_save_p.setStyleSheet("background-color: #1e40af; color: white; padding: 10px; font-weight: bold;"); rp.addWidget(self.btn_save_p)
-        self.btn_del_p = QPushButton("🗑️ ELIMINA"); self.btn_del_p.setStyleSheet("background-color: #991b1b; color: white; padding: 10px; font-weight: bold;"); rp.addWidget(self.btn_del_p); fl.addLayout(rp)
+        rp = QHBoxLayout(); self.btn_save_p = QPushButton("💾 SALVA NOTA"); self.btn_save_p.setStyleSheet("background-color: #222; border: 1px solid #a67c52; color: #fff; padding: 10px; font-weight: bold;"); rp.addWidget(self.btn_save_p)
+        self.btn_del_p = QPushButton("🗑️ ELIMINA"); self.btn_del_p.setStyleSheet("background-color: #2a1818; border: 1px solid #8a3a3a; color: #cc6666; padding: 10px; font-weight: bold;"); rp.addWidget(self.btn_del_p); fl.addLayout(rp)
 
         # 4. DESTINAZIONE
         fl.addWidget(QLabel("4. DESTINAZIONE OUTPUT", styleSheet=t_css))
         ro = QHBoxLayout(); self.btn_out = QPushButton("CARTELLA OUTPUT 📂"); self.btn_out.setStyleSheet(btn_css); ro.addWidget(self.btn_out)
-        self.lbl_out_path = QLabel("output"); self.lbl_out_path.setStyleSheet("color: #10b981;"); ro.addWidget(self.lbl_out_path); ro.addStretch(); fl.addLayout(ro)
+        self.lbl_out_path = QLabel("output"); self.lbl_out_path.setStyleSheet("color: #a67c52;"); ro.addWidget(self.lbl_out_path); ro.addStretch(); fl.addLayout(ro)
 
         scroll.setWidget(cont); l.addWidget(scroll)
         
@@ -248,7 +257,7 @@ class GenealogyDialog(QDialog):
         fl.addLayout(fm)
 
         self.progress_bar = QProgressBar(); self.progress_bar.setVisible(False); l.addWidget(self.progress_bar)
-        self.btn_run = QPushButton("AVVIA ESTRAZIONE COMPLETA 🚀🧬"); self.btn_run.setMinimumHeight(60); self.btn_run.setStyleSheet("background-color: #065f46; color: white; font-weight: bold; font-size: 16px; border-radius: 4px;"); l.addWidget(self.btn_run)
+        self.btn_run = QPushButton("AVVIA ESTRAZIONE COMPLETA 🚀🧬"); self.btn_run.setMinimumHeight(60); self.btn_run.setStyleSheet("background-color: #a67c52; border: none; color: #fff; font-weight: bold; font-size: 16px; border-radius: 4px;"); l.addWidget(self.btn_run)
 
         # Connessioni
         self.btn_run.clicked.connect(self.start_process); self.btn_select.clicked.connect(self.select_files); self.btn_out.clicked.connect(self.select_output_folder)
