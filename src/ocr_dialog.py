@@ -452,6 +452,7 @@ class AdvancedOCRDialog(QDialog):
         if "OpenAI" in self.combo_prov.currentText(): prov_str_check = "OpenAI"
         elif "Anthropic" in self.combo_prov.currentText(): prov_str_check = "Claude"
         from key_manager import KeyManager
+        from config_utils import _config_file_path
         if not os.path.exists(_config_file_path()) and not KeyManager().has_keys(prov_str_check):
             QMessageBox.warning(self, "Attenzione", self.gm("Inserisci la API Key valida."))
             return

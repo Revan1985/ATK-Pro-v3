@@ -14,8 +14,9 @@ def get_best_gemini_model(api_key, preferred="flash"):
         valid = []
         for m in models:
             if 'generateContent' in m.supported_generation_methods:
-                # Evitiamo modelli sperimentali o troppo vecchi se possibile
-                if 'exp' not in m.name and 'vision' not in m.name and 'preview' not in m.name:
+                # Evitiamo alias instabili su v1 REST, modelli sperimentali o deprecated
+                if ('exp' not in m.name and 'vision' not in m.name
+                        and 'preview' not in m.name and 'latest' not in m.name):
                     valid.append(m.name.replace('models/', ''))
         
         if not valid:

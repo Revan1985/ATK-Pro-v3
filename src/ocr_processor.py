@@ -99,22 +99,24 @@ class AdvancedOCRWorker:
             img.save(buf, format="JPEG", quality=90)
             b64_img = base64.b64encode(buf.getvalue()).decode("utf-8")
 
-        # Prompt paleografico
-        prompt = (
-            "Sei un esperto di paleografia e diplomatica.\n"
-            "TRASCRIVI FEDELMENTE il testo contenuto in questa immagine.\n"
-            "REGOLE ASSOLUTE:\n"
-            "1. Mantieni la disposizione del testo originale (a capo, paragrafi).\n"
-            "2. Non aggiungere commenti, introduzioni o conclusioni.\n"
-            "3. Se il testo è incerto, usa [?].\n"
-            "4. Sciogli le abbreviazioni ovvie tra parentesi angolate < >.\n"
-            "5. Non normalizzare nomi propri o termini dialettali.\n"
-        )
-        if self.example_text:
-            prompt += f"\nTRASCRIZIONE DI ESEMPIO (stessa calligrafia):\n{self.example_text}\n"
+        # Se è stato passato un prompt composto (da compose_ocr_prompt via dialog), usarlo direttamente.
+        # Altrimenti usa il prompt generico di fallback.
         if self.custom_prompt:
-            prompt += f"\nISTRUZIONI AGGIUNTIVE:\n{self.custom_prompt}\n"
-        prompt += "\nINIZIA LA TRASCRIZIONE:"
+            prompt = self.custom_prompt
+        else:
+            prompt = (
+                "Sei un esperto di paleografia e diplomatica.\n"
+                "TRASCRIVI FEDELMENTE il testo contenuto in questa immagine.\n"
+                "REGOLE ASSOLUTE:\n"
+                "1. Mantieni la disposizione del testo originale (a capo, paragrafi).\n"
+                "2. Non aggiungere commenti, introduzioni o conclusioni.\n"
+                "3. Se il testo è incerto, usa [?].\n"
+                "4. Sciogli le abbreviazioni ovvie tra parentesi angolate < >.\n"
+                "5. Non normalizzare nomi propri o termini dialettali.\n"
+            )
+            if self.example_text:
+                prompt += f"\nTRASCRIZIONE DI ESEMPIO (stessa calligrafia):\n{self.example_text}\n"
+            prompt += "\nINIZIA LA TRASCRIZIONE:"
 
         payload = {
             "contents": [{"parts": [

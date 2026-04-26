@@ -53,12 +53,21 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- Presta attenzione ai termini medici arcaici per le cause di morte.\n"
         ),
         "Stato delle Anime / Censimento Parrocchiale": (
-            "\nTIPOLOGIA: Stato delle Anime o censimento parrocchiale (tabella strutturata).\n"
-            "- Il documento è organizzato in colonne: Casa, Famiglia, Progressivo, Cognome, Nome,\n"
-            "  Età, Stato civile (M/F), Religione, Patria, Professione, Osservazioni.\n"
-            "- I segni ditto (\") o idem indicano la ripetizione del valore della riga precedente:\n"
-            "  TRASCRIVILI come apici (\") senza espanderli.\n"
-            "- Trascrivi OGNI riga della tabella, anche se parzialmente visibile.\n"
+            "\nTIPOLOGIA: Stato delle Anime o censimento parrocchiale (TABELLA MULTI-COLONNA).\n"
+            "\nSTRUTTURA ATTESA DELLE COLONNE (leggi TUTTE le colonne per ogni riga):\n"
+            "  Col.1 = N° d'ordine Casa | Col.2 = N° Famiglia | Col.3 = N° Persona\n"
+            "  Col.4 = Cognome | Col.5 = Nome | Col.6 = Età | Col.7 = Stato civile\n"
+            "  Col.8 = Religione/Patria | Col.9 = Professione | Col.10 = Osservazioni\n"
+            "\nREGOLE OBBLIGATORIE PER LA TRASCRIZIONE A TABELLA:\n"
+            "- Trascrivi OGNI riga come una riga di testo con i valori separati da ' | '.\n"
+            "  Esempio: 1 | 1 | 1 | Davini | Enrico | 45 | M | Poncarale | Contadino |\n"
+            "- Inizia con una riga di intestazione con i nomi delle colonne separati da ' | '.\n"
+            "- I segni ditto (\") o 'idem' indicano ripetizione del valore precedente in quella colonna:\n"
+            "  TRASCRIVILI come \" senza espanderli.\n"
+            "- NON saltare righe: anche le righe con soli segni ditto vanno trascritte.\n"
+            "- Se una colonna è vuota scrivi uno spazio tra i separatori: | |\n"
+            "- Se un valore è illeggibile usa [?].\n"
+            "- NON aggiungere note o commenti: solo la tabella.\n"
         ),
         "Documento Notarile": (
             "\nTIPOLOGIA: Documento notarile (contratto, testamento, atto di compravendita, ecc.).\n"
