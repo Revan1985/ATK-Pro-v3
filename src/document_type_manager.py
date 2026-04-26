@@ -103,6 +103,9 @@ class DocumentTypeManager:
     Gestione centralizzata delle tipologie documentali per tutti e tre i servizi.
     """
 
+    # Prefisso visivo per i tipi custom nel combo (accessibile come attributo di classe)
+    CUSTOM_PREFIX = CUSTOM_PREFIX
+
     def __init__(self):
         self._custom: list[dict] = []
         self._load()

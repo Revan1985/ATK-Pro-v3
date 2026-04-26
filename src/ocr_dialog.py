@@ -232,15 +232,15 @@ class AdvancedOCRDialog(QDialog):
         self.combo_type = QComboBox()
         self.combo_type.addItems(self._dtm.get_labels(service="ocr"))
         self.combo_type.currentIndexChanged.connect(self._on_type_changed_ocr)
-        btn_add_type = QPushButton("＋")
+        btn_add_type = QPushButton("+")
         btn_add_type.setToolTip("Aggiungi tipologia personalizzata")
         btn_add_type.setFixedWidth(30)
-        btn_add_type.setStyleSheet("background-color: #2a5a2a; color: #fff; border-radius: 4px; font-weight: bold;")
+        btn_add_type.setStyleSheet("background-color: #3a8a3a; color: #ffffff; border-radius: 4px; font-weight: bold; font-family: Arial, sans-serif; font-size: 14px;")
         btn_add_type.clicked.connect(self._add_custom_type)
-        self.btn_edit_type = QPushButton("✎")
+        self.btn_edit_type = QPushButton("✏")
         self.btn_edit_type.setToolTip("Modifica tipologia personalizzata selezionata")
         self.btn_edit_type.setFixedWidth(30)
-        self.btn_edit_type.setStyleSheet("background-color: #2a3a5a; color: #fff; border-radius: 4px;")
+        self.btn_edit_type.setStyleSheet("background-color: #3a5a8a; color: #ffffff; border-radius: 4px; font-family: Arial, sans-serif; font-size: 13px;")
         self.btn_edit_type.clicked.connect(self._edit_custom_type)
         self.btn_edit_type.setVisible(False)
         type_layout.addWidget(lbl_type)
@@ -524,14 +524,20 @@ class AdvancedOCRDialog(QDialog):
         doc_type = self.combo_type.currentText()
         custom_p = self.txt_istruzioni.toPlainText().strip()
         ex_text = self.txt_esempio.toPlainText().strip()
-        if self._dtm.is_custom(doc_type):
-            # Tipo custom: usa il prompt utente, con fallback al generico
-            custom_ocr = self._dtm.get_ocr_prompt(doc_type) or ""
-            from ocr_prompts import compose_ocr_prompt
-            final_prompt = compose_ocr_prompt("Manoscritto Generico / Altro", custom_ocr + ("\n" + custom_p if custom_p else ""), ex_text)
-        else:
-            from ocr_prompts import compose_ocr_prompt
-            final_prompt = compose_ocr_prompt(doc_type, custom_p, ex_text)
+        try:
+            if self._dtm.is_custom(doc_type):
+                # Tipo custom: usa il prompt utente, con fallback al generico
+                custom_ocr = self._dtm.get_ocr_prompt(doc_type) or ""
+                from ocr_prompts import compose_ocr_prompt
+                final_prompt = compose_ocr_prompt("Manoscritto Generico / Altro", custom_ocr + ("\n" + custom_p if custom_p else ""), ex_text)
+            else:
+                from ocr_prompts import compose_ocr_prompt
+                final_prompt = compose_ocr_prompt(doc_type, custom_p, ex_text)
+        except Exception as e:
+            import logging, traceback
+            logging.error(f"[OCR] Errore composizione prompt: {e}\n{traceback.format_exc()}")
+            QMessageBox.critical(self, "Errore Prompt", f"Impossibile costruire il prompt OCR:\n{e}")
+            return
 
         self.btn_start.setEnabled(False)
         self.progress_bar.setValue(0)
