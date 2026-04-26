@@ -19,7 +19,7 @@ import json
 import logging
 import argparse
 from typing import List, Tuple, Optional, Dict, Any
-from PIL import Image, PngImagePlugin
+from PIL import Image, PngImagePlugin, ImageDraw, ImageFont
 import piexif
 
 
@@ -114,22 +114,55 @@ class TileRebuilder:
         return tiles
 
     def rebuild(self) -> Image.Image:
-        """Ricompone le tile in un'unica immagine e restituisce il canvas PIL.Image."""
+        """Ricompone le tile in un'unica immagine e restituisce il canvas PIL.Image (con footer opzionale)."""
         tiles = self.load_tiles()
         expected = self.columns * self.rows
         if len(tiles) != expected:
             logging.warning(
                 f"Numero di tile ({len(tiles)}) non corrisponde a grid_size ({expected})"
             )
+        
         total_w = self.columns * self.tile_w + (self.columns - 1) * self.pad_x
         total_h = self.rows * self.tile_h + (self.rows - 1) * self.pad_y
-        canvas = Image.new("RGB", (total_w, total_h))
+        
+        # --- FOOTER LOGIC (AIT Integration) ---
+        source_url = self.metadata.get("Source")
+        footer_height = 60 if source_url else 0
+        
+        canvas = Image.new("RGB", (total_w, total_h + footer_height), (255, 255, 255))
+        
+        # Incolla le tile
         for idx, tile in enumerate(tiles):
             row = idx // self.columns
             col = idx % self.columns
             x = col * (self.tile_w + self.pad_x)
             y = row * (self.tile_h + self.pad_y)
             canvas.paste(tile, (x, y))
+            
+        # Aggiunge il testo nel footer se presente
+        if source_url:
+            draw = ImageDraw.Draw(canvas)
+            font = None
+            # Font standard per Windows, macOS e Linux
+            font_paths = [
+                "arial.ttf", "Arial.ttf", 
+                "/System/Library/Fonts/Supplemental/Arial.ttf",
+                "/Library/Fonts/Arial.ttf",
+                "/System/Library/Fonts/Helvetica.ttc",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+            ]
+            for fpath in font_paths:
+                try:
+                    font = ImageFont.truetype(fpath, 35)
+                    break
+                except:
+                    continue
+            if not font:
+                font = ImageFont.load_default()
+            
+            label_text = f"Source: {source_url}"
+            draw.text((20, total_h + 10), label_text, fill=(0, 0, 0), font=font)
+            
         return canvas
 
     def save(self) -> None:
@@ -197,13 +230,14 @@ def run() -> None:
 __all__ = ["build_image_metadata", "TileRebuilder", "run", "rebuild_image"]
 
 
-def rebuild_image(info: Dict[str, Any], tile_dir: str) -> Image.Image:
+def rebuild_image(info: Dict[str, Any], tile_dir: str, source_url: str = None) -> Image.Image:
     """
     Funzione helper per ricostruire un'immagine da tiles (compatibile con v1.4.1).
     
     Parametri:
     - info: dict IIIF info.json con width, height, tiles
     - tile_dir: directory contenente i tile file
+    - source_url: URL opzionale da inserire nel footer
     
     Ritorna: PIL Image ricostruita
     """
@@ -215,8 +249,11 @@ def rebuild_image(info: Dict[str, Any], tile_dir: str) -> Image.Image:
     cols = (width + tile_size - 1) // tile_size
     rows = (height + tile_size - 1) // tile_size
     
+    # --- FOOTER LOGIC ---
+    footer_height = 60 if source_url else 0
+    final_image = Image.new("RGB", (width, height + footer_height), (255, 255, 255))
+    
     # Crea canvas e incolla tile
-    final_image = Image.new("RGB", (width, height))
     for y in range(rows):
         for x in range(cols):
             tile_filename = os.path.join(tile_dir, f"tile_{x}_{y}.jpg")
@@ -229,4 +266,25 @@ def rebuild_image(info: Dict[str, Any], tile_dir: str) -> Image.Image:
             else:
                 logging.debug("Tile mancante: tile_%d_%d.jpg", x, y)
     
+    # Disegna footer
+    if source_url:
+        draw = ImageDraw.Draw(final_image)
+        font = None
+        font_paths = [
+            "arial.ttf", "Arial.ttf", 
+            "/System/Library/Fonts/Supplemental/Arial.ttf",
+            "/Library/Fonts/Arial.ttf",
+            "/System/Library/Fonts/Helvetica.ttc",
+            "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+        ]
+        for fpath in font_paths:
+            try:
+                font = ImageFont.truetype(fpath, 35)
+                break
+            except:
+                continue
+        if not font:
+            font = ImageFont.load_default()
+        draw.text((20, height + 10), f"Source: {source_url}", fill=(0, 0, 0), font=font)
+        
     return final_image

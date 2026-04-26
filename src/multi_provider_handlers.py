@@ -1,0 +1,367 @@
+import os
+import json
+import base64
+import logging
+import time
+
+try:
+    import google.generativeai as genai
+    from google.generativeai.types import GenerationConfig
+except ImportError:
+    genai = None
+
+class AIProviderHandler:
+    def __init__(self, provider, api_key):
+        self.provider = provider
+        self.api_key = api_key
+
+    def set_key(self, key):
+        self.api_key = key
+
+    def extract_genealogy(self, prompt, image_path=None, model=None):
+        raise NotImplementedError
+        
+    def _cleanup_json_response(self, text):
+        """Pulisce la risposta IA per estrarre un JSON valido, riparando errori comuni."""
+        import re
+        if not text: return "{}"
+        
+        # 1. Estrazione del blocco tra graffe
+        match = re.search(r"(\{.*\})", text, re.DOTALL)
+        clean = match.group(1) if match else text.strip()
+        
+        # 2. Rimozione commenti in stile C/JS se presenti
+        clean = re.sub(r'//.*?\n|/\*.*?\*/', '', clean, flags=re.S)
+        
+        # 3. Riparazione virgole finali prima di chiusura graffa/quadra
+        clean = re.sub(r',\s*\}', '}', clean)
+        clean = re.sub(r',\s*\]', ']', clean)
+        
+        # 4. Sincro v15.7: Auto-Close per troncamenti IA
+        open_braces = clean.count('{') - clean.count('}')
+        open_brackets = clean.count('[') - clean.count(']')
+        
+        # Se c'è una chiave appesa come "field": (senza valore)
+        if clean.strip().endswith(':'):
+             clean += ' ""'
+        
+        # Chiudi nell'ordine inverso
+        if open_brackets > 0: clean += ']' * open_brackets
+        if open_braces > 0: clean += '}' * open_braces
+        
+        return clean
+
+class GeminiHandler(AIProviderHandler):
+    """Sincronia v15.3: Implementazione Ufficiale Google-GenerativeAI"""
+    def _get_available_models(self):
+        """Interroga dinamicamente l'account e seleziona i 2 migliori per stabilità e quota."""
+        try:
+            genai.configure(api_key=self.api_key)
+            models = genai.list_models()
+            discovery = []
+            # Puntiamo ai modelli che hanno quote più ampie o sono i più recenti
+            preference = ['flash-lite-latest', '2.0-flash', 'flash-latest']
+            
+            discovered_names = [m.name for m in models if "generateContent" in m.supported_generation_methods]
+            
+            for pref in preference:
+                for dn in discovered_names:
+                    if pref in dn.lower():
+                        discovery.append(dn)
+                        break
+                if len(discovery) >= 2: break
+                
+            return discovery if discovery else ['models/gemini-1.5-flash']
+        except Exception as e:
+            logging.warning(f"[AUTO-DISCOVERY] Fallito: {e}")
+        return ['models/gemini-1.5-flash', 'models/gemini-flash-latest']
+
+    def _parse_markdown_table(self, text):
+        """Converte una tabella Markdown indicizzata (Num:Val) in JSON rigenerando le chiavi corrette."""
+        rows = []
+        lines = [l.strip() for l in text.split('\n') if l.strip().startswith('|')]
+        if len(lines) < 2: return []
+        
+        data_start = 0
+        for i, line in enumerate(lines):
+            if '---' in line:
+                data_start = i + 1
+                break
+        
+        actual_data = lines[data_start:]
+        for line in actual_data:
+            line_content = line.strip('|')
+            cols = [c.strip() for c in line_content.split('|')]
+            row_dict = {}
+            for col_idx, raw_val in enumerate(cols):
+                val = raw_val
+                if ':' in raw_val:
+                    parts = raw_val.split(':', 1)
+                    idx_str = parts[0].strip()
+                    if idx_str.isdigit():
+                        val = parts[1].strip()
+                        target_idx = idx_str
+                    else: target_idx = str(col_idx + 1)
+                else: target_idx = str(col_idx + 1)
+                row_dict[target_idx] = val
+            
+            if any(v for k, v in row_dict.items() if v):
+                rows.append(row_dict)
+        return rows
+
+    def _sanitize_json_text(self, text: str) -> str:
+        """Ripara errori comuni di Gemini (es. virgolette triple per segni di ripetizione)."""
+        import re
+        # Ripara sequenze di 2 o più virgolette dopo i due punti: ": """ -> ": "\""
+        # Gestisce anche spazi intermedi: ": " " -> ": "\""
+        text = re.sub(r'":\s*["\s]{2,}(?=[,}\s])', '": "\\""', text)
+        return text
+
+    def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
+        if not genai:
+            raise ImportError("La libreria 'google-generativeai' non è installata.")
+        
+        from PIL import Image, ImageEnhance, ImageFilter
+        import io
+        import time 
+        
+        available_models = self._get_available_models()
+        genai.configure(api_key=self.api_key)
+
+        slices = []
+        if image_path and os.path.exists(image_path):
+            with Image.open(image_path) as img:
+                if img.mode != "RGB": img = img.convert("RGB")
+                
+                # Sincro v30.0: FILTRAZIONE OTTICA AVANZATA (Contrast + UnsharpMask)
+                enhancer = ImageEnhance.Contrast(img)
+                img = enhancer.enhance(1.8) # Contrasto ancora più marcato
+                img = img.filter(ImageFilter.UnsharpMask(radius=2, percent=150, threshold=3)) # Definisce i bordi dell'inchiostro
+                img = img.filter(ImageFilter.SHARPEN)
+                
+                w, h = img.size
+                # Sincro v48.0: VISTA SPLIT (2 Strisce) - Ultra Risoluzione
+                # Usiamo solo 2 strisce (Top/Bottom) con ampia sovrapposizione (20%)
+                # per garantire che nessuna riga venga spezzata e riduciamo le chiamate API.
+                header_h = int(h * 0.12) # Circa il 12% superiore contiene le intestazioni
+                header_img = img.crop((0, 0, w, header_h))
+                
+                strips_configs = [
+                    ("TOP", (0, 0, w, int(h * 0.60))),
+                    ("BOTTOM", (0, int(h * 0.40), w, h))
+                ]
+
+                for label, box in strips_configs:
+                    tile = img.crop(box)
+                    
+                    # Sincro v48.2: HEADER STITCHING per la striscia BOTTOM
+                    # Se stiamo lavorando sulla parte bassa, incolliamo l'intestazione in cima
+                    # per garantire che l'IA veda sempre le etichette dello Stato Civile (7-12).
+                    if label == "BOTTOM":
+                        combined = Image.new('RGB', (w, tile.height + header_h))
+                        combined.paste(header_img, (0, 0))
+                        combined.paste(tile, (0, header_h))
+                        tile = combined
+
+                    # Sincro v48.0: Ridimensionamento Forzato a 4000px di altezza
+                    target_h = 4000
+                    curr_w, curr_h = tile.size
+                    scale = target_h / curr_h
+                    target_w = int(curr_w * scale)
+                    tile = tile.resize((target_w, target_h), Image.LANCZOS)
+                    
+                    img_byte_arr = io.BytesIO()
+                    tile.save(img_byte_arr, format='JPEG', quality=95)
+                    slices.append((label, Image.open(img_byte_arr)))
+
+        # Eseguiamo le passate (Strisce)
+        all_quadrant_rows = []
+        
+        # Sincro v36.3: PRIORITÀ ASSOLUTA PRO (Nomi Certificati 2026)
+        # Usiamo solo i nomi che abbiamo visto esistere con lo script di test
+        target_models = [
+            "models/gemini-pro-latest",
+            "models/gemini-2.5-pro",
+            "models/gemini-3.1-pro-preview",
+            "models/gemini-3-pro-preview"
+        ]
+        
+        # Log di verifica per debugging
+        logging.info(f"[SINCRO] Modelli PRO certificati in prova: {target_models}")
+
+        for label, tile in slices:
+            side_prompt = f"LAVORA SULLA {label}. COLONNE 1-20 (Intero rigo).\nREGOLE TAGLI: Trascrivi *SOLO* le righe perfettamente visibili e intere. IGNORA SCORBUTICAMENTE qualsiasi riga il cui testo è anche solo parzialmente tagliato dal bordo superiore o inferiore. Niente deduzioni. {prompt}"
+            
+            success = False
+            for m_name in target_models:
+                try:
+                    # Turbo Mode v36.8: Rimossa pausa di 5s (Billing attivo) per evitare timeout GUI
+                    logging.info(f"[SINCRONIA] {label} con {m_name} (MODALITÀ TURBO PRO - v36.8)...")
+                    vision_model = genai.GenerativeModel(model_name=m_name)
+                    # Temperatura 0.0 (Zero Assoluto) e Token Espansi per file completi (v46.1)
+                    response = vision_model.generate_content([tile, side_prompt], 
+                                                           generation_config=GenerationConfig(temperature=0.0, max_output_tokens=8192))
+                    if response.text:
+                        raw_text = response.text
+                        f_name = os.path.join(debug_dir if debug_dir else os.getcwd(), f"DIAGNOSTICA_trascrizione_IA_{label}.md")
+                        with open(f_name, "w", encoding="utf-8") as df:
+                            df.write(raw_text)
+                            
+                        # PARSER ULTRADIFENSIVO v36.4
+                        q_rows = []
+                        import re
+                        json_match = re.search(r"(\{.*\})|(\[.*\])", raw_text, re.DOTALL)
+                        if json_match:
+                            try:
+                                sanitized_json = self._sanitize_json_text(json_match.group(0))
+                                data = json.loads(sanitized_json)
+                                def find_rows(obj):
+                                    if isinstance(obj, list): return obj
+                                    if isinstance(obj, dict):
+                                        # Caso A: l'oggetto è una lista annidata sotto una chiave
+                                        if "righe" in obj: return obj["righe"]
+                                        for k, v in obj.items():
+                                            if isinstance(v, list) and len(v) > 0: return v
+                                        # Caso B: l'oggetto è lui stesso una riga (ha chiavi numeriche es. '3')
+                                        if '3' in obj or 3 in obj: return [obj]
+                                        # Caso C: l'oggetto è un dizionario di righe (es. {"1": {...}, "2": {...}})
+                                        first_val = next(iter(obj.values()), None)
+                                        if isinstance(first_val, dict): return list(obj.values())
+                                        return []
+                                    return []
+                                q_rows = find_rows(data)
+                            except: q_rows = self._parse_markdown_table(raw_text)
+                        else:
+                            q_rows = self._parse_markdown_table(raw_text)
+                        
+                        all_quadrant_rows.extend(q_rows)
+                        success = True
+                        break
+                except Exception as e:
+                    logging.warning(f"Errore {label} su {m_name}: {e}")
+                    # Se il PRO fallisce per quota, aspettiamo di più e riproviamo CON LO STESSO MODELLO
+                    if "429" in str(e) or "503" in str(e) or "quota" in str(e).lower():
+                        logging.info("[SINCRONIA] Errore rete/quota. Pausa lunga (20s) e riprovo...")
+                        time.sleep(20)
+                        # Qui il ciclo for riproverà il modello successivo, ma se è l'unico 'pro' ripeterà il tentativo
+                    continue
+            if not success: raise Exception(f"Impossibile elaborare {label} con modelli di classe PRO.")
+
+        # UNIONE SEQUENZIALE PER IDENTITÀ (v48.0 - Persona_Nr Key)
+        merged_rows = []
+        master_map = {}
+        last_valid_p_nr = 0
+        
+        try:
+            for row in all_quadrant_rows:
+                if not isinstance(row, dict): continue
+                
+                # Estrazione e pulizia del progressivo (Colonna 3)
+                raw_p_id = str(row.get('3', '')).strip()
+                import re
+                m = re.search(r'(\d+)', raw_p_id)
+                
+                if m:
+                    p_id = m.group(1)
+                    last_valid_p_nr = int(p_id)
+                else:
+                    # Logica suggerita dall'utente: se manca, è il precedente + 1
+                    last_valid_p_nr += 1
+                    p_id = str(last_valid_p_nr)
+                    row['3'] = p_id 
+                
+                if p_id not in master_map:
+                    master_map[p_id] = row
+                else:
+                    # Fusione dati: riempiamo i buchi del record esistente (es. se nella prima passata era troncato)
+                    for k, v in row.items():
+                        v_str = str(v).strip()
+                        current_val = str(master_map[p_id].get(k, '')).strip()
+                        if v_str and not current_val:
+                            master_map[p_id][k] = v_str
+                        # Se il master ha un segno di ripetizione ma il nuovo ha il testo completo, aggiorna
+                        elif v_str and current_val in ['"', '”', '“'] and v_str not in ['"', '”', '“']:
+                            master_map[p_id][k] = v_str
+
+            # Trasformiamo la mappa in lista ordinata per ID
+            sorted_keys = sorted(master_map.keys(), key=lambda x: int(x))
+            merged_rows = [master_map[k] for k in sorted_keys]
+            
+            logging.info(f"[SINCRONIA] Merge completato (v48.0). Individui unici: {len(merged_rows)}")
+            
+            # SALVATAGGIO DIAGNOSTICA UNIFICATA (Spostato prima del return)
+            try:
+                d_path = debug_dir if debug_dir else os.getcwd()
+                diag_file = os.path.join(d_path, "DIAGNOSTICA_tabella_unita.md")
+                with open(diag_file, "w", encoding="utf-8") as f:
+                    f.write("# DIAGNOSTICA TABELLA UNITA (Merge v48.0)\n\n")
+                    json.dump(merged_rows, f, indent=2)
+                logging.debug(f"[SINCRONIA] Diagnostica unita salvata in: {diag_file}")
+            except Exception as de:
+                logging.warning(f"Impossibile salvare diagnostica unita: {de}")
+
+            return merged_rows
+        except Exception as e:
+            logging.error(f"[SINCRONIA] Errore critico durante il merge: {str(e)}. Salvo i dati grezzi.")
+            # Fallback estremo: restituisci i dati non filtrati per non perdere nulla
+            return [r for r in all_quadrant_rows if isinstance(r, dict)]
+        
+        raise Exception("Errore critico durante lo split visivo.")
+
+class OpenAIHandler(AIProviderHandler):
+    def extract_genealogy(self, prompt, image_path=None, model=None):
+        from openai import OpenAI
+        import httpx
+        if not model: model = 'gpt-4o'
+        client = OpenAI(api_key=self.api_key, http_client=httpx.Client())
+        messages = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+        if image_path and os.path.exists(image_path):
+            with open(image_path, "rb") as f:
+                base64_image = base64.b64encode(f.read()).decode('utf-8')
+                messages[0]["content"].append({
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
+                })
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                response_format={"type": "json_object"} if "json" in prompt.lower() else None
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            raise e
+
+class ClaudeHandler(AIProviderHandler):
+    def extract_genealogy(self, prompt, image_path=None, model=None):
+        from anthropic import Anthropic
+        import httpx
+        if not model: model = 'claude-3-5-sonnet-20241022'
+        client = Anthropic(api_key=self.api_key, http_client=httpx.Client())
+        content = []
+        if image_path and os.path.exists(image_path):
+             with open(image_path, "rb") as f:
+                img_data = base64.b64encode(f.read()).decode('utf-8')
+                content.append({
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/jpeg",
+                        "data": img_data
+                    }
+                })
+        content.append({"type": "text", "text": prompt})
+        try:
+            response = client.messages.create(
+                model=model,
+                max_tokens=4096,
+                messages=[{"role": "user", "content": content}]
+            )
+            return response.content[0].text
+        except Exception as e:
+            raise e
+
+def get_handler(provider, api_key):
+    if provider == "OpenAI": return OpenAIHandler(provider, api_key)
+    if provider == "Claude": return ClaudeHandler(provider, api_key)
+    return GeminiHandler("Gemini", api_key)

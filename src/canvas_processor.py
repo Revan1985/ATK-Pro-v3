@@ -186,7 +186,7 @@ def process_single_canvas(
             download_tiles(info, tile_dir, update_progress=update_progress)
         except TypeError:
             download_tiles(info, tile_dir)
-        final_img = rebuild_image(info, tile_dir)
+        final_img = rebuild_image(info, tile_dir, source_url=page_url)
 
         nome_base = (base_filename or "canvas_elaborato").strip()
         ua = _parse_ua_from_url(page_url or "")
@@ -271,7 +271,7 @@ def process_all_canvases(
                 download_tiles(info, tile_dir, update_progress=update_progress)
             except TypeError:
                 download_tiles(info, tile_dir)
-            final_img = rebuild_image(info, tile_dir)
+            final_img = rebuild_image(info, tile_dir, source_url=page_url)
 
             nome_base = f"{base_filename_prefix}_canvas_{idx}".strip()
             ua = _parse_ua_from_url(page_url or "")

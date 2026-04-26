@@ -430,7 +430,7 @@ class Elaborazione:
             else:
                 self.tiles_missing = []
             logger.info(f"[Rebuild] Ricostruendo immagine dai tiles")
-            final_img = rebuild_image(info, tile_dir)
+            final_img = rebuild_image(info, tile_dir, source_url=self.ark_url)
             if final_img is None:
                 if pdf_in_formats:
                     logger.warning(f"[PDF] Immagine non ricostruita, genero placeholder per {self.nome_file}")
@@ -487,7 +487,7 @@ class Elaborazione:
             max_retries = 3
             while mancanti and retry_count < max_retries:
                 logger.warning(f"[Verifica] Mancano immagini finali: {mancanti}. Retry {retry_count+1}/{max_retries}")
-                final_img = rebuild_image(info, tile_dir)
+                final_img = rebuild_image(info, tile_dir, source_url=self.ark_url)
                 if final_img is not None:
                     save_image_variants(final_img, self.output_dir, self.nome_file, image_formats, meta=meta)
                 mancanti = [img for img in immagini_attese if not os.path.exists(os.path.join(self.output_dir, img))]
@@ -608,7 +608,7 @@ class Elaborazione:
                         if not hasattr(self, 'tiles_missing_all'):
                             self.tiles_missing_all = []
                         self.tiles_missing_all.extend(tiles_missing)
-                    final_img = rebuild_image(info, tile_dir)
+                    final_img = rebuild_image(info, tile_dir, source_url=self.ark_url)
                     ua = _parse_ua_from_url(self.ark_url)
                     ark = _parse_ark_from_url(self.ark_url)
                     canvas_tail = _last_segment(service_id)
@@ -690,7 +690,7 @@ class Elaborazione:
                         image_info_url = service_id.rstrip('/') + '/info.json'
                         info = download_info_json(image_info_url)
                         tile_dir = os.path.join(self.output_dir, f"tiles_canvas_{idx_canvas}")
-                        final_img = rebuild_image(info, tile_dir)
+                        final_img = rebuild_image(info, tile_dir, source_url=self.ark_url)
                         nome_base = f"{self.nome_file}_canvas_{idx_canvas}"
                         meta = build_image_metadata(
                             ua=_parse_ua_from_url(self.ark_url),

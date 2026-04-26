@@ -136,3 +136,131 @@ Thumbs.db
 # 📦 Modalità portable — il sentinel NON va committato
 # (viene aggiunto solo nel pacchetto ZIP portable al momento del packaging)
 /portable.txt
+
+# ============================
+# ATK-Pro · .gitignore v3.0.0
+# Aggiornato: 26/04/2026 (v3.0 dev — esclusi script di servizio locali)
+# ============================
+
+# 🔨 Script di servizio usati durante lo sviluppo v3.0
+# (utili localmente ma non parte del prodotto — NON eliminare, solo ignorare)
+
+# Costruzione e correzione guide HTML
+make_guides.py
+make_hub.py
+rebuild_hub.py
+rebuild_hub_safe.py
+rebuild_g08.py
+refactor_guides_it.py
+restructure_docs.py
+split_guida_exact.py
+expand_guides_06_07.py
+translate_guides.py
+add_translations.py
+add_cosatk.py
+duplicate_guides.py
+remove_borders.py
+update_docs_full.py
+update_hub_intro.py
+update_texts.py
+update_gedcom.py
+fix_content_457.py
+fix_final.py
+fix_g08_nav.py
+fix_guida02_servizi.py
+fix_hub_title.py
+fix_hub_title2.py
+fix_oldnav_and_07.py
+
+# Analisi e diagnostica sviluppo
+analyze_anomalies.py
+detect_ghosts.py
+detect_suspects.py
+inspect_box.py
+inspect_guida.py
+inspect_intro.py
+inspect_top_html.py
+check_deps.py
+list_gemini_models.py
+list_models.py
+verification_fase1.py
+cleanup_csv.py
+cleanup_final.py
+
+# Patch di rilascio v2.2.1 (già applicati, non più necessari)
+_patch_v221.py
+_patch_iss_v221.py
+_add_autoupdate_changelog.py
+
+# Script di test e debug
+test_cumulative.py
+test_extraction.py
+test_fix.py
+test_gedcom.py
+test_gedcom2.py
+test_gedcom3.py
+test_merge_full.py
+test_merge.py
+test_model.py
+test_regex.py
+test_rotation_v5.py
+test_solo.py
+bug_test2.py
+csv_bug_test.py
+
+# Output di testo temporanei
+anomalies_full.txt
+canvas_diff.txt
+err.txt
+gitdiff.txt
+gitlog.txt
+gitlog15.txt
+gitlog_oneline.txt
+last_log.txt
+latest_csv.txt
+log_search.txt
+main_gui_diff.txt
+out.txt
+out2.txt
+out_fixed.txt
+out_solo.txt
+out_test.txt
+test_out.txt
+raw_dx.txt
+raw_sx.txt
+recent.txt
+status.txt
+suspects_full.txt
+translate_log.txt
+translate_log_v2.txt
+
+# File GED/genealogici (test e dati locali — possono contenere dati personali)
+*.ged
+
+# File di diagnostica Markdown (interni al processo di sviluppo)
+DIAGNOSTICA_tabella_unita.md
+DIAGNOSTICA_trascrizione_IA_BOTTOM.md
+DIAGNOSTICA_trascrizione_IA_TOP.md
+_release_notes.md
+
+# Artefatti di build locali Windows
+_win_artifacts/
+
+# Cartelle di lavoro temporanee locali
+scratch/
+tmp/
+
+# File vari non classificabili
+La
+
+# 🔬 Script di diagnostica e debug dentro src/ (locali, non parte del prodotto)
+src/check_gemini_models.py
+src/check_gemini_models_v2.py
+src/check_quota_leak.py
+src/test_comparison.py
+src/nextgen_1_13.py
+src/multi_provider_handlers.py_tmp_handler_fix.py
+src/debug_ia.txt
+src/gemini_report.txt
+src/gemini_final_report.txt
+src/quota_unlock_report.txt

@@ -1003,6 +1003,7 @@ class MainWindow(QMainWindow):
         servizi_menu.addAction(gm("OCR Avanzato"), self.apri_ocr_avanzato)
         servizi_menu.addAction(gm("Traduzione OCR"), self.apri_traduzione_ocr)
         servizi_menu.addAction(gm("Esportazione GEDCOM"), self.avvia_analisi_genealogica)
+
         menubar.addMenu(servizi_menu)
 
         # --- Documenti ---
@@ -1421,6 +1422,16 @@ class MainWindow(QMainWindow):
             logging.error(f"Errore caricamento Analisi Genealogica: {e}")
             from PySide6.QtWidgets import QMessageBox
             QMessageBox.critical(self, "Errore", f"Impossibile aprire l'Analisi Genealogica: {e}")
+
+    def apri_ocr_avanzato(self):
+        from src.ocr_dialog import AdvancedOCRDialog
+        dialog = AdvancedOCRDialog(self, self.glossario_data, self.lingua)
+        dialog.exec()
+
+    def apri_traduzione_ocr(self):
+        from src.translation_dialog import TranslationDialog
+        dialog = TranslationDialog(self, self.glossario_data, self.lingua)
+        dialog.exec()
 
     def funzione_in_sviluppo(self):
         # Messaggio placeholder localizzato per tutte le voci Servizi

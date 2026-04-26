@@ -1,0 +1,391 @@
+import os
+import json
+import logging
+import time
+import re
+import zipfile
+import io
+import xml.etree.ElementTree as ET
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
+                             QPushButton, QComboBox, QTextEdit, QFileDialog, 
+                             QProgressBar, QMessageBox, QLineEdit, QFormLayout, QFrame, QWidget, QScrollArea, QInputDialog)
+from PySide6.QtCore import Qt, QThread, Signal, QBuffer, QIODevice, QMutex, QWaitCondition
+from PySide6.QtGui import QImage
+
+try:
+    import google.generativeai as genai
+except ImportError:
+    pass
+from genealogy_prompts import get_available_types, compose_extraction_prompt
+from gedcom_factory import GedcomGenerator
+from key_manager import KeyManager
+from multi_provider_handlers import get_handler
+
+CONFIG_DIR = os.path.dirname(os.path.dirname(__file__))
+PRESETS_FILE = os.path.join(CONFIG_DIR, "genealogy_presets.json")
+
+def extract_text_from_docx(docx_path):
+    """Estrae il testo da un file .docx senza librerie esterne usando zipfile."""
+    try:
+        with zipfile.ZipFile(docx_path) as z:
+            xml_content = z.read('word/document.xml')
+            tree = ET.fromstring(xml_content)
+            namespace = {'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+            paragraphs = tree.findall('.//w:t', namespace)
+            return "".join([p.text for p in paragraphs if p.text])
+    except Exception as e:
+        return f"Errore DOCX: {str(e)}"
+
+class GenealogyWorker(QThread):
+    progress = Signal(int, str)
+    finished = Signal(str, int)
+    error = Signal(str)
+    request_provider_change = Signal(str, list)
+
+    def __init__(self, files, doc_type, tips, provider, output_file_path, base_path=None):
+        super().__init__()
+        self.files = files
+        self.doc_type = doc_type
+        self.tips = tips
+        self.provider = provider
+        self.output_file_path = output_file_path
+        self.base_path = base_path
+        self.mutex = QMutex()
+        self.wait_cond = QWaitCondition()
+        self.provider_result = None
+
+    def run(self):
+        try:
+            # --- INIZIALIZZAZIONE TURBINA (Sincronia v5) ---
+            km = KeyManager()
+            current_prov = self.provider
+            current_key, _ = km.get_next_key(current_prov)
+            
+            if not current_key:
+                self.error.emit(f"Nessuna chiave trovata per {current_prov} nel Caveau (api_keys.csv)!"); return
+
+            handler = get_handler(current_prov, current_key)
+            generator = GedcomGenerator(source_system="ATK-Pro_Genealogy_Engine")
+            
+            effective_base = self.base_path
+            if not effective_base and self.output_file_path:
+                base_name = os.path.splitext(self.output_file_path)[0]
+                csv_expected = f"{base_name}_REGISTRO_ORIGINALE.csv"
+                if os.path.exists(self.output_file_path) or os.path.exists(csv_expected):
+                    effective_base = self.output_file_path
+
+            if effective_base:
+                b_path = os.path.splitext(effective_base)[0]
+                b_path = b_path.replace('_REGISTRO_ORIGINALE', '').replace('_REVISIONE_GENEALOGICA', '')
+                ged_path = b_path + ".ged"
+                csv_path = b_path + "_REGISTRO_ORIGINALE.csv"
+                if os.path.exists(ged_path): generator.load_existing_gedcom(ged_path)
+                if os.path.exists(csv_path): generator.load_existing_csv(csv_path)
+            
+            total_files = len(self.files)
+            extracted_count = 0
+            
+            for i, file_path in enumerate(self.files):
+                filename = os.path.basename(file_path).lower()
+                percent = int((i / total_files) * 100)
+                self.progress.emit(percent, f"Analisi {i+1}/{total_files}: {filename}")
+                
+                success = False
+                while not success:
+                    try:
+                        prompt = compose_extraction_prompt(self.doc_type, self.tips)
+                        # Estrazione tramite handler specifico con salvataggio diagnostica MD (v37.0 Allineamento)
+                        debug_dir = os.path.dirname(self.output_file_path)
+                        tx = handler.extract_genealogy(prompt, file_path, debug_dir=debug_dir)
+                        
+                        # Se tx è già una lista (nuovo standard v36.9+), la usiamo direttamente
+                        if isinstance(tx, list):
+                            js = {"righe": tx}
+                        else:
+                            # Vecchio standard: scavo nel testo per trovare il JSON
+                            jm = re.search(r"(\{.*\})", str(tx), re.DOTALL)
+                            js = json.loads(jm.group(1) if jm else str(tx).strip())
+                        
+                        if hasattr(generator, 'parse_user_notes_metadata'):
+                            generator.parse_user_notes_metadata(self.tips)
+                            
+                        generator.process_ai_json(js)
+                        c_count = len(js.get('righe', js.get('records', [])))
+                        if 'famiglie' in js:
+                            c_count = sum(len(f.get('componenti', [])) for f in js['famiglie'])
+                        extracted_count += c_count
+                        success = True
+                        
+                    except Exception as e:
+                        full_error = str(e)
+                        key_hint = current_key[:6] + "..." if current_key else "None"
+                        logging.error(f"[CAVEAU-FAIL] Chiave {key_hint} fallita: {full_error}")
+                        
+                        # Messaggio di stato pulito sulla barra
+                        self.progress.emit(percent, f"Errore {current_prov}: Riprovo con prossima chiave...")
+                        
+                        next_key, wrapped = km.get_next_key(current_prov, current_key)
+                        
+                        if wrapped:
+                            # Esaurite tutte le chiavi per questo provider (giro completo)
+                            other_provs = [p for p in ["Gemini", "OpenAI", "Claude"] if km.get_all_keys(p) and p != current_prov]
+                            if other_provs:
+                                # SINCRO v5: Richiesta interattiva di cambio provider
+                                self.mutex.lock()
+                                self.provider_result = None
+                                self.request_provider_change.emit(current_prov, other_provs)
+                                self.wait_cond.wait(self.mutex)
+                                self.mutex.unlock()
+                                
+                                if self.provider_result:
+                                    current_prov = self.provider_result
+                                    current_key, _ = km.get_next_key(current_prov)
+                                    handler = get_handler(current_prov, current_key)
+                                    self.progress.emit(percent, f"Passaggio a {current_prov} confermato. Riprovo...")
+                                    continue
+                                else:
+                                    self.error.emit("Operazione annullata o nessun provider disponibile selezionato."); return
+                            else:
+                                # Messaggio ancora più dettagliato in caso di fallimento totale
+                                raise Exception(f"Saturazione Totale Caveau.\nUltimo errore per {current_prov} (chiave {key_hint}):\n{full_error}")
+                        
+                        current_key = next_key
+                        handler.set_key(current_key)
+                        # SINCRO v15.4.6: Tempo di attesa ridotto per rotazione, ma aumentato per errori gravi
+                        wait_time = 15 if "429" in full_error else 2
+                        time.sleep(wait_time)
+
+            generator.save_to_file(self.output_file_path)
+            self.finished.emit(self.output_file_path, extracted_count)
+        except Exception as e:
+            self.error.emit(str(e))
+
+class GenealogyDialog(QDialog):
+    def __init__(self, parent=None, glossario=None, lingua="it"):
+        super().__init__(parent)
+        self.selected_files = []
+        self.output_folder = ""
+        self.base_path = None
+        self.presets = {}
+        self.init_ui()
+        self.load_config()
+        self.load_presets()
+
+    def init_ui(self):
+        self.setWindowTitle("Factory Genealogica - ATK-Pro 3.0 Escape")
+        self.setMinimumSize(950, 850)
+        self.setStyleSheet("background-color: #0c0c0c; color: #ffffff;")
+        l = QVBoxLayout(self); l.setContentsMargins(15, 15, 15, 15)
+        
+        t_css = "color: #3b82f6; font-size: 15px; font-weight: bold;"
+        lbl_css = "font-size: 13px; font-weight: bold; color: #9ca3af;"
+        inp_css = "background-color: #1a1a1a; border: 1px solid #333; border-radius: 4px; padding: 7px; color: #fff;"
+        btn_css = "QPushButton { background-color: #262626; border: 1px solid #404040; border-radius: 4px; padding: 10px; font-weight: bold; } QPushButton:hover { background-color: #3b82f6; color: #000; }"
+
+        scroll = QScrollArea(); scroll.setWidgetResizable(True); scroll.setStyleSheet("QScrollArea { border: none; }")
+        cont = QWidget(); fl = QVBoxLayout(cont); fl.setSpacing(18)
+
+        # 1. INPUT UNIVERSALE
+        fl.addWidget(QLabel("1. METODO E INPUT UNIVERSALE", styleSheet=t_css))
+        f_in = QFormLayout(); self.combo_source = QComboBox(); self.combo_source.addItems(["Auto-Discovery", "Vision IA", "Refinery LLM"])
+        self.combo_source.setStyleSheet(inp_css); f_in.addRow(QLabel("Metodo:", styleSheet=lbl_css), self.combo_source)
+        rs = QHBoxLayout(); self.btn_select = QPushButton("SFOGLIA L'ARCHIVIO 📂"); self.btn_select.setStyleSheet(btn_css); rs.addWidget(self.btn_select)
+        self.lbl_count = QLabel("0 atti pronti"); self.lbl_count.setStyleSheet("color: #f59e0b;"); rs.addWidget(self.lbl_count); rs.addStretch()
+        f_in.addRow(QLabel("Input:", styleSheet=lbl_css), rs); fl.addLayout(f_in)
+
+        # 2. BASE INCREMENTALE
+        fl.addWidget(QLabel("2. INCREMENTA BASE ESISTENTE (GEDCOM o CSV)", styleSheet=t_css))
+        rb = QHBoxLayout(); self.btn_load_base = QPushButton("CARICA BASE 🧬📑"); self.btn_load_base.setStyleSheet(btn_css); rb.addWidget(self.btn_load_base)
+        self.lbl_base_path = QLabel("Lavoro nuovo"); self.lbl_base_path.setStyleSheet("color: #fbbf24; font-size: 11px;"); rb.addWidget(self.lbl_base_path); rb.addStretch(); fl.addLayout(rb)
+
+        # 3. BANCA DATI NOTE
+        fl.addWidget(QLabel("3. BANCA DATI NOTE PALEOGRAFICHE", styleSheet=t_css))
+        ft = QFormLayout(); self.combo_type = QComboBox(); self.combo_type.addItems(get_available_types()); self.combo_type.setStyleSheet(inp_css)
+        ft.addRow(QLabel("Atto:", styleSheet=lbl_css), self.combo_type)
+        self.combo_presets = QComboBox(); self.combo_presets.setStyleSheet(inp_css)
+        ft.addRow(QLabel("Richiama Nota:", styleSheet=lbl_css), self.combo_presets); fl.addLayout(ft)
+        self.txt_tips = QTextEdit(); self.txt_tips.setStyleSheet(inp_css); self.txt_tips.setMinimumHeight(120); fl.addWidget(self.txt_tips)
+        rp = QHBoxLayout(); self.btn_save_p = QPushButton("💾 SALVA NOTA"); self.btn_save_p.setStyleSheet("background-color: #1e40af; color: white; padding: 10px; font-weight: bold;"); rp.addWidget(self.btn_save_p)
+        self.btn_del_p = QPushButton("🗑️ ELIMINA"); self.btn_del_p.setStyleSheet("background-color: #991b1b; color: white; padding: 10px; font-weight: bold;"); rp.addWidget(self.btn_del_p); fl.addLayout(rp)
+
+        # 4. DESTINAZIONE
+        fl.addWidget(QLabel("4. DESTINAZIONE OUTPUT", styleSheet=t_css))
+        ro = QHBoxLayout(); self.btn_out = QPushButton("CARTELLA OUTPUT 📂"); self.btn_out.setStyleSheet(btn_css); ro.addWidget(self.btn_out)
+        self.lbl_out_path = QLabel("output"); self.lbl_out_path.setStyleSheet("color: #10b981;"); ro.addWidget(self.lbl_out_path); ro.addStretch(); fl.addLayout(ro)
+
+        scroll.setWidget(cont); l.addWidget(scroll)
+        
+        # 5. MOTORE IA & CAVEAU
+        fl.addWidget(QLabel("5. MOTORE IA & CAVEAU CHIAVI", styleSheet=t_css))
+        fm = QFormLayout()
+        self.combo_provider = QComboBox(); self.combo_provider.addItems(["Gemini", "OpenAI", "Claude"]); self.combo_provider.setStyleSheet(inp_css)
+        fm.addRow(QLabel("Provider:", styleSheet=lbl_css), self.combo_provider)
+        
+        km_ly = QHBoxLayout()
+        self.btn_manage_keys = QPushButton("🗝️ GESTISCI CAVEAU CHIAVI (CSV)"); self.btn_manage_keys.setStyleSheet(btn_css)
+        km_ly.addWidget(self.btn_manage_keys); km_ly.addStretch()
+        fm.addRow(QLabel("Chiavi:", styleSheet=lbl_css), km_ly)
+        fl.addLayout(fm)
+
+        self.progress_bar = QProgressBar(); self.progress_bar.setVisible(False); l.addWidget(self.progress_bar)
+        self.btn_run = QPushButton("AVVIA ESTRAZIONE COMPLETA 🚀🧬"); self.btn_run.setMinimumHeight(60); self.btn_run.setStyleSheet("background-color: #065f46; color: white; font-weight: bold; font-size: 16px; border-radius: 4px;"); l.addWidget(self.btn_run)
+
+        # Connessioni
+        self.btn_run.clicked.connect(self.start_process); self.btn_select.clicked.connect(self.select_files); self.btn_out.clicked.connect(self.select_output_folder)
+        self.btn_load_base.clicked.connect(self.select_base_hybrid); self.btn_save_p.clicked.connect(self.save_current_preset); self.btn_del_p.clicked.connect(self.delete_selected_preset); self.combo_presets.currentIndexChanged.connect(self.apply_preset)
+        self.btn_manage_keys.clicked.connect(self.open_key_manager)
+        self.combo_source.currentIndexChanged.connect(self.save_config)
+        self.combo_type.currentIndexChanged.connect(self.save_config)
+        self.combo_provider.currentIndexChanged.connect(self.save_config)
+
+    def load_config(self):
+        try:
+            from config_utils import _config_file_path
+            p = _config_file_path()
+            logging.info(f"[SINCRO] Tento caricamento config da: {p}")
+            if os.path.exists(p):
+                with open(p, "r", encoding="utf-8") as f:
+                    c = json.load(f)
+                    self.output_folder = c.get("output_folder_single", os.getcwd())
+                    self.lbl_out_path.setText(self.output_folder)
+                    # Sincro v15.6: Ripristino ultime impostazioni
+                    if c.get("last_doc_type"): self.combo_type.setCurrentText(c["last_doc_type"])
+                    if c.get("last_tips"): self.txt_tips.setPlainText(c["last_tips"])
+                    if c.get("last_provider"): self.combo_provider.setCurrentText(c["last_provider"])
+                    if c.get("last_source"): self.combo_source.setCurrentText(c["last_source"])
+                    if c.get("last_base_path") and os.path.exists(c["last_base_path"]):
+                        self.base_path = c["last_base_path"]
+                        self.lbl_base_path.setText(os.path.basename(self.base_path))
+                    logging.info(f"[SINCRO] Config caricato correttamente. Base: {self.base_path}")
+        except Exception as e:
+            logging.error(f"[SINCRO] Errore caricamento config: {e}")
+        except: pass
+
+    def save_config(self):
+        """Salva le impostazioni correnti per il prossimo avvio."""
+        try:
+            from main_gui_qt import _config_file_path
+            p = _config_file_path()
+            data = {}
+            if os.path.exists(p):
+                with open(p, "r", encoding="utf-8") as f: data = json.load(f)
+            
+            data["output_folder_single"] = self.output_folder
+            data["last_doc_type"] = self.combo_type.currentText()
+            data["last_tips"] = self.txt_tips.toPlainText()
+            data["last_provider"] = self.combo_provider.currentText()
+            data["last_source"] = self.combo_source.currentText()
+            if self.base_path:
+                data["last_base_path"] = self.base_path
+            
+            logging.info(f"[SINCRO] Config salvato in {p}. Base: {self.base_path}")
+            with open(p, "w", encoding="utf-8") as f: json.dump(data, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            logging.error(f"[SINCRO] Errore salvataggio config: {e}")
+        except: pass
+
+    def load_presets(self):
+        self.combo_presets.clear(); self.combo_presets.addItem("--- Carica Nota dalla Banca Dati ---")
+        try:
+            if os.path.exists(PRESETS_FILE):
+                with open(PRESETS_FILE, "r", encoding="utf-8") as f:
+                    self.presets = json.load(f)
+                    for k in sorted(self.presets.keys()): self.combo_presets.addItem(k)
+        except: self.presets = {}
+
+    def save_current_preset(self):
+        t = self.txt_tips.toPlainText().strip()
+        if not t: return
+        n, ok = QInputDialog.getText(self, "Salva", "Nome nota:")
+        if ok and n: self.presets[n] = t; self.save_pf(); self.load_presets()
+
+    def save_pf(self):
+        with open(PRESETS_FILE, "w", encoding="utf-8") as f: json.dump(self.presets, f, indent=4)
+
+    def apply_preset(self):
+        p = self.combo_presets.currentText()
+        if p in self.presets: self.txt_tips.setPlainText(self.presets[p])
+
+    def delete_selected_preset(self):
+        p = self.combo_presets.currentText()
+        if p in self.presets:
+            if QMessageBox.question(self, "Elimina", f"Rimuovere '{p}'?") == QMessageBox.Yes:
+                del self.presets[p]; self.save_pf(); self.load_presets()
+
+    def select_output_folder(self):
+        f = QFileDialog.getExistingDirectory(self, "Seleziona", self.output_folder)
+        if f: self.output_folder = f; self.lbl_out_path.setText(f)
+
+    def select_base_hybrid(self):
+        p, _ = QFileDialog.getOpenFileName(self, "Base", "", "Database (*.ged *.csv)")
+        if p: 
+            self.base_path = p
+            self.lbl_base_path.setText(os.path.basename(p))
+            self.save_config() # Salva subito il percorso della base
+
+    def select_files(self):
+        f, _ = QFileDialog.getOpenFileNames(self, "Seleziona", "", "Archivio (*.pdf *.docx *.jpg *.jpeg *.png *.webp *.tiff *.tif *.bmp *.txt *.json *.csv)")
+        if f: self.selected_files = f; self.lbl_count.setText(f"{len(f)} file pronti")
+
+    def start_process(self):
+        if not self.selected_files: return
+        self.save_config()
+        # SINCRO v48.2: Forza il salvataggio nella cartella della BASE se presente
+        if self.base_path:
+            self.output_folder = os.path.dirname(self.base_path)
+            logging.info(f"[SINCRO] Output dirottato su cartella Base: {self.output_folder}")
+
+        # SINCRO v15.1: Bonifica caratteri illegali per Windows (/)
+        tag = self.combo_type.currentText().replace(" ", "_").replace("/", "_").lower()
+        fp = os.path.join(self.output_folder, f"genealogia_{tag}.ged")
+        self.btn_run.setEnabled(False); self.progress_bar.setVisible(True); self.progress_bar.setValue(1)
+        # Passiamo il Provider scelto invece della singola chiave
+        self.worker = GenealogyWorker(self.selected_files, self.combo_type.currentText(), self.txt_tips.toPlainText(), self.combo_provider.currentText(), fp, self.base_path)
+        self.worker.progress.connect(lambda v,m: (self.progress_bar.setValue(v), self.progress_bar.setFormat(m)))
+        self.worker.request_provider_change.connect(self.handle_provider_change)
+        self.worker.finished.connect(self.process_finished); self.worker.error.connect(self.process_error); self.worker.start()
+
+    def open_key_manager(self):
+        from key_manager import KeyManager
+        km = KeyManager()
+        import platform, subprocess
+        if os.path.exists(km.file_path):
+            try:
+                if platform.system() == 'Windows': os.startfile(km.file_path)
+                elif platform.system() == 'Darwin': subprocess.run(['open', km.file_path])
+                else: subprocess.run(['xdg-open', km.file_path])
+            except: QMessageBox.warning(self, "Errore", "Impossibile aprire il file CSV.")
+        else:
+            QMessageBox.warning(self, "Errore", "File chiavi non trovato.")
+
+    def handle_provider_change(self, current_prov, available_provs):
+        """Slot per gestire la richiesta di cambio provider interattivo."""
+        msg = f"Le chiavi di {current_prov} sono sature.\nVuoi passare a un altro provider disponibile?"
+        box = QMessageBox(self)
+        box.setWindowTitle("Saturazione API")
+        box.setText(msg)
+        box.setIcon(QMessageBox.Question)
+        
+        btns = {}
+        for p in available_provs:
+            b = box.addButton(f"Usa {p}", QMessageBox.AcceptRole)
+            btns[b] = p
+        
+        cancel = box.addButton("Annulla", QMessageBox.RejectRole)
+        box.exec()
+        
+        if box.clickedButton() in btns:
+            self.worker.provider_result = btns[box.clickedButton()]
+            # Sincronizza visivamente il dropdown
+            self.combo_provider.setCurrentText(self.worker.provider_result)
+        else:
+            self.worker.provider_result = None
+            
+        self.worker.wait_cond.wakeAll()
+
+    def process_finished(self, p, c):
+        self.btn_run.setEnabled(True); self.progress_bar.setVisible(False)
+        QMessageBox.information(self, "OK", f"Finito!\nFile: {p}\nRecord: {c}")
+
+    def process_error(self, e):
+        self.btn_run.setEnabled(True); QMessageBox.critical(self, "Stato Quota", str(e))

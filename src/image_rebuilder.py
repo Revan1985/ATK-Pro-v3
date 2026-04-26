@@ -7,7 +7,8 @@ Ricostruisce l'immagine finale dai tiles scaricati.
 import os
 from logging.handlers import RotatingFileHandler
 ATKPRO_ENV = os.environ.get("ATKPRO_ENV", "development").lower()
-logger = logging.getLogger(__name__)
+import logging
+from PIL import Image, ImageDraw, ImageFont
 if not logger.hasHandlers():
     handler = logging.StreamHandler()
     handler.setLevel(logging.DEBUG if ATKPRO_ENV != "production" else logging.WARNING)
@@ -18,18 +19,21 @@ if not logger.hasHandlers():
         logger.addHandler(file_handler)
 logger.setLevel(logging.DEBUG if ATKPRO_ENV != "production" else logging.WARNING)
 
-def rebuild_image(info, tile_dir, update_status=None, update_progress=None, on_error=None):
+def rebuild_image(info, tile_dir, source_url=None, update_status=None, update_progress=None, on_error=None):
     """
     Ricostruisce l'immagine finale a partire dai tiles scaricati.
     - info: dict con width, height, tiles[0]["width"]
     - tile_dir: cartella contenente i tile scaricati
+    - source_url: URL opzionale da inserire nel footer
     """
     try:
         width = info["width"]
         height = info["height"]
         tile_size = info["tiles"][0]["width"]
 
-        final_image = Image.new("RGB", (width, height))
+        # --- FOOTER LOGIC ---
+        footer_height = 60 if source_url else 0
+        final_image = Image.new("RGB", (width, height + footer_height), (255, 255, 255))
         cols = (width + tile_size - 1) // tile_size
         rows = (height + tile_size - 1) // tile_size
         total = cols * rows
@@ -80,6 +84,27 @@ def rebuild_image(info, tile_dir, update_status=None, update_progress=None, on_e
                         update_progress(progress)
                     except Exception:
                         pass
+
+        # Disegna footer
+        if source_url:
+            draw = ImageDraw.Draw(final_image)
+            font = None
+            font_paths = [
+                "arial.ttf", "Arial.ttf", 
+                "/System/Library/Fonts/Supplemental/Arial.ttf",
+                "/Library/Fonts/Arial.ttf",
+                "/System/Library/Fonts/Helvetica.ttc",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+            ]
+            for fpath in font_paths:
+                try:
+                    font = ImageFont.truetype(fpath, 35)
+                    break
+                except:
+                    continue
+            if not font:
+                font = ImageFont.load_default()
+            draw.text((20, height + 10), f"Source: {source_url}", fill=(0, 0, 0), font=font)
 
         logger.info("[OK] Immagine ricostruita correttamente dai tiles.")
         if update_status:
