@@ -469,7 +469,7 @@ def _add_close_button(layout: QVBoxLayout, dlg: QDialog, label: str = "Chiudi"):
     row = QHBoxLayout()
     row.addStretch()
     btn = QPushButton(label)
-    btn.setFixedWidth(120)
+    btn.setMinimumWidth(80)
     btn.clicked.connect(dlg.accept)
     row.addWidget(btn)
     layout.addLayout(row)

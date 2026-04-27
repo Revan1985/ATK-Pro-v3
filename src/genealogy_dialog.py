@@ -36,6 +36,24 @@ def extract_text_from_docx(docx_path):
     except Exception as e:
         return f"Errore DOCX: {str(e)}"
 
+
+def _enrich_prompt_with_text(prompt: str, text_content: str) -> str:
+    """
+    Modalità Pipeline Due Fasi: inietta una trascrizione diplomatica nel prompt
+    al posto dell'immagine. Valido per tutti i tipi documentali.
+    """
+    return (
+        f"{prompt}\n\n"
+        "NOTA OPERATIVA: Il documento non è un'immagine diretta ma una "
+        "TRASCRIZIONE DIPLOMATICA prodotta in fase precedente con OCR Avanzato "
+        "(paleografo specializzato). Il tuo compito è esclusivamente l'analisi "
+        "strutturale e l'estrazione genealogica dal testo seguente — non devi "
+        "eseguire OCR né interpretare grafia.\n\n"
+        "--- TRASCRIZIONE DIPLOMATICA ---\n"
+        f"{text_content.strip()}\n"
+        "--- FINE TRASCRIZIONE ---\n"
+    )
+
 class GenealogyWorker(QThread):
     progress = Signal(int, str)
     finished = Signal(str, int)
@@ -94,9 +112,24 @@ class GenealogyWorker(QThread):
                 while not success:
                     try:
                         prompt = compose_extraction_prompt(self.doc_type, self.tips)
-                        # Estrazione tramite handler specifico con salvataggio diagnostica MD (v37.0 Allineamento)
                         debug_dir = os.path.dirname(self.output_file_path)
-                        tx = handler.extract_genealogy(prompt, file_path, debug_dir=debug_dir)
+
+                        # PIPELINE DUE FASI: se il file è una trascrizione (.txt/.docx),
+                        # inietta il testo nel prompt e bypassa la pipeline immagine.
+                        # Valido per tutti i tipi documentali.
+                        file_ext = os.path.splitext(file_path)[1].lower()
+                        effective_image_path = file_path
+                        if file_ext == '.docx':
+                            text_content = extract_text_from_docx(file_path)
+                            prompt = _enrich_prompt_with_text(prompt, text_content)
+                            effective_image_path = None
+                        elif file_ext == '.txt':
+                            with open(file_path, 'r', encoding='utf-8', errors='replace') as _tf:
+                                text_content = _tf.read()
+                            prompt = _enrich_prompt_with_text(prompt, text_content)
+                            effective_image_path = None
+
+                        tx = handler.extract_genealogy(prompt, effective_image_path, debug_dir=debug_dir)
                         
                         # Se tx è già una lista (nuovo standard v36.9+), la usiamo direttamente
                         if isinstance(tx, list):

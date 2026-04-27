@@ -117,10 +117,81 @@ class GeminiHandler(AIProviderHandler):
         text = re.sub(r'":\s*["\s]{2,}(?=[,}\s])', '": "\\""', text)
         return text
 
+    def _parse_rows_from_text(self, raw_text: str) -> list:
+        """Parser unificato: estrae lista di righe da JSON o tabella Markdown."""
+        json_match = re.search(r"(\{.*\})|(\[.*\])", raw_text, re.DOTALL)
+        if json_match:
+            try:
+                data = json.loads(self._sanitize_json_text(json_match.group(0)))
+                def find_rows(obj):
+                    if isinstance(obj, list): return obj
+                    if isinstance(obj, dict):
+                        if "righe" in obj: return obj["righe"]
+                        for k, v in obj.items():
+                            if isinstance(v, list) and len(v) > 0: return v
+                        if '3' in obj or 3 in obj: return [obj]
+                        first_val = next(iter(obj.values()), None)
+                        if isinstance(first_val, dict): return list(obj.values())
+                    return []
+                return find_rows(data)
+            except Exception:
+                pass
+        return self._parse_markdown_table(raw_text)
+
+    def _extract_text_only_gemini(self, prompt: str, debug_dir=None) -> list:
+        """
+        PIPELINE DUE FASI — MODALITÀ TESTO: chiamata diretta a Gemini senza
+        pipeline immagine. Usata quando il documento è già stato trascritto con
+        OCR Avanzato e il testo è incorporato nel prompt.
+        Valida per tutti i tipi documentali.
+        """
+        import time
+        genai.configure(api_key=self.api_key)
+
+        # Modelli in ordine di preferenza: Pro per ragionamento, Flash come fallback
+        target_models = [
+            "models/gemini-2.5-pro",
+            "models/gemini-pro-latest",
+            "models/gemini-2.0-flash",
+            "models/gemini-flash-latest",
+        ]
+
+        for m_name in target_models:
+            try:
+                logging.info(f"[TEXT-MODE] Chiamata testo-only con {m_name}...")
+                vision_model = genai.GenerativeModel(model_name=m_name)
+                response = vision_model.generate_content(
+                    [prompt],
+                    generation_config=GenerationConfig(temperature=0.0, max_output_tokens=8192)
+                )
+                if response.text:
+                    raw_text = response.text
+                    if debug_dir:
+                        d_path = os.path.join(debug_dir, "DIAGNOSTICA_trascrizione_IA_TESTO.md")
+                        try:
+                            with open(d_path, "w", encoding="utf-8") as f:
+                                f.write(raw_text)
+                        except Exception:
+                            pass
+                    rows = self._parse_rows_from_text(raw_text)
+                    logging.info(f"[TEXT-MODE] Righe estratte: {len(rows)}")
+                    return rows
+            except Exception as e:
+                logging.warning(f"[TEXT-MODE] Errore con {m_name}: {e}")
+                if "429" in str(e) or "quota" in str(e).lower():
+                    time.sleep(10)
+                continue
+
+        raise Exception("Impossibile estrarre dati dal testo con i modelli Gemini disponibili.")
+
     def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
         if not genai:
             raise ImportError("La libreria 'google-generativeai' non è installata.")
-        
+
+        # PIPELINE DUE FASI: se non c'è immagine, usa il path testo-only
+        if not image_path or not os.path.exists(str(image_path or '')):
+            return self._extract_text_only_gemini(prompt, debug_dir)
+
         from PIL import Image, ImageEnhance, ImageFilter
         import io
         import time 
@@ -206,34 +277,8 @@ class GeminiHandler(AIProviderHandler):
                         f_name = os.path.join(debug_dir if debug_dir else os.getcwd(), f"DIAGNOSTICA_trascrizione_IA_{label}.md")
                         with open(f_name, "w", encoding="utf-8") as df:
                             df.write(raw_text)
-                            
-                        # PARSER ULTRADIFENSIVO v36.4
-                        q_rows = []
-                        import re
-                        json_match = re.search(r"(\{.*\})|(\[.*\])", raw_text, re.DOTALL)
-                        if json_match:
-                            try:
-                                sanitized_json = self._sanitize_json_text(json_match.group(0))
-                                data = json.loads(sanitized_json)
-                                def find_rows(obj):
-                                    if isinstance(obj, list): return obj
-                                    if isinstance(obj, dict):
-                                        # Caso A: l'oggetto è una lista annidata sotto una chiave
-                                        if "righe" in obj: return obj["righe"]
-                                        for k, v in obj.items():
-                                            if isinstance(v, list) and len(v) > 0: return v
-                                        # Caso B: l'oggetto è lui stesso una riga (ha chiavi numeriche es. '3')
-                                        if '3' in obj or 3 in obj: return [obj]
-                                        # Caso C: l'oggetto è un dizionario di righe (es. {"1": {...}, "2": {...}})
-                                        first_val = next(iter(obj.values()), None)
-                                        if isinstance(first_val, dict): return list(obj.values())
-                                        return []
-                                    return []
-                                q_rows = find_rows(data)
-                            except: q_rows = self._parse_markdown_table(raw_text)
-                        else:
-                            q_rows = self._parse_markdown_table(raw_text)
-                        
+
+                        q_rows = self._parse_rows_from_text(raw_text)
                         all_quadrant_rows.extend(q_rows)
                         success = True
                         break

@@ -51,7 +51,13 @@ BUILTIN_TYPES = [
         "gedcom": True,
     },
     {
-        "label": "Processetto Matrimoniale",
+        "label": "Stati delle Anime Granducato di Toscana",
+        "ocr": True,
+        "translation": False,
+        "gedcom": True,
+    },
+    {
+        "label": "Processetto / Allegati Matrimoniali",
         "ocr": True,
         "translation": True,
         "gedcom": True,
@@ -87,7 +93,13 @@ BUILTIN_TYPES = [
         "gedcom": True,
     },
     {
-        "label": "Manoscritto Generico / Altro",
+        "label": "Indice / Registro degli Atti",
+        "ocr": True,
+        "translation": False,
+        "gedcom": False,
+    },
+    {
+        "label": "Documento Generico / Non Classificato",
         "ocr": True,
         "translation": True,
         "gedcom": True,

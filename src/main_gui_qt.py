@@ -1423,16 +1423,6 @@ class MainWindow(QMainWindow):
             from PySide6.QtWidgets import QMessageBox
             QMessageBox.critical(self, "Errore", f"Impossibile aprire l'Analisi Genealogica: {e}")
 
-    def apri_ocr_avanzato(self):
-        from src.ocr_dialog import AdvancedOCRDialog
-        dialog = AdvancedOCRDialog(self, self.glossario_data, self.lingua)
-        dialog.exec()
-
-    def apri_traduzione_ocr(self):
-        from src.translation_dialog import TranslationDialog
-        dialog = TranslationDialog(self, self.glossario_data, self.lingua)
-        dialog.exec()
-
     def funzione_in_sviluppo(self):
         # Messaggio placeholder localizzato per tutte le voci Servizi
         msg = get_msg(self.glossario_data, "Funzione in sviluppo", self.lingua)
@@ -2113,10 +2103,8 @@ def ask_language(glossario_data, lingua_attuale, parent):
 
 def ask_image_formats(glossario_data, lingua):
     dlg = QDialog()
-    dlg.resize(270, 310)  # altezza aumentata per checkbox PDF
     dlg.setWindowTitle(get_msg(glossario_data, "Seleziona formati immagine", lingua.upper()))
     dlg.setWindowIcon(QIcon(get_pixmap_cached(asset_path("assets/common/grafici/ATK-Pro.ico"))))
-    _setup_dialog_pergamena(dlg, 270, 310)
 
     layout = QVBoxLayout(dlg)
     checks_layout = QHBoxLayout()
@@ -2161,6 +2149,9 @@ def ask_image_formats(glossario_data, lingua):
     btns.addWidget(ok_btn)
     btns.addWidget(cancel_btn)
     layout.addLayout(btns)
+
+    dlg.adjustSize()
+    _setup_dialog_pergamena(dlg, dlg.width(), dlg.height())
 
     if dlg.exec() == QDialog.Accepted:
         scelti = []

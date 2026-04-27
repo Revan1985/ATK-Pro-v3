@@ -49,14 +49,16 @@ class ZoomableView(QGraphicsView):
         self.scale(zoom_factor, zoom_factor)
 
 class OCRReviewDialog(QDialog):
-    def __init__(self, img_path, raw_text, parent=None):
+    def __init__(self, img_path, raw_text, parent=None, lingua=None, glossario_data=None):
         super().__init__(parent)
-        self.setWindowTitle("Revisione Interattiva OCR")
+        self.lingua = (lingua or "it").upper()
+        self.glossario_data = glossario_data
+        self.setWindowTitle(self.gm("Revisione Interattiva OCR"))
         from PySide6.QtCore import Qt
         self.setWindowFlags(self.windowFlags() | Qt.Window)
         self.setMinimumSize(900, 600)
         self.resize(1100, 750)
-        
+
         self.setStyleSheet("""
             QDialog { background-color: #181818; color: #fff; border: 2px solid #a67c52; }
             QLabel { color: #fff; font-size: 14px; }
@@ -64,9 +66,9 @@ class OCRReviewDialog(QDialog):
             QPushButton:hover { background-color: #333; }
             QTextEdit { background-color: #2a2a2a; color: #ccc; border: 1px solid #555; border-radius: 4px; font-size: 14px; }
         """)
-        
+
         layout = QHBoxLayout(self)
-        
+
         # Left side: Image Viewer
         pix = QPixmap(img_path)
         if not pix.isNull():
@@ -74,32 +76,36 @@ class OCRReviewDialog(QDialog):
             self.zoom_view.setStyleSheet("background-color: #2a2a2a; border: 1px solid #555;")
             layout.addWidget(self.zoom_view, 1)
         else:
-            lbl = QLabel("Immagine non disponibile")
+            lbl = QLabel(self.gm("Immagine non disponibile"))
             lbl.setAlignment(Qt.AlignCenter)
             layout.addWidget(lbl, 1)
-        
+
         # Right side: Editor + Buttons
         right_ly = QVBoxLayout()
-        lbl_info = QLabel("Correggi il testo a destra e clicca 'Approva' per salvare i file:")
+        lbl_info = QLabel(self.gm("Correggi il testo e clicca 'Approva' per salvare:"))
         lbl_info.setStyleSheet("color: #e6c891; font-weight: bold;")
         self.txt_editor = QTextEdit()
         self.txt_editor.setPlainText(raw_text)
-        
+
         btn_ly = QHBoxLayout()
-        btn_skip = QPushButton("Salta Pagina")
+        btn_skip = QPushButton(self.gm("Salta Pagina"))
         btn_skip.clicked.connect(self.reject)
-        btn_ok = QPushButton("Approva e Genera File")
+        btn_ok = QPushButton(self.gm("Approva e Genera File"))
         btn_ok.setStyleSheet("background-color: #a67c52; color: #fff; padding: 8px;")
         btn_ok.clicked.connect(self.accept)
-        
+
         btn_ly.addWidget(btn_skip)
         btn_ly.addWidget(btn_ok)
-        
+
         right_ly.addWidget(lbl_info)
         right_ly.addWidget(self.txt_editor)
         right_ly.addLayout(btn_ly)
-        
+
         layout.addLayout(right_ly, 1)
+
+    def gm(self, text):
+        res = get_msg(self.glossario_data, text, self.lingua)
+        return res if (res and res != text) else text
 
 class OCRThread(QThread):
     progress = Signal(int, int, str)
@@ -135,8 +141,18 @@ class OCRThread(QThread):
                 
             total = len(self.file_paths)
             for i, f_path in enumerate(self.file_paths):
-                self.progress.emit(i, total, f"{self.prefix_elab}{os.path.basename(f_path)}")
-                worker.process_file(f_path, review_callback=interceptor)
+                fname = os.path.basename(f_path)
+                self.progress.emit(i, total, f"{self.prefix_elab}{fname}")
+
+                # Callback per il progresso pagina-per-pagina dei PDF
+                file_idx, total_files, file_name = i, total, fname
+                def make_page_cb(fi, tf, fn):
+                    def cb(page_num, n_pages):
+                        self.progress.emit(fi, tf, f"{fn} — pag. {page_num}/{n_pages}")
+                    return cb
+
+                worker.process_file(f_path, review_callback=interceptor,
+                                    page_progress=make_page_cb(file_idx, total_files, file_name))
             self.progress.emit(total, total, "Completato")
             self.finished.emit(True, "Estrazione OCR completata con successo.")
         except Exception as e:
@@ -293,7 +309,6 @@ class AdvancedOCRDialog(QDialog):
         self.txt_istruzioni.setAcceptRichText(False)
         self.txt_istruzioni.setPlaceholderText(self.gm("Es: I nomi dei mesi sono in dialetto, ometti i timbri a margine..."))
         self.txt_istruzioni.setMaximumHeight(60)
-        layout.addWidget(lbl_istruzioni)
         layout.addWidget(self.txt_istruzioni)
 
         # Trascrizione di Esempio (Few-Shot)
@@ -516,7 +531,7 @@ class AdvancedOCRDialog(QDialog):
                 # Tipo custom: usa il prompt utente, con fallback al generico
                 custom_ocr = self._dtm.get_ocr_prompt(doc_type) or ""
                 from ocr_prompts import compose_ocr_prompt
-                final_prompt = compose_ocr_prompt("Manoscritto Generico / Altro", custom_ocr + ("\n" + custom_p if custom_p else ""), ex_text)
+                final_prompt = compose_ocr_prompt("Documento Generico / Non Classificato", custom_ocr + ("\n" + custom_p if custom_p else ""), ex_text)
             else:
                 from ocr_prompts import compose_ocr_prompt
                 final_prompt = compose_ocr_prompt(doc_type, custom_p, ex_text)
@@ -564,7 +579,8 @@ class AdvancedOCRDialog(QDialog):
                 logging.error(f"Errore salvataggio prompt archive: {e}")
 
     def show_review_dialog(self, img_path, raw_text):
-        dlg = OCRReviewDialog(img_path, raw_text, self)
+        dlg = OCRReviewDialog(img_path, raw_text, self,
+                              lingua=self.lingua, glossario_data=self.glossario_data)
         if dlg.exec():
             # Approva -> salviamo il testo modificato
             self.thread.reviewed_text = dlg.txt_editor.toPlainText().strip()
