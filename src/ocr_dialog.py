@@ -2,7 +2,7 @@ import os
 import threading
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
-    QComboBox, QCheckBox, QLineEdit, QFileDialog, QProgressBar, QMessageBox, QApplication, QTextEdit, QScrollArea, QGraphicsView
+    QComboBox, QCheckBox, QLineEdit, QFileDialog, QProgressBar, QMessageBox, QApplication, QTextEdit, QScrollArea, QGraphicsView, QInputDialog
 )
 from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QIcon, QFont, QPixmap
@@ -164,7 +164,7 @@ class AdvancedOCRDialog(QDialog):
         self.glossario_data = glossario_data
         self.lingua = lingua
         self.file_paths = []
-        self.saved_instructions_list = []
+        self.saved_instructions = {}  # {nome: testo}
         self.setup_ui()
         self.load_settings()
 
@@ -293,15 +293,32 @@ class AdvancedOCRDialog(QDialog):
         self.combo_istruzioni = QComboBox()
         self.combo_istruzioni.addItem(self.gm("-- Istruzioni Salvate --"), "")
         self.combo_istruzioni.currentIndexChanged.connect(self.load_saved_instruction)
-        
-        self.btn_save_istruzione = QPushButton(self.gm("Salva"))
-        self.btn_save_istruzione.setStyleSheet("background-color: #2a2a2a; color: #f5f0e8; border: 1px solid #888; padding: 2px 10px; border-radius: 4px; font-size: 11px;")
-        self.btn_save_istruzione.clicked.connect(self.save_current_instruction)
+
+        _btn_small = "background-color: #222; border: 1px solid #a67c52; border-radius: 4px; font-weight: bold; color: #a67c52; padding: 0px; font-size: 14px;"
+        self.btn_add_istruzione = QPushButton("+")
+        self.btn_add_istruzione.setToolTip(self.gm("Salva istruzione corrente con un nome"))
+        self.btn_add_istruzione.setFixedSize(26, 26)
+        self.btn_add_istruzione.setStyleSheet(_btn_small)
+        self.btn_add_istruzione.clicked.connect(self.add_instruction)
+
+        self.btn_ren_istruzione = QPushButton("✏")
+        self.btn_ren_istruzione.setToolTip(self.gm("Rinomina istruzione selezionata"))
+        self.btn_ren_istruzione.setFixedSize(26, 26)
+        self.btn_ren_istruzione.setStyleSheet(_btn_small)
+        self.btn_ren_istruzione.clicked.connect(self.rename_instruction)
+
+        self.btn_del_istruzione = QPushButton("✕")
+        self.btn_del_istruzione.setToolTip(self.gm("Elimina istruzione selezionata"))
+        self.btn_del_istruzione.setFixedSize(26, 26)
+        self.btn_del_istruzione.setStyleSheet("background-color: #2a1818; border: 1px solid #8a3a3a; border-radius: 4px; font-weight: bold; color: #cc6666; padding: 0px; font-size: 14px;")
+        self.btn_del_istruzione.clicked.connect(self.delete_instruction)
         
         istr_header_ly.addWidget(lbl_istruzioni)
         istr_header_ly.addStretch()
         istr_header_ly.addWidget(self.combo_istruzioni)
-        istr_header_ly.addWidget(self.btn_save_istruzione)
+        istr_header_ly.addWidget(self.btn_add_istruzione)
+        istr_header_ly.addWidget(self.btn_ren_istruzione)
+        istr_header_ly.addWidget(self.btn_del_istruzione)
         
         layout.addLayout(istr_header_ly)
         
@@ -351,8 +368,21 @@ class AdvancedOCRDialog(QDialog):
 
     def _on_type_changed_ocr(self):
         """Mostra/nasconde i pulsanti Modifica/Elimina in base al tipo selezionato."""
-        is_custom = self._dtm.is_custom(self.combo_type.currentText())
-        self.btn_edit_type.setVisible(is_custom)
+        label = self.combo_type.currentText()
+        is_custom = self._dtm.is_custom(label)
+        # ✏ visibile sempre: per built-in apre editor prompt, per custom apre NewDocTypeDialog
+        self.btn_edit_type.setVisible(True)
+        # indica override attivo con colore diverso
+        has_ov = not is_custom and self._dtm.has_builtin_override(label, "ocr")
+        self.btn_edit_type.setStyleSheet(
+            "background-color: #2a2a1a; border: 1px solid #cc9922; color: #ffcc44;"
+            if has_ov else ""
+        )
+        self.btn_edit_type.setToolTip(
+            self.gm("Override prompt attivo — clicca per modificare") if has_ov
+            else self.gm("Modifica prompt tipologia selezionata")
+        )
+        # ✕ solo per custom
         self.btn_del_type.setVisible(is_custom)
 
     def _add_custom_type(self):
@@ -369,13 +399,23 @@ class AdvancedOCRDialog(QDialog):
 
     def _edit_custom_type(self):
         label = self.combo_type.currentText()
-        data = self._dtm.get_custom_data(label)
-        if not data:
-            return
-        from new_doc_type_dialog import NewDocTypeDialog
-        dlg = NewDocTypeDialog(self, existing_data=data, lingua=self.lingua, glossario_data=self.glossario_data)
-        if dlg.exec() and dlg.result_data:
-            self._dtm.update_custom_type(**dlg.result_data)
+        if self._dtm.is_custom(label):
+            # Custom: apre NewDocTypeDialog come prima
+            data = self._dtm.get_custom_data(label)
+            if not data:
+                return
+            from new_doc_type_dialog import NewDocTypeDialog
+            dlg = NewDocTypeDialog(self, existing_data=data, lingua=self.lingua, glossario_data=self.glossario_data)
+            if dlg.exec() and dlg.result_data:
+                self._dtm.update_custom_type(**dlg.result_data)
+        else:
+            # Built-in: apre editor prompt con supporto override
+            from prompt_edit_dialog import PromptEditDialog
+            dlg = PromptEditDialog(self._dtm, label, "ocr", parent=self,
+                                   lingua=self.lingua, glossario_data=self.glossario_data)
+            if dlg.exec():
+                # Aggiorna stile pulsante (override potrebbe essere stato salvato o rimosso)
+                self._on_type_changed_ocr()
 
     def _delete_custom_type(self):
         label = self.combo_type.currentText()
@@ -440,11 +480,20 @@ class AdvancedOCRDialog(QDialog):
                 self.txt_esempio.setText(prefs.get('ocr_example_text', ''))
 
                 # Restore saved prompts history
-                self.saved_instructions_list = prefs.get('ocr_saved_prompts', [])
-                for txt in self.saved_instructions_list:
-                    trunc = txt.replace('\n', ' ')
-                    if len(trunc) > 40: trunc = trunc[:37] + "..."
-                    self.combo_istruzioni.addItem(trunc, txt)
+                # Restore saved instructions (new dict format via ocr_instructions.json)
+                instr_file = self._instructions_file_path()
+                if os.path.exists(instr_file):
+                    with open(instr_file, 'r', encoding='utf-8') as fi:
+                        self.saved_instructions = json.load(fi)
+                else:
+                    # Migrazione dal vecchio formato lista in config.json
+                    old_list = prefs.get('ocr_saved_prompts', [])
+                    for i, txt in enumerate(old_list, 1):
+                        nome = f"Istruzione {i}"
+                        self.saved_instructions[nome] = txt
+                    if old_list:
+                        self._save_instructions_file()
+                self._rebuild_combo_istruzioni()
 
             # Pre-carica la prima chiave disponibile dalla Cassaforte (KeyManager)
             prov_str = "Gemini"
@@ -533,8 +582,18 @@ class AdvancedOCRDialog(QDialog):
                 from ocr_prompts import compose_ocr_prompt
                 final_prompt = compose_ocr_prompt("Documento Generico / Non Classificato", custom_ocr + ("\n" + custom_p if custom_p else ""), ex_text)
             else:
+                # Built-in: controlla se esiste un override utente
+                override = self._dtm.get_ocr_prompt(doc_type)  # ritorna override se presente, None altrimenti
                 from ocr_prompts import compose_ocr_prompt
-                final_prompt = compose_ocr_prompt(doc_type, custom_p, ex_text)
+                if override:
+                    # Override attivo: usa il testo modificato dall'utente + user_instructions
+                    final_prompt = override
+                    if custom_p:
+                        final_prompt += f"\n\nISTRUZIONI AGGIUNTIVE:\n{custom_p}"
+                    if ex_text:
+                        final_prompt += f"\n\nTRASCRIZIONE DI ESEMPIO (stessa calligrafia):\n{ex_text}"
+                else:
+                    final_prompt = compose_ocr_prompt(doc_type, custom_p, ex_text)
         except Exception as e:
             import logging, traceback
             logging.error(f"[OCR] Errore composizione prompt: {e}\n{traceback.format_exc()}")
@@ -555,28 +614,85 @@ class AdvancedOCRDialog(QDialog):
         self.thread.finished.connect(self.ocr_finished)
         self.thread.start()
 
+    def _instructions_file_path(self):
+        """Percorso del file JSON delle istruzioni OCR salvate (stessa cartella di genealogy_presets.json)."""
+        from config_utils import _EXE_DIR
+        import os
+        return os.path.join(_EXE_DIR, "ocr_instructions.json")
+
+    def _save_instructions_file(self):
+        """Persiste il dizionario saved_instructions su disco."""
+        import json
+        with open(self._instructions_file_path(), 'w', encoding='utf-8') as f:
+            json.dump(self.saved_instructions, f, indent=2, ensure_ascii=False)
+
+    def _rebuild_combo_istruzioni(self):
+        """Ricostruisce il combo dalle chiavi del dizionario."""
+        self.combo_istruzioni.blockSignals(True)
+        self.combo_istruzioni.clear()
+        self.combo_istruzioni.addItem(self.gm("-- Istruzioni Salvate --"), "")
+        for nome in sorted(self.saved_instructions.keys()):
+            self.combo_istruzioni.addItem(nome, self.saved_instructions[nome])
+        self.combo_istruzioni.blockSignals(False)
+
     def load_saved_instruction(self, index):
         if index > 0:
             txt = self.combo_istruzioni.itemData(index)
             self.txt_istruzioni.setText(txt)
 
-    def save_current_instruction(self):
+    def add_instruction(self):
+        """Salva il testo corrente con un nome scelto dall'utente."""
         txt = self.txt_istruzioni.toPlainText().strip()
-        if not txt: return
-        if txt not in self.saved_instructions_list:
-            self.saved_instructions_list.append(txt)
-            trunc = txt.replace('\n', ' ')
-            if len(trunc) > 40: trunc = trunc[:37] + "..."
-            self.combo_istruzioni.addItem(trunc, txt)
-            self.combo_istruzioni.setCurrentIndex(self.combo_istruzioni.count() - 1)
-            
-            try:
-                from main_gui_qt import _write_config_prefs
-                _write_config_prefs('ocr_saved_prompts', self.saved_instructions_list)
-                QMessageBox.information(self, self.gm("Completato"), self.gm("Istruzione salvata nell'archivio."))
-            except Exception as e:
-                import logging
-                logging.error(f"Errore salvataggio prompt archive: {e}")
+        if not txt:
+            QMessageBox.warning(self, self.gm("Attenzione"), self.gm("Scrivi un'istruzione prima di salvarla."))
+            return
+        nome, ok = QInputDialog.getText(self, self.gm("Salva Istruzione"), self.gm("Nome per questa istruzione:"))
+        if not ok or not nome.strip():
+            return
+        nome = nome.strip()
+        self.saved_instructions[nome] = txt
+        self._save_instructions_file()
+        self._rebuild_combo_istruzioni()
+        idx = self.combo_istruzioni.findText(nome)
+        if idx >= 0:
+            self.combo_istruzioni.setCurrentIndex(idx)
+
+    def rename_instruction(self):
+        """Rinomina l'istruzione selezionata nel combo."""
+        idx = self.combo_istruzioni.currentIndex()
+        if idx <= 0:
+            QMessageBox.warning(self, self.gm("Attenzione"), self.gm("Seleziona prima un'istruzione dal menu."))
+            return
+        old_nome = self.combo_istruzioni.currentText()
+        new_nome, ok = QInputDialog.getText(self, self.gm("Rinomina"), self.gm("Nuovo nome:"), text=old_nome)
+        if not ok or not new_nome.strip() or new_nome.strip() == old_nome:
+            return
+        new_nome = new_nome.strip()
+        txt = self.saved_instructions.pop(old_nome)
+        self.saved_instructions[new_nome] = txt
+        self._save_instructions_file()
+        self._rebuild_combo_istruzioni()
+        idx = self.combo_istruzioni.findText(new_nome)
+        if idx >= 0:
+            self.combo_istruzioni.setCurrentIndex(idx)
+
+    def delete_instruction(self):
+        """Elimina l'istruzione selezionata nel combo."""
+        idx = self.combo_istruzioni.currentIndex()
+        if idx <= 0:
+            QMessageBox.warning(self, self.gm("Attenzione"), self.gm("Seleziona prima un'istruzione dal menu."))
+            return
+        nome = self.combo_istruzioni.currentText()
+        msg = QMessageBox(self)
+        msg.setWindowTitle(self.gm("Elimina Istruzione"))
+        msg.setText(f"{self.gm('Rimuovere')} \"{nome}\"?")
+        btn_si = msg.addButton(self.gm("Sì"), QMessageBox.ButtonRole.YesRole)
+        msg.addButton(self.gm("No"), QMessageBox.ButtonRole.NoRole)
+        msg.exec()
+        if msg.clickedButton() == btn_si:
+            self.saved_instructions.pop(nome, None)
+            self._save_instructions_file()
+            self._rebuild_combo_istruzioni()
 
     def show_review_dialog(self, img_path, raw_text):
         dlg = OCRReviewDialog(img_path, raw_text, self,

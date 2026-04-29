@@ -184,35 +184,267 @@ class AdvancedOCRWorker:
         return prompt
 
     def _transcribe_image(self, img_path, api_key):
-        """Dispatcher: instrada al provider corretto."""
-        b64_img = self._prepare_image_b64(img_path)
-        prompt  = self._build_prompt()
+        """Dispatcher: instrada al provider corretto.
+        Per immagini a doppia pagina affiancata (aspect ratio > 1.6) con Gemini,
+        esegue lo split TOP/BOTTOM per aumentare l'accuratezza OCR su tabelle lunghe."""
+        prompt   = self._build_prompt()
         provider = (self.provider or "Gemini").strip()
-        if "OpenAI" in provider or "GPT" in provider:
-            return self._transcribe_openai(api_key, b64_img, prompt)
-        if "Anthropic" in provider or "Claude" in provider:
-            return self._transcribe_anthropic(api_key, b64_img, prompt)
-        return self._transcribe_gemini(api_key, b64_img, prompt)
 
-    def _transcribe_gemini(self, api_key, b64_img, prompt):
-        """Trascrizione via Gemini REST (scoperta dinamica del modello)."""
-        from ai_utils import get_best_gemini_model
-        model = get_best_gemini_model(api_key, preferred="flash")
-        logging.info(f"[OCR] Gemini — modello: {model}")
+        # Per provider non-Gemini usa il path diretto
+        if "OpenAI" in provider or "GPT" in provider:
+            return self._transcribe_openai(api_key, self._prepare_image_b64(img_path), prompt)
+        if "Anthropic" in provider or "Claude" in provider:
+            return self._transcribe_anthropic(api_key, self._prepare_image_b64(img_path), prompt)
+
+        # Gemini: split se la tipologia documentale prevede doppia pagina
+        # oppure se l'immagine è effettivamente molto larga (foglio aperto fisico)
+        with Image.open(img_path) as _probe:
+            w, h = _probe.size
+        is_double_page = (
+            "DOPPIA PAGINA" in prompt  # il tipo documentale lo dichiara esplicitamente
+            or ((w / h) >= 1.6 if h > 0 else False)  # o il formato è fisicamente panoramico
+        )
+
+        if is_double_page:
+            return self._transcribe_gemini_split(img_path, api_key, prompt)
+
+        return self._transcribe_gemini(api_key, self._prepare_image_b64(img_path), prompt)
+
+    def _transcribe_gemini_split(self, img_path, api_key, prompt):
+        """Per immagini a doppia pagina affiancata: divide in TOP+BOTTOM,
+        trascrive ciascuna metà con il prompt completo (tutte le colonne visibili)
+        e concatena le righe. Questo approccio è più accurato dello split SX/DX
+        perché ogni chiamata vede tutte le colonne ma su meno righe."""
+
+        with Image.open(img_path) as img:
+            w, h = img.size
+            # Overlap del 20%: TOP va fino al 60%, BOTTOM parte dal 40%.
+            # Ogni riga è garantita di essere completamente visibile in almeno una metà.
+            cut_top = int(h * 0.60)
+            cut_bottom = int(h * 0.40)
+            top_img = img.crop((0, 0, w, cut_top))
+            bottom_img = img.crop((0, cut_bottom, w, h))
+
+            def _to_b64(pil_img):
+                max_size = 3072
+                if max(pil_img.size) > max_size:
+                    ratio = max_size / max(pil_img.size)
+                    pil_img = pil_img.resize(
+                        (int(pil_img.size[0] * ratio), int(pil_img.size[1] * ratio)),
+                        Image.Resampling.LANCZOS
+                    )
+                if pil_img.mode != "RGB":
+                    pil_img = pil_img.convert("RGB")
+                buf = io.BytesIO()
+                pil_img.save(buf, format="JPEG", quality=90)
+                return base64.b64encode(buf.getvalue()).decode("utf-8")
+
+            b64_top = _to_b64(top_img)
+            b64_bottom = _to_b64(bottom_img)
+
+        prompt_top = (
+            prompt
+            + "\n\nNOTA OPERATIVA — METÀ SUPERIORE DEL REGISTRO:"
+            " Stai vedendo i primi 2/3 circa del foglio aperto."
+            " Trascrivi TUTTE le righe visibili in questa metà, inclusa la riga di intestazione."
+            " Le due pagine fisiche affiancate formano UN'UNICA RIGA ciascuna:"
+            " unisci le colonne di sinistra e di destra con ' | ' (come già indicato sopra)."
+            "\n⚠ NON inventare righe non visibili nell'immagine."
+            "\nESEMPIO FORMATO OBBLIGATORIO (RISPETTA ESATTAMENTE):"
+            "\n  capofamiglia Ammogliato:  1 | 1 | 1 | Acciaj | Gaspero | 60 |  | 1 |  |  |  |  | Cattolica |  | Possidente | "
+            "\n  moglie (Maritata):        |  | 2 | \" | Rosa | 62 |  |  |  |  | 1 |  | \" |  |  | "
+            "\n  figlio Celibe:            |  | 3 | \" | Pietro | 1 | 1 |  |  |  |  |  | \" |  |  | "
+            "\n  figlia Nubile:            |  | 4 | \" | Rosa | 2 |  |  |  | 1 |  |  | \" |  |  | "
+            "\n  → Nelle righe di continuazione N°Casa (col.1) e N°Famiglia (col.2) sono BLANK."
+            "\n  → Il numero progressivo crescente va SEMPRE nella TERZA colonna (N°Progressivo)."
+            "\n  → NON mettere il numero progressivo nella seconda colonna (N°Famiglia)."
+            "\n⚠ STATO CIVILE — CONTA LE CASELLE DA SINISTRA:"
+            " le 6 caselle sono nell'ordine: [1]Celibe [2]Ammogliato [3]Vedovo [4]Nubile [5]Maritata [6]Vedova."
+            " Il segno (tratto, croce) in casella [1] = Celibe (maschio); in casella [4] = Nubile (femmina)."
+            " NON scambiare [1] con [4]: un bambino di 1 anno con il segno nella PRIMA casella è Celibe=maschio."
+        )
+
+        logging.info("[OCR] Immagine a doppia pagina — split TOP/BOTTOM (overlap 20%) per Gemini")
+        text_top = self._transcribe_gemini(api_key, b64_top, prompt_top)
+
+        # Costruisci contesto dalle ultime righe del TOP per aiutare il modello BOTTOM
+        # a riconoscere cambi di nucleo familiare alla prima riga visibile.
+        _lines_top_ctx = [l for l in text_top.strip().splitlines() if l.strip()]
+        _data_top_ctx = _lines_top_ctx[1:] if len(_lines_top_ctx) > 1 else _lines_top_ctx
+        _last_rows = _data_top_ctx[-3:] if _data_top_ctx else []
+        _context_note = ""
+        if _last_rows:
+            _context_note = (
+                "\n\nCONTESTO — ultime righe già trascritte dalla metà superiore:\n"
+                + "\n".join(_last_rows)
+                + "\nUsa queste righe come riferimento per determinare il numero progressivo e il nucleo"
+                " familiare in corso. Se la prima riga visibile nella tua immagine appartiene a un"
+                " NUOVO nucleo familiare (N°Casa e N°Famiglia diversi dall'ultima riga sopra),"
+                " compilane obbligatoriamente le colonne 1 e 2 con i numeri letti nell'immagine."
+            )
+
+        prompt_bottom = (
+            prompt
+            + "\n\nNOTA OPERATIVA — METÀ INFERIORE DEL REGISTRO:"
+            " Stai vedendo gli ultimi 2/3 circa del foglio aperto"
+            " (con una sovrapposizione rispetto alla metà superiore già trascritta)."
+            " Trascrivi TUTTE le righe visibili in questa metà."
+            " NON includere la riga di intestazione — inizia direttamente dalla prima riga dati."
+            " Le due pagine fisiche affiancate formano UN'UNICA RIGA ciascuna."
+            "\n⚠ NON inventare righe non visibili nell'immagine."
+            "\nESEMPIO FORMATO:"
+            "\n  riga continuazione: |  | 14 | \" | Pietro | 42 |  | 1 |  |  |  |  | \" |  |  | "
+            "\n  riga capofamiglia: 4 | 4 | 13 | Bargelli | Caterina | 72 |  |  |  |  |  | 1 | \" |  |  | "
+            "\n  → Nelle righe di continuazione N°Casa (col.1) e N°Famiglia (col.2) sono BLANK."
+            "\n  → Il numero progressivo va SEMPRE nella TERZA colonna."
+            + _context_note
+        )
+
+        text_bottom = self._transcribe_gemini(api_key, b64_bottom, prompt_bottom)
+
+        # Salva diagnostica raw TOP/BOTTOM per debugging
+        try:
+            import pathlib
+            stem = pathlib.Path(img_path).stem
+            diag_dir = self.output_dir if (self.output_dir and os.path.isdir(self.output_dir)) else os.getcwd()
+            for label, raw in (("TOP", text_top), ("BOTTOM", text_bottom)):
+                diag_path = os.path.join(diag_dir, f"DIAG_{stem}_{label}.txt")
+                with open(diag_path, "w", encoding="utf-8") as _df:
+                    _df.write(raw)
+            logging.debug(f"[OCR] Diagnostica split salvata in: {diag_dir}")
+        except Exception as _de:
+            logging.warning(f"[OCR] Impossibile salvare diagnostica split: {_de}")
+
+        lines_top = [l for l in text_top.strip().splitlines() if l.strip()]
+        lines_bottom = [l for l in text_bottom.strip().splitlines() if l.strip()]
+
+        # Rimuovi intestazione dal bottom se il modello l'ha inclusa
+        if lines_bottom and any(
+            k in lines_bottom[0]
+            for k in ("N°", "Religione", "Cognome", "Nome", "Età", "Casa", "Famiglia")
+        ):
+            lines_bottom = lines_bottom[1:]
+
+        if not lines_top:
+            return "\n".join(lines_bottom)
+
+        # Merge con column-level fusion per le righe nell'overlap (TOP e BOTTOM).
+        # Strategia: per ogni riga presente in entrambi, il TOP è master (ha visibilità ottimale
+        # sulla zona superiore). Se il TOP ha un valore non-blank per una colonna, lo usa; altrimenti
+        # integra con il BOTTOM. Questo preserva N°Casa/N°Fam dal TOP per le righe di cambio nucleo.
+        def _get_prog(row: str):
+            parts = [p.strip() for p in row.split("|")]
+            if len(parts) >= 3:
+                try:
+                    return int(parts[2])
+                except ValueError:
+                    pass
+            return None
+
+        def _merge_cols(top_row: str, bot_row: str) -> str:
+            """Merge sovrapposizione: BOTTOM è master (lettura ottimale nella zona centrale).
+            Il TOP integra SOLO le colonne 0 (N°Casa) e 1 (N°Fam) se il BOTTOM le ha vuote,
+            perché il TOP ha visibilità del contesto del nucleo familiare precedente."""
+            tc = [c.strip() for c in top_row.split("|")]
+            bc = [c.strip() for c in bot_row.split("|")]
+            # Riempi N°Casa e N°Fam dal TOP se il BOTTOM è blank
+            for idx in (0, 1):
+                if idx < len(tc) and idx < len(bc) and not bc[idx] and tc[idx]:
+                    bc[idx] = tc[idx]
+            return " | ".join(bc)
+
+        header_lines = [lines_top[0]] if lines_top else []
+        data_top = lines_top[1:] if len(lines_top) > 1 else []
+
+        # Mappe {prog: riga} per TOP e BOTTOM
+        top_map: dict[int, str] = {}
+        for row in data_top:
+            p = _get_prog(row)
+            if p is not None:
+                top_map[p] = row
+
+        valid_bottom_progs = [p for p in (_get_prog(l) for l in lines_bottom) if p is not None]
+        first_bottom_prog = min(valid_bottom_progs) if valid_bottom_progs else None
+        max_top_prog = max(top_map.keys()) if top_map else None
+
+        if first_bottom_prog is not None and max_top_prog is not None:
+            # Righe solo nel TOP (prima della zona di overlap)
+            rows_top_only = [row for row in data_top
+                             if (_get_prog(row) or 0) < first_bottom_prog]
+
+            # Righe nell'overlap: column-level merge (TOP master)
+            overlap_rows = []
+            for row in lines_bottom:
+                p = _get_prog(row)
+                if p is not None and p <= max_top_prog:
+                    if p in top_map:
+                        overlap_rows.append(_merge_cols(top_map[p], row))
+                    else:
+                        overlap_rows.append(row)  # solo nel BOTTOM
+
+            # Righe solo nel BOTTOM (oltre la fine del TOP)
+            rows_bottom_only = [row for row in lines_bottom
+                                 if (_get_prog(row) or 0) > max_top_prog]
+
+            merged_data = rows_top_only + overlap_rows + rows_bottom_only
+        else:
+            # Fallback: comportamento conservativo
+            data_top_filtered = [row for row in data_top
+                                  if (_get_prog(row) or 0) < (first_bottom_prog or float("inf"))]
+            merged_data = data_top_filtered + lines_bottom
+
+        return "\n".join(header_lines + merged_data)
+
+    def _call_gemini_rest(self, api_key, model, b64_img, prompt):
+        """Chiama l'API REST Gemini con un'immagine e ritorna il testo."""
         url = f"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={api_key}"
         payload = {
             "contents": [{"parts": [
                 {"text": prompt},
                 {"inline_data": {"mime_type": "image/jpeg", "data": b64_img}}
             ]}],
-            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 4096}
+            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 32768}
         }
-        resp = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, timeout=120)
+        resp = requests.post(url, headers={"Content-Type": "application/json"}, json=payload, timeout=180)
         resp.raise_for_status()
         res_json = resp.json()
         if "candidates" in res_json:
-            return res_json["candidates"][0]["content"]["parts"][0]["text"]
+            candidate = res_json["candidates"][0]
+            finish_reason = candidate.get("finishReason", "UNKNOWN")
+            content = candidate.get("content", {})
+            parts = content.get("parts", [])
+            if parts and "text" in parts[0]:
+                return parts[0]["text"]
+            logging.warning(f"[OCR] Gemini risposta senza testo. finishReason={finish_reason}, content={str(content)[:200]}")
+            raise Exception(f"Risposta Gemini senza testo (finishReason={finish_reason})")
         raise Exception(f"Risposta Gemini vuota: {res_json}")
+
+    def _transcribe_gemini(self, api_key, b64_img, prompt):
+        """Trascrizione via Gemini REST. Per OCR usa pro → flash come fallback."""
+        from ai_utils import get_best_gemini_model
+
+        # Ordine di preferenza: prima pro (più accurato su tabelle), poi flash
+        model_candidates = [
+            get_best_gemini_model(api_key, preferred="pro"),
+            get_best_gemini_model(api_key, preferred="flash"),
+        ]
+        # Rimuovi duplicati mantenendo l'ordine
+        seen = set()
+        model_candidates = [m for m in model_candidates if m not in seen and not seen.add(m)]
+
+        last_error = None
+        for model in model_candidates:
+            try:
+                logging.info(f"[OCR] Gemini — modello: {model}")
+                return self._call_gemini_rest(api_key, model, b64_img, prompt)
+            except Exception as e:
+                err_str = str(e).lower()
+                last_error = e
+                if any(k in err_str for k in ["404", "not found", "does_not_exist", "invalid"]):
+                    logging.warning(f"[OCR] Modello {model} non disponibile, provo successivo.")
+                    continue
+                raise e
+        raise Exception(f"[OCR] Nessun modello Gemini disponibile. Ultimo errore: {last_error}")
 
     def _transcribe_openai(self, api_key, b64_img, prompt):
         """Trascrizione via OpenAI Vision (gpt-4o)."""

@@ -196,8 +196,18 @@ class TranslationDialog(QDialog):
         main_layout.addLayout(bottom_ly)
 
     def _on_type_changed_tr(self):
-        is_custom = self._dtm.is_custom(self.combo_type.currentText())
-        self.btn_edit_type.setVisible(is_custom)
+        label = self.combo_type.currentText()
+        is_custom = self._dtm.is_custom(label)
+        self.btn_edit_type.setVisible(True)
+        has_ov = not is_custom and self._dtm.has_builtin_override(label, "translation")
+        self.btn_edit_type.setStyleSheet(
+            "background-color: #2a2a1a; border: 1px solid #cc9922; color: #ffcc44;"
+            if has_ov else ""
+        )
+        self.btn_edit_type.setToolTip(
+            self.gm("Override prompt attivo — clicca per modificare") if has_ov
+            else self.gm("Modifica prompt tipologia selezionata")
+        )
         self.btn_del_type.setVisible(is_custom)
 
     def _add_custom_type(self):
@@ -214,13 +224,20 @@ class TranslationDialog(QDialog):
 
     def _edit_custom_type(self):
         label = self.combo_type.currentText()
-        data = self._dtm.get_custom_data(label)
-        if not data:
-            return
-        from new_doc_type_dialog import NewDocTypeDialog
-        dlg = NewDocTypeDialog(self, existing_data=data, lingua=self.lingua, glossario_data=self.glossario_data)
-        if dlg.exec() and dlg.result_data:
-            self._dtm.update_custom_type(**dlg.result_data)
+        if self._dtm.is_custom(label):
+            data = self._dtm.get_custom_data(label)
+            if not data:
+                return
+            from new_doc_type_dialog import NewDocTypeDialog
+            dlg = NewDocTypeDialog(self, existing_data=data, lingua=self.lingua, glossario_data=self.glossario_data)
+            if dlg.exec() and dlg.result_data:
+                self._dtm.update_custom_type(**dlg.result_data)
+        else:
+            from prompt_edit_dialog import PromptEditDialog
+            dlg = PromptEditDialog(self._dtm, label, "translation", parent=self,
+                                   lingua=self.lingua, glossario_data=self.glossario_data)
+            if dlg.exec():
+                self._on_type_changed_tr()
 
     def _delete_custom_type(self):
         label = self.combo_type.currentText()

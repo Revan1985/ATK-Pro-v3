@@ -120,6 +120,7 @@ class DocumentTypeManager:
 
     def __init__(self):
         self._custom: list[dict] = []
+        self._overrides: dict = {}   # {label: {"ocr": str, "translation": str, "gedcom": str}}
         self._load()
 
     # ------------------------------------------------------------------
@@ -130,20 +131,26 @@ class DocumentTypeManager:
         path = _custom_types_path()
         if not os.path.exists(path):
             self._custom = []
+            self._overrides = {}
             return
         try:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             self._custom = data.get("custom_types", [])
+            self._overrides = data.get("builtin_overrides", {})
         except Exception as e:
             logging.error(f"[DTM] Errore caricamento document_types.json: {e}")
             self._custom = []
+            self._overrides = {}
 
     def _save(self):
         path = _custom_types_path()
         try:
             with open(path, "w", encoding="utf-8") as f:
-                json.dump({"custom_types": self._custom}, f, ensure_ascii=False, indent=2)
+                json.dump(
+                    {"custom_types": self._custom, "builtin_overrides": self._overrides},
+                    f, ensure_ascii=False, indent=2
+                )
         except Exception as e:
             logging.error(f"[DTM] Errore salvataggio document_types.json: {e}")
 
@@ -184,21 +191,29 @@ class DocumentTypeManager:
         """
         Restituisce il prompt OCR per la tipologia indicata,
         o None se non trovato (usa il fallback generico del chiamante).
+        Cerca prima negli override utente, poi nei custom, poi ritorna None (built-in usa ocr_prompts).
         """
         bare = self.bare_label(label)
+        # Override built-in ha precedenza assoluta
+        ov = self._overrides.get(bare, {}).get("ocr", "").strip()
+        if ov:
+            return ov
         if self.is_custom(label):
             custom = self._find_custom(bare)
             if custom:
                 return custom.get("ocr_prompt", "").strip() or None
             return None
-        # Built-in: delegato a ocr_prompts.compose_ocr_prompt
-        return None  # Il chiamante usa compose_ocr_prompt direttamente
+        # Built-in senza override: delegato a ocr_prompts.compose_ocr_prompt
+        return None
 
     def get_translation_prompt(self, label: str) -> str | None:
         """
-        Restituisce il prompt di traduzione per la tipologia indicata.
+        Restituisce la sezione type_specific del prompt di traduzione (override o None).
         """
         bare = self.bare_label(label)
+        ov = self._overrides.get(bare, {}).get("translation", "").strip()
+        if ov:
+            return ov
         if self.is_custom(label):
             custom = self._find_custom(bare)
             if custom:
@@ -208,15 +223,61 @@ class DocumentTypeManager:
 
     def get_gedcom_prompt(self, label: str) -> str | None:
         """
-        Restituisce il prompt GEDCOM per la tipologia indicata.
+        Restituisce il prompt GEDCOM per la tipologia indicata (override o None).
         """
         bare = self.bare_label(label)
+        ov = self._overrides.get(bare, {}).get("gedcom", "").strip()
+        if ov:
+            return ov
         if self.is_custom(label):
             custom = self._find_custom(bare)
             if custom:
                 return custom.get("gedcom_prompt", "").strip() or None
             return None
         return None
+
+    # ------------------------------------------------------------------
+    # Override prompt per tipologie built-in
+    # ------------------------------------------------------------------
+
+    def has_builtin_override(self, label: str, service: str) -> bool:
+        """True se esiste un override utente per il built-in (service: 'ocr'/'translation'/'gedcom')."""
+        bare = self.bare_label(label)
+        return bool(self._overrides.get(bare, {}).get(service, "").strip())
+
+    def set_builtin_override(self, label: str, service: str, prompt: str) -> None:
+        """Salva/aggiorna l'override di un prompt built-in."""
+        bare = self.bare_label(label)
+        if bare not in self._overrides:
+            self._overrides[bare] = {}
+        self._overrides[bare][service] = prompt.strip()
+        self._save()
+
+    def delete_builtin_override(self, label: str, service: str) -> None:
+        """Rimuove l'override di un prompt built-in, ripristinando il default."""
+        bare = self.bare_label(label)
+        if bare in self._overrides:
+            self._overrides[bare].pop(service, None)
+            if not self._overrides[bare]:  # voce vuota → rimuovi
+                del self._overrides[bare]
+            self._save()
+
+    def get_builtin_original_prompt(self, label: str, service: str) -> str:
+        """Restituisce il prompt originale built-in (ignora override) come testo leggibile."""
+        bare = self.bare_label(label)
+        try:
+            if service == "ocr":
+                from ocr_prompts import compose_ocr_prompt
+                return compose_ocr_prompt(bare)
+            elif service == "translation":
+                from translation_prompts import compose_translation_prompt
+                return compose_translation_prompt(bare, source_text="[TESTO_SORGENTE]", target_lang="Italiano")
+            elif service == "gedcom":
+                from genealogy_prompts import compose_extraction_prompt
+                return compose_extraction_prompt(bare)
+        except Exception:
+            pass
+        return ""
 
     # ------------------------------------------------------------------
     # Gestione custom
