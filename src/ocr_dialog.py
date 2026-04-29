@@ -49,11 +49,12 @@ class ZoomableView(QGraphicsView):
         self.scale(zoom_factor, zoom_factor)
 
 class OCRReviewDialog(QDialog):
-    def __init__(self, img_path, raw_text, parent=None, lingua=None, glossario_data=None):
+    def __init__(self, img_path, raw_text, parent=None, lingua=None, glossario_data=None,
+                 ok_label=None, skip_label=None, title=None):
         super().__init__(parent)
         self.lingua = (lingua or "it").upper()
         self.glossario_data = glossario_data
-        self.setWindowTitle(self.gm("Revisione Interattiva OCR"))
+        self.setWindowTitle(title if title else self.gm("Revisione Interattiva OCR"))
         from PySide6.QtCore import Qt
         self.setWindowFlags(self.windowFlags() | Qt.Window)
         self.setMinimumSize(900, 600)
@@ -88,9 +89,9 @@ class OCRReviewDialog(QDialog):
         self.txt_editor.setPlainText(raw_text)
 
         btn_ly = QHBoxLayout()
-        btn_skip = QPushButton(self.gm("Salta Pagina"))
+        btn_skip = QPushButton(skip_label if skip_label else self.gm("Salta Pagina"))
         btn_skip.clicked.connect(self.reject)
-        btn_ok = QPushButton(self.gm("Approva e Genera File"))
+        btn_ok = QPushButton(ok_label if ok_label else self.gm("Approva e Genera File"))
         btn_ok.setStyleSheet("background-color: #a67c52; color: #fff; padding: 8px;")
         btn_ok.clicked.connect(self.accept)
 
@@ -157,6 +158,44 @@ class OCRThread(QThread):
             self.finished.emit(True, "Estrazione OCR completata con successo.")
         except Exception as e:
             self.finished.emit(False, str(e))
+
+
+class CalibrationThread(QThread):
+    """Thread che elabora solo il TOP 60% del primo file per la calibrazione assistita."""
+    preview_ready = Signal(str, str)  # (tmp_img_path, testo_raw)
+    error = Signal(str)
+
+    def __init__(self, file_path, provider, api_key, base_prompt):
+        super().__init__()
+        self.file_path = file_path
+        self.provider = provider
+        self.api_key = api_key
+        self.base_prompt = base_prompt
+
+    def run(self):
+        try:
+            worker = AdvancedOCRWorker(self.provider, self.api_key, [], None)
+            last_error = None
+            for attempt in range(len(worker.api_keys)):
+                try:
+                    tmp_path, text = worker.transcribe_top_preview(
+                        self.file_path, worker._current_key(), self.base_prompt
+                    )
+                    self.preview_ready.emit(tmp_path, text)
+                    return
+                except Exception as e:
+                    err_str = str(e).lower()
+                    last_error = e
+                    is_quota = any(k in err_str for k in ["429", "quota", "resource_exhausted", "rate"])
+                    if is_quota:
+                        if not worker._rotate_key():
+                            break
+                    else:
+                        raise e
+            self.error.emit(str(last_error))
+        except Exception as e:
+            self.error.emit(str(e))
+
 
 class AdvancedOCRDialog(QDialog):
     def __init__(self, parent=None, glossario_data=None, lingua="it"):
@@ -284,6 +323,15 @@ class AdvancedOCRDialog(QDialog):
         self.chk_interactive = QCheckBox("Abilita Finestra di Revisione Interattiva prima di salvare l'OCR")
         self.chk_interactive.setStyleSheet("color: #f5f0e8; font-weight: bold; margin-top: 5px; margin-bottom: 5px;")
         layout.addWidget(self.chk_interactive)
+
+        # Calibrazione Assistita Checkbox
+        self.chk_calibration = QCheckBox("Abilita Calibrazione Assistita (anteprima TOP per creare il riferimento)")
+        self.chk_calibration.setStyleSheet("color: #c8e6c9; font-weight: bold; margin-bottom: 5px;")
+        self.chk_calibration.setToolTip(
+            "Il programma elabora le prime righe, le mostra per correzione,\n"
+            "poi usa il testo corretto come riferimento per l'elaborazione completa."
+        )
+        layout.addWidget(self.chk_calibration)
 
         # Istruzioni extra con Archiviazione
         istr_header_ly = QHBoxLayout()
@@ -572,28 +620,9 @@ class AdvancedOCRDialog(QDialog):
         elif "Anthropic" in self.combo_prov.currentText(): prov_str = "Claude"
 
         # Costruisce il prompt dalla tipologia documentale selezionata
-        doc_type = self.combo_type.currentText()
-        custom_p = self.txt_istruzioni.toPlainText().strip()
         ex_text = self.txt_esempio.toPlainText().strip()
         try:
-            if self._dtm.is_custom(doc_type):
-                # Tipo custom: usa il prompt utente, con fallback al generico
-                custom_ocr = self._dtm.get_ocr_prompt(doc_type) or ""
-                from ocr_prompts import compose_ocr_prompt
-                final_prompt = compose_ocr_prompt("Documento Generico / Non Classificato", custom_ocr + ("\n" + custom_p if custom_p else ""), ex_text)
-            else:
-                # Built-in: controlla se esiste un override utente
-                override = self._dtm.get_ocr_prompt(doc_type)  # ritorna override se presente, None altrimenti
-                from ocr_prompts import compose_ocr_prompt
-                if override:
-                    # Override attivo: usa il testo modificato dall'utente + user_instructions
-                    final_prompt = override
-                    if custom_p:
-                        final_prompt += f"\n\nISTRUZIONI AGGIUNTIVE:\n{custom_p}"
-                    if ex_text:
-                        final_prompt += f"\n\nTRASCRIZIONE DI ESEMPIO (stessa calligrafia):\n{ex_text}"
-                else:
-                    final_prompt = compose_ocr_prompt(doc_type, custom_p, ex_text)
+            final_prompt = self._compose_final_prompt(ex_text)
         except Exception as e:
             import logging, traceback
             logging.error(f"[OCR] Errore composizione prompt: {e}\n{traceback.format_exc()}")
@@ -603,16 +632,120 @@ class AdvancedOCRDialog(QDialog):
         self.btn_start.setEnabled(False)
         self.progress_bar.setValue(0)
 
+        # --- Calibrazione Assistita ---
+        if self.chk_calibration.isChecked() and not ex_text and self.file_paths:
+            try:
+                base_prompt = self._compose_final_prompt("")  # prompt senza esempio
+            except Exception as e:
+                self.btn_start.setEnabled(True)
+                return
+            self._start_calibration(base_prompt, fmt, out_dir, prov_str)
+            return
+
+        # --- Flusso standard ---
+        self._launch_ocr_thread(final_prompt, fmt, out_dir, prov_str)
+
+    def _compose_final_prompt(self, ex_text):
+        """Compone il prompt finale con il testo di esempio fornito."""
+        doc_type = self.combo_type.currentText()
+        custom_p = self.txt_istruzioni.toPlainText().strip()
+        from ocr_prompts import compose_ocr_prompt
+        if self._dtm.is_custom(doc_type):
+            custom_ocr = self._dtm.get_ocr_prompt(doc_type) or ""
+            return compose_ocr_prompt(
+                "Documento Generico / Non Classificato",
+                custom_ocr + ("\n" + custom_p if custom_p else ""),
+                ex_text
+            )
+        else:
+            override = self._dtm.get_ocr_prompt(doc_type)
+            if override:
+                prompt = override
+                if custom_p:
+                    prompt += f"\n\nISTRUZIONI AGGIUNTIVE:\n{custom_p}"
+                if ex_text:
+                    prompt += f"\n\nTRASCRIZIONE DI ESEMPIO (stessa calligrafia):\n{ex_text}"
+                return prompt
+            else:
+                return compose_ocr_prompt(doc_type, custom_p, ex_text)
+
+    def _launch_ocr_thread(self, final_prompt, fmt, out_dir, prov_str):
+        """Avvia il thread OCR principale."""
         interact = self.chk_interactive.isChecked()
         self.thread = OCRThread(
             self.file_paths, prov_str, self.txt_api.text(),
             fmt, out_dir, self.gm("Elaborazione: "),
-            final_prompt, "", interact  # prompt già composto, example_text incluso
+            final_prompt, "", interact
         )
         self.thread.review_requested.connect(self.show_review_dialog)
         self.thread.progress.connect(self.update_progress)
         self.thread.finished.connect(self.ocr_finished)
         self.thread.start()
+
+    def _start_calibration(self, base_prompt, fmt, out_dir, prov_str):
+        """Avvia la calibrazione assistita sul primo file del batch."""
+        self._calib_fmt      = fmt
+        self._calib_out_dir  = out_dir
+        self._calib_prov_str = prov_str
+        self._calib_base_prompt = base_prompt
+
+        self.progress_lbl.setText(self.gm("Calibrazione: analisi delle prime righe in corso…"))
+        self.progress_bar.setMaximum(0)  # indeterminato
+
+        self.calib_thread = CalibrationThread(
+            self.file_paths[0], prov_str, self.txt_api.text(), base_prompt
+        )
+        self.calib_thread.preview_ready.connect(self._on_calibration_ready)
+        self.calib_thread.error.connect(self._on_calibration_error)
+        self.calib_thread.start()
+
+    def _on_calibration_ready(self, tmp_img_path, raw_text):
+        """Mostra il dialog di revisione calibrazione, poi avvia l'elaborazione completa."""
+        self.progress_bar.setMaximum(100)
+        self.progress_lbl.setText("")
+
+        dlg = OCRReviewDialog(
+            tmp_img_path, raw_text, self,
+            lingua=self.lingua, glossario_data=self.glossario_data,
+            ok_label=self.gm("Usa come Riferimento e Continua"),
+            skip_label=self.gm("Salta Calibrazione"),
+            title=self.gm("Calibrazione Assistita — Correggi le prime righe")
+        )
+
+        approved = dlg.exec()
+        ex_text = dlg.txt_editor.toPlainText().strip() if approved else ""
+
+        # Pulisci immagine temporanea
+        try:
+            os.remove(tmp_img_path)
+        except Exception:
+            pass
+
+        # Se l'utente ha approvato, aggiorna il campo "Trascrizione di Riferimento"
+        if approved and ex_text:
+            self.txt_esempio.setPlainText(ex_text)
+
+        # Avvia elaborazione completa con o senza esempio
+        try:
+            final_prompt = self._compose_final_prompt(ex_text)
+        except Exception as e:
+            import logging, traceback
+            logging.error(f"[OCR] Errore composizione prompt post-calibrazione: {e}\n{traceback.format_exc()}")
+            QMessageBox.critical(self, "Errore Prompt", f"Impossibile costruire il prompt OCR:\n{e}")
+            self.btn_start.setEnabled(True)
+            return
+
+        self._launch_ocr_thread(final_prompt, self._calib_fmt, self._calib_out_dir, self._calib_prov_str)
+
+    def _on_calibration_error(self, err_msg):
+        """Gestisce un errore durante la calibrazione."""
+        import logging
+        logging.error(f"[OCR] Errore calibrazione: {err_msg}")
+        self.btn_start.setEnabled(True)
+        self.progress_bar.setMaximum(100)
+        self.progress_lbl.setText("")
+        QMessageBox.critical(self, self.gm("Errore Calibrazione"),
+                             f"{self.gm('Errore durante la calibrazione assistita')}:\n{err_msg}")
 
     def _instructions_file_path(self):
         """Percorso del file JSON delle istruzioni OCR salvate (stessa cartella di genealogy_presets.json)."""

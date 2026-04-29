@@ -183,6 +183,64 @@ class AdvancedOCRWorker:
         prompt += "\nINIZIA LA TRASCRIZIONE:"
         return prompt
 
+    def transcribe_top_preview(self, img_path, api_key, base_prompt):
+        """Elabora solo il TOP 60% dell'immagine per la calibrazione assistita.
+        Ritorna (tmp_image_path, text). Il chiamante deve eliminare tmp_image_path."""
+        import tempfile
+
+        with Image.open(img_path) as img:
+            w, h = img.size
+            top_pil = img.crop((0, 0, w, int(h * 0.60))).copy()
+
+        # Ridimensiona e prepara b64
+        max_size = 4096
+        if max(top_pil.size) > max_size:
+            ratio = max_size / max(top_pil.size)
+            top_pil = top_pil.resize(
+                (int(top_pil.size[0] * ratio), int(top_pil.size[1] * ratio)),
+                Image.Resampling.LANCZOS
+            )
+        if top_pil.mode != "RGB":
+            top_pil = top_pil.convert("RGB")
+
+        # Salva crop come JPEG temporaneo (per mostrarlo nel dialog di revisione)
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix=".jpg", prefix="atk_calib_")
+        os.close(tmp_fd)
+        top_pil.save(tmp_path, format="JPEG", quality=95)
+
+        buf = io.BytesIO()
+        top_pil.save(buf, format="JPEG", quality=95)
+        b64_top = base64.b64encode(buf.getvalue()).decode("utf-8")
+
+        fmt_examples = (
+            "\nESEMPIO FORMATO (RISPETTA ESATTAMENTE):"
+            "\n  capofamiglia Ammogliato:  1 | 1 | 1 | Acciaj | Gaspero | 60 |  | 1 |  |  |  |  | Cattolico |  | Possidente | "
+            "\n  moglie Maritata:          |  | 2 | \" | Rosa | 62 |  |  |  |  | 1 |  | \" |  |  | "
+            "\n  figlio Celibe (età 3):    |  | 5 | \" | Giuseppe | 3 | 1 |  |  |  |  |  | \" |  |  | "
+            "\n  figlia Nubile (età 4):    |  | 7 | \" | Rosa | 4 |  |  |  | 1 |  |  | \" |  |  | "
+            "\n  figlia Nubile (età 1):    |  | 8 | \" | Tina | 1 |  |  |  | 1 |  |  | \" |  |  | "
+            "\n  → ATTENZIONE: un bambino/a di 1 anno può essere sia maschio (Celibe, col.1) sia femmina (Nubile, col.4)."
+            "\n  → LEGGI SEMPRE IL NOME ESATTAMENTE come scritto: non correggere 'Tina' in 'Pietro'."
+            "\n  → Col.1 e Col.2 BLANK nelle righe di continuazione."
+            "\n  → Il progressivo crescente va SEMPRE in Col.3."
+            "\n⚠ STATO CIVILE — 6 caselle da sinistra: [1]Celibe [2]Ammogliato [3]Vedovo"
+            " [4]Nubile [5]Maritata [6]Vedova. Segno in [1]=maschio Celibe; in [4]=femmina Nubile."
+            " NON confondere casella [1] con [4]."
+        )
+
+        prompt_top = (
+            base_prompt
+            + "\n\nNOTA OPERATIVA — METÀ SUPERIORE (primo ~60% del foglio aperto):"
+            " Trascrivi TUTTE le righe visibili, inclusa la riga di intestazione."
+            " Le due pagine fisiche affiancate formano UN'UNICA RIGA: unisci le colonne con ' | '."
+            "\n⚠ NON inventare righe non visibili nell'immagine."
+            + fmt_examples
+        )
+
+        text = self._transcribe_gemini(api_key, b64_top, prompt_top)
+        logging.info(f"[OCR] Calibrazione: anteprima TOP estratta — {len(text.splitlines())} righe")
+        return tmp_path, text
+
     def _transcribe_image(self, img_path, api_key):
         """Dispatcher: instrada al provider corretto.
         Per immagini a doppia pagina affiancata (aspect ratio > 1.6) con Gemini,
@@ -211,22 +269,18 @@ class AdvancedOCRWorker:
         return self._transcribe_gemini(api_key, self._prepare_image_b64(img_path), prompt)
 
     def _transcribe_gemini_split(self, img_path, api_key, prompt):
-        """Per immagini a doppia pagina affiancata: divide in TOP+BOTTOM,
-        trascrive ciascuna metà con il prompt completo (tutte le colonne visibili)
-        e concatena le righe. Questo approccio è più accurato dello split SX/DX
-        perché ogni chiamata vede tutte le colonne ma su meno righe."""
+        """Split 2-vie (TOP/BOTTOM) con overlap 20% per immagini a doppia pagina.
+        Risoluzione nativa: max_size=4096, quality=95.
+        Merge: BOTTOM è master; TOP integra solo N°Casa/N°Fam se BOTTOM li ha vuoti."""
 
         with Image.open(img_path) as img:
             w, h = img.size
-            # Overlap del 20%: TOP va fino al 60%, BOTTOM parte dal 40%.
-            # Ogni riga è garantita di essere completamente visibile in almeno una metà.
-            cut_top = int(h * 0.60)
-            cut_bottom = int(h * 0.40)
-            top_img = img.crop((0, 0, w, cut_top))
-            bottom_img = img.crop((0, cut_bottom, w, h))
+            # TOP: 0% → 60%,  BOTTOM: 40% → 100%  (overlap 20%)
+            top_img = img.crop((0, 0,             w, int(h * 0.60)))
+            bot_img = img.crop((0, int(h * 0.40), w, h))
 
             def _to_b64(pil_img):
-                max_size = 3072
+                max_size = 4096
                 if max(pil_img.size) > max_size:
                     ratio = max_size / max(pil_img.size)
                     pil_img = pil_img.resize(
@@ -236,78 +290,73 @@ class AdvancedOCRWorker:
                 if pil_img.mode != "RGB":
                     pil_img = pil_img.convert("RGB")
                 buf = io.BytesIO()
-                pil_img.save(buf, format="JPEG", quality=90)
+                pil_img.save(buf, format="JPEG", quality=95)
                 return base64.b64encode(buf.getvalue()).decode("utf-8")
 
             b64_top = _to_b64(top_img)
-            b64_bottom = _to_b64(bottom_img)
+            b64_bot = _to_b64(bot_img)
+
+        fmt_examples = (
+            "\nESEMPIO FORMATO (RISPETTA ESATTAMENTE):"
+            "\n  capofamiglia Ammogliato:  1 | 1 | 1 | Acciaj | Gaspero | 60 |  | 1 |  |  |  |  | Cattolico |  | Possidente | "
+            "\n  moglie Maritata:          |  | 2 | \" | Rosa | 62 |  |  |  |  | 1 |  | \" |  |  | "
+            "\n  figlio Celibe (età 3):    |  | 5 | \" | Giuseppe | 3 | 1 |  |  |  |  |  | \" |  |  | "
+            "\n  figlia Nubile (età 4):    |  | 7 | \" | Rosa | 4 |  |  |  | 1 |  |  | \" |  |  | "
+            "\n  figlia Nubile (età 1):    |  | 8 | \" | Tina | 1 |  |  |  | 1 |  |  | \" |  |  | "
+            "\n  → ATTENZIONE: un bambino/a di 1 anno può essere sia maschio (Celibe, col.1) sia femmina (Nubile, col.4)."
+            "\n  → LEGGI SEMPRE IL NOME ESATTAMENTE come scritto: non correggere 'Tina' in 'Pietro'."
+            "\n  → Col.1 e Col.2 BLANK nelle righe di continuazione."
+            "\n  → Il progressivo crescente va SEMPRE in Col.3."
+            "\n⚠ STATO CIVILE — 6 caselle da sinistra: [1]Celibe [2]Ammogliato [3]Vedovo"
+            " [4]Nubile [5]Maritata [6]Vedova. Segno in [1]=maschio Celibe; in [4]=femmina Nubile."
+            " NON confondere casella [1] con [4]."
+        )
 
         prompt_top = (
             prompt
-            + "\n\nNOTA OPERATIVA — METÀ SUPERIORE DEL REGISTRO:"
-            " Stai vedendo i primi 2/3 circa del foglio aperto."
-            " Trascrivi TUTTE le righe visibili in questa metà, inclusa la riga di intestazione."
-            " Le due pagine fisiche affiancate formano UN'UNICA RIGA ciascuna:"
-            " unisci le colonne di sinistra e di destra con ' | ' (come già indicato sopra)."
+            + "\n\nNOTA OPERATIVA — METÀ SUPERIORE (primo ~60% del foglio aperto):"
+            " Trascrivi TUTTE le righe visibili, inclusa la riga di intestazione."
+            " Le due pagine fisiche affiancate formano UN'UNICA RIGA: unisci le colonne con ' | '."
             "\n⚠ NON inventare righe non visibili nell'immagine."
-            "\nESEMPIO FORMATO OBBLIGATORIO (RISPETTA ESATTAMENTE):"
-            "\n  capofamiglia Ammogliato:  1 | 1 | 1 | Acciaj | Gaspero | 60 |  | 1 |  |  |  |  | Cattolica |  | Possidente | "
-            "\n  moglie (Maritata):        |  | 2 | \" | Rosa | 62 |  |  |  |  | 1 |  | \" |  |  | "
-            "\n  figlio Celibe:            |  | 3 | \" | Pietro | 1 | 1 |  |  |  |  |  | \" |  |  | "
-            "\n  figlia Nubile:            |  | 4 | \" | Rosa | 2 |  |  |  | 1 |  |  | \" |  |  | "
-            "\n  → Nelle righe di continuazione N°Casa (col.1) e N°Famiglia (col.2) sono BLANK."
-            "\n  → Il numero progressivo crescente va SEMPRE nella TERZA colonna (N°Progressivo)."
-            "\n  → NON mettere il numero progressivo nella seconda colonna (N°Famiglia)."
-            "\n⚠ STATO CIVILE — CONTA LE CASELLE DA SINISTRA:"
-            " le 6 caselle sono nell'ordine: [1]Celibe [2]Ammogliato [3]Vedovo [4]Nubile [5]Maritata [6]Vedova."
-            " Il segno (tratto, croce) in casella [1] = Celibe (maschio); in casella [4] = Nubile (femmina)."
-            " NON scambiare [1] con [4]: un bambino di 1 anno con il segno nella PRIMA casella è Celibe=maschio."
+            + fmt_examples
         )
 
-        logging.info("[OCR] Immagine a doppia pagina — split TOP/BOTTOM (overlap 20%) per Gemini")
+        logging.info("[OCR] Immagine doppia pagina — split TOP/BOTTOM (overlap 20%, max_size=4096, quality=95)")
         text_top = self._transcribe_gemini(api_key, b64_top, prompt_top)
 
-        # Costruisci contesto dalle ultime righe del TOP per aiutare il modello BOTTOM
-        # a riconoscere cambi di nucleo familiare alla prima riga visibile.
-        _lines_top_ctx = [l for l in text_top.strip().splitlines() if l.strip()]
-        _data_top_ctx = _lines_top_ctx[1:] if len(_lines_top_ctx) > 1 else _lines_top_ctx
-        _last_rows = _data_top_ctx[-3:] if _data_top_ctx else []
-        _context_note = ""
-        if _last_rows:
-            _context_note = (
+        # Contesto: ultime 3 righe del TOP per aiutare il BOTTOM a gestire i cambi nucleo
+        _lines_ctx = [l for l in text_top.strip().splitlines() if l.strip()]
+        _data_ctx  = _lines_ctx[1:] if (len(_lines_ctx) > 1 and any(
+            k in _lines_ctx[0] for k in ("N°", "Cognome", "Nome", "Età", "Casa")
+        )) else _lines_ctx
+        _ctx_note = ""
+        if _data_ctx[-3:]:
+            _ctx_note = (
                 "\n\nCONTESTO — ultime righe già trascritte dalla metà superiore:\n"
-                + "\n".join(_last_rows)
-                + "\nUsa queste righe come riferimento per determinare il numero progressivo e il nucleo"
-                " familiare in corso. Se la prima riga visibile nella tua immagine appartiene a un"
-                " NUOVO nucleo familiare (N°Casa e N°Famiglia diversi dall'ultima riga sopra),"
+                + "\n".join(_data_ctx[-3:])
+                + "\nSe la prima riga visibile qui inizia un NUOVO nucleo familiare"
+                " (N°Casa e N°Famiglia diversi dall'ultima riga sopra),"
                 " compilane obbligatoriamente le colonne 1 e 2 con i numeri letti nell'immagine."
             )
 
-        prompt_bottom = (
+        prompt_bot = (
             prompt
-            + "\n\nNOTA OPERATIVA — METÀ INFERIORE DEL REGISTRO:"
-            " Stai vedendo gli ultimi 2/3 circa del foglio aperto"
-            " (con una sovrapposizione rispetto alla metà superiore già trascritta)."
-            " Trascrivi TUTTE le righe visibili in questa metà."
-            " NON includere la riga di intestazione — inizia direttamente dalla prima riga dati."
-            " Le due pagine fisiche affiancate formano UN'UNICA RIGA ciascuna."
+            + "\n\nNOTA OPERATIVA — METÀ INFERIORE (ultimo ~60% del foglio aperto,"
+            " con sovrapposizione rispetto alla metà superiore già trascritta):"
+            " NON includere la riga di intestazione — inizia dalla prima riga dati."
+            " Le due pagine fisiche affiancate formano UN'UNICA RIGA: unisci le colonne con ' | '."
             "\n⚠ NON inventare righe non visibili nell'immagine."
-            "\nESEMPIO FORMATO:"
-            "\n  riga continuazione: |  | 14 | \" | Pietro | 42 |  | 1 |  |  |  |  | \" |  |  | "
-            "\n  riga capofamiglia: 4 | 4 | 13 | Bargelli | Caterina | 72 |  |  |  |  |  | 1 | \" |  |  | "
-            "\n  → Nelle righe di continuazione N°Casa (col.1) e N°Famiglia (col.2) sono BLANK."
-            "\n  → Il numero progressivo va SEMPRE nella TERZA colonna."
-            + _context_note
+            + fmt_examples
+            + _ctx_note
         )
+        text_bot = self._transcribe_gemini(api_key, b64_bot, prompt_bot)
 
-        text_bottom = self._transcribe_gemini(api_key, b64_bottom, prompt_bottom)
-
-        # Salva diagnostica raw TOP/BOTTOM per debugging
+        # Salva diagnostica raw per debugging
         try:
             import pathlib
             stem = pathlib.Path(img_path).stem
             diag_dir = self.output_dir if (self.output_dir and os.path.isdir(self.output_dir)) else os.getcwd()
-            for label, raw in (("TOP", text_top), ("BOTTOM", text_bottom)):
+            for label, raw in (("TOP", text_top), ("BOTTOM", text_bot)):
                 diag_path = os.path.join(diag_dir, f"DIAG_{stem}_{label}.txt")
                 with open(diag_path, "w", encoding="utf-8") as _df:
                     _df.write(raw)
@@ -315,23 +364,7 @@ class AdvancedOCRWorker:
         except Exception as _de:
             logging.warning(f"[OCR] Impossibile salvare diagnostica split: {_de}")
 
-        lines_top = [l for l in text_top.strip().splitlines() if l.strip()]
-        lines_bottom = [l for l in text_bottom.strip().splitlines() if l.strip()]
-
-        # Rimuovi intestazione dal bottom se il modello l'ha inclusa
-        if lines_bottom and any(
-            k in lines_bottom[0]
-            for k in ("N°", "Religione", "Cognome", "Nome", "Età", "Casa", "Famiglia")
-        ):
-            lines_bottom = lines_bottom[1:]
-
-        if not lines_top:
-            return "\n".join(lines_bottom)
-
-        # Merge con column-level fusion per le righe nell'overlap (TOP e BOTTOM).
-        # Strategia: per ogni riga presente in entrambi, il TOP è master (ha visibilità ottimale
-        # sulla zona superiore). Se il TOP ha un valore non-blank per una colonna, lo usa; altrimenti
-        # integra con il BOTTOM. Questo preserva N°Casa/N°Fam dal TOP per le righe di cambio nucleo.
+        # --- Merge: BOTTOM master, TOP integra solo N°Casa/N°Fam se BOTTOM li ha vuoti ---
         def _get_prog(row: str):
             parts = [p.strip() for p in row.split("|")]
             if len(parts) >= 3:
@@ -341,57 +374,54 @@ class AdvancedOCRWorker:
                     pass
             return None
 
-        def _merge_cols(top_row: str, bot_row: str) -> str:
-            """Merge sovrapposizione: BOTTOM è master (lettura ottimale nella zona centrale).
-            Il TOP integra SOLO le colonne 0 (N°Casa) e 1 (N°Fam) se il BOTTOM le ha vuote,
-            perché il TOP ha visibilità del contesto del nucleo familiare precedente."""
-            tc = [c.strip() for c in top_row.split("|")]
-            bc = [c.strip() for c in bot_row.split("|")]
-            # Riempi N°Casa e N°Fam dal TOP se il BOTTOM è blank
-            for idx in (0, 1):
-                if idx < len(tc) and idx < len(bc) and not bc[idx] and tc[idx]:
-                    bc[idx] = tc[idx]
-            return " | ".join(bc)
+        def _has_header(line: str) -> bool:
+            return any(k in line for k in ("N°", "Religione", "Cognome", "Nome", "Età", "Casa", "Famiglia"))
+
+        lines_top = [l for l in text_top.strip().splitlines() if l.strip()]
+        lines_bot = [l for l in text_bot.strip().splitlines() if l.strip()]
+
+        # Rimuovi intestazione dal bottom se il modello l'ha inclusa
+        if lines_bot and _has_header(lines_bot[0]):
+            lines_bot = lines_bot[1:]
+
+        if not lines_top:
+            return "\n".join(lines_bot)
 
         header_lines = [lines_top[0]] if lines_top else []
-        data_top = lines_top[1:] if len(lines_top) > 1 else []
+        data_top = lines_top[1:] if (lines_top and _has_header(lines_top[0])) else lines_top
 
-        # Mappe {prog: riga} per TOP e BOTTOM
+        # Mappa prog → riga per il TOP
         top_map: dict[int, str] = {}
         for row in data_top:
             p = _get_prog(row)
             if p is not None:
                 top_map[p] = row
 
-        valid_bottom_progs = [p for p in (_get_prog(l) for l in lines_bottom) if p is not None]
-        first_bottom_prog = min(valid_bottom_progs) if valid_bottom_progs else None
-        max_top_prog = max(top_map.keys()) if top_map else None
+        valid_bot_progs = [p for p in (_get_prog(l) for l in lines_bot) if p is not None]
+        first_bot_prog  = min(valid_bot_progs) if valid_bot_progs else None
+        max_top_prog    = max(top_map.keys())  if top_map        else None
 
-        if first_bottom_prog is not None and max_top_prog is not None:
-            # Righe solo nel TOP (prima della zona di overlap)
-            rows_top_only = [row for row in data_top
-                             if (_get_prog(row) or 0) < first_bottom_prog]
+        def _merge_cols(top_row: str, bot_row: str) -> str:
+            """BOTTOM master: integra N°Casa(col 0) e N°Fam(col 1) dal TOP solo se BOTTOM li ha vuoti."""
+            tc = [c.strip() for c in top_row.split("|")]
+            bc = [c.strip() for c in bot_row.split("|")]
+            for idx in (0, 1):
+                if idx < len(tc) and idx < len(bc) and not bc[idx] and tc[idx]:
+                    bc[idx] = tc[idx]
+            return " | ".join(bc)
 
-            # Righe nell'overlap: column-level merge (TOP master)
-            overlap_rows = []
-            for row in lines_bottom:
+        if first_bot_prog is not None and max_top_prog is not None:
+            rows_top_only   = [r for r in data_top   if (_get_prog(r) or 0) < first_bot_prog]
+            overlap_rows    = []
+            for row in lines_bot:
                 p = _get_prog(row)
                 if p is not None and p <= max_top_prog:
-                    if p in top_map:
-                        overlap_rows.append(_merge_cols(top_map[p], row))
-                    else:
-                        overlap_rows.append(row)  # solo nel BOTTOM
-
-            # Righe solo nel BOTTOM (oltre la fine del TOP)
-            rows_bottom_only = [row for row in lines_bottom
-                                 if (_get_prog(row) or 0) > max_top_prog]
-
-            merged_data = rows_top_only + overlap_rows + rows_bottom_only
+                    overlap_rows.append(_merge_cols(top_map[p], row) if p in top_map else row)
+            rows_bot_only   = [r for r in lines_bot  if (_get_prog(r) or 0) > max_top_prog]
+            merged_data = rows_top_only + overlap_rows + rows_bot_only
         else:
-            # Fallback: comportamento conservativo
-            data_top_filtered = [row for row in data_top
-                                  if (_get_prog(row) or 0) < (first_bottom_prog or float("inf"))]
-            merged_data = data_top_filtered + lines_bottom
+            top_only = [r for r in data_top if (_get_prog(r) or 0) < (first_bot_prog or float("inf"))]
+            merged_data = top_only + lines_bot
 
         return "\n".join(header_lines + merged_data)
 
