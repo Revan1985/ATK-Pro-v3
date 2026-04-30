@@ -33,6 +33,7 @@ def get_available_types():
         "Atto di Stato Civile (Matrimonio)",
         "Atto di Stato Civile (Morte / Sepoltura)",
         "Processetto / Allegati Matrimoniali",
+        "Pubblicazioni di Matrimonio (registro bandi)",
         # ── Registri Parrocchiali (Concilio di Trento, sec. XVI-XIX) ───────────────
         "Registro Parrocchiale — Battesimi (sec. XVI-XIX)",
         "Registro Parrocchiale — Matrimoni (sec. XVI-XIX)",
@@ -41,6 +42,10 @@ def get_available_types():
         "Anagrafe / Censimento Lombardo-Veneto (sec. XIX)",
         "Stato delle Anime / Censimento Parrocchiale",
         "Censimento Storico (Generico)",
+        "Catasto Onciario (Due Sicilie, sec. XVIII)",
+        # ── Leva Militare (1865-1940) ──────────────────────────────────────────────────
+        "Ruolo di Matricola / Leva Militare (1865-1940)",
+        "Foglio Matricolare (scheda individuale, 1865-1940)",
         "Indice / Registro degli Atti",
         "Documento Notarile",
         "Atto in Latino Ecclesiastico",
@@ -547,6 +552,35 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- Se un singolo foglio contiene più deposizioni o atti distinti, separa ciascuno con"
             " '--- ATTO N ---' prima di ogni sezione.\n"
         ),
+        "Pubblicazioni di Matrimonio (registro bandi)": (
+            "\nTIPOLOGIA: Registro delle Pubblicazioni di Matrimonio (bandi).\n"
+            "Registro autonomo tenuto dall'ufficiale di stato civile (SC) o dal parroco (registro\n"
+            "parrocchiale), distinto dall'atto di matrimonio vero e proprio. Ogni bando elenca la\n"
+            "coppia e viene ripetuto per tre domeniche/giorni festivi consecutivi.\n"
+            "\nSTRUTTURA TIPICA (varia tra SC e parrocchiale):\n"
+            "- Intestazione di pagina: anno, comune o parrocchia, ufficiale o parroco.\n"
+            "- Per OGNI pubblicazione:\n"
+            "  * N° della pubblicazione (progressivo annuale).\n"
+            "  * Data della prima, seconda e terza pubblicazione.\n"
+            "  * Sposo: nome, cognome, età o data di nascita, professione, domicilio,\n"
+            "    stato civile (celibe/vedovo), nome del padre e della madre (con 'fu' se defunti).\n"
+            "  * Sposa: stesse informazioni; cognome da nubile.\n"
+            "  * Eventuali opposizioni ricevute: trascrivi per intero.\n"
+            "  * Esito: 'Nessuna opposizione' / 'Opposizione da parte di...' / 'Dispensato'.\n"
+            "- Firma dell'ufficiale o del parroco.\n"
+            "\nVARIANTI:\n"
+            "- SCN (1806-1815): tre pubblicazioni obbligatorie nei giorni festivi;\n"
+            "  formula molto standard.\n"
+            "- SCR/SCI: stessa struttura con varianti locali (date domenicali).\n"
+            "- Registro parrocchiale: formula in latino ('facta prima / secunda / tertia\n"
+            "  proclamatione die...') o in italiano; eventuali note di dispensa vescovile.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Se la pagina contiene PIÙ DI UNA PUBBLICAZIONE, separa ciascuna con\n"
+            "  '--- PUBBLICAZIONE N ---'.\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- MARGINALIA (frequenti: opposizioni tardive, annotazioni di avvenuto matrimonio):\n"
+            "  trascrivi con il tag [MARGINE: ...].\n"
+        ),
 
         # ── Registri Parrocchiali (Concilio di Trento, sec. XVI-XIX) ──────────────
         "Registro Parrocchiale — Battesimi (sec. XVI-XIX)": (
@@ -864,6 +898,126 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             " le colonne di sinistra e di destra formano insieme un'unica riga: trascrivile come"
             " riga continua unita da ' | ', non come due righe separate.\n"
         ),
+        "Catasto Onciario (Due Sicilie, sec. XVIII)": (
+            "\nTIPOLOGIA: Catasto Onciario del Regno delle Due Sicilie (sec. XVIII, 1740-1753 ca.).\n"
+            "Strumento fiscale borbonico che censisce ogni 'fuoco' (nucleo familiare/unità produttiva)\n"
+            "di ogni comune del Regno. Fonte primaria per la genealogia meridionale pre-stato civile.\n"
+            "\nSTRUTTURA DEL DOCUMENTO:\n"
+            "Il catasto onciario è suddiviso in sezioni per categoria di contribuente:\n"
+            "  1. FUOCHI DESCRITTI (cittadini ordinari): capofamiglia, famiglia, beni.\n"
+            "  2. FUOCHI FRANCHI O PRIVILEGIATI (clero, nobili, vedove, orfani).\n"
+            "  3. UNIVERSITÀ (beni comuni del paese).\n"
+            "  4. FUOCHI FORESTIERI (proprietari non residenti).\n"
+            "\nPER OGNI FUOCO / NUCLEO FAMILIARE trascrivi:\n"
+            "  [INTESTAZIONE FUOCO]\n"
+            "  - N° del fuoco (progressivo) e nome del capofamiglia (con titolo: 'Don', 'mastro', ecc.).\n"
+            "  - Professione / mestiere del capofamiglia.\n"
+            "  - Età dichiarata (spesso arrotondata al quinquennio).\n"
+            "  [COMPONENTI FAMIGLIA]\n"
+            "  - Moglie: nome, età.\n"
+            "  - Figli: nome, sesso, età.\n"
+            "  - Altri conviventi: relazione, nome, età.\n"
+            "  [BENI DICHIARATI]\n"
+            "  - Beni stabili (terre, case, botteghe): descrizione, estensione, ubicazione, valore in once.\n"
+            "  - Industria (attività artigianale/commerciale): descrizione e reddito annuo in grana/once.\n"
+            "  - Capitali a credito (censi, prestiti): creditore/debitore, somma, interesse.\n"
+            "  [ONCIATURA]\n"
+            "  - Totale imponibile in once, tarì e grana (es. '12 once, 3 tarì, 10 grana').\n"
+            "  - Deduzioni (moglie, figli, debiti): elenca con valori.\n"
+            "  - Netto tassabile finale.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- La grafia è corsiva napoletana (sec. XVIII): frequenti abbreviazioni;\n"
+            "  scioglile con <> (es. 'on.' = <once>, 'gr.' = <grana>, 'tt.' = <tarì>).\n"
+            "- 'Fu' indica genitore/marito defunto: trascrivi letteralmente.\n"
+            "- 'Vedova di...' o 'pupillo/a di fu...' sono frequenti per fuochi franchi.\n"
+            "- Unità di misura locali per le terre: 'tomolo', 'moggio', 'versura', 'canna';\n"
+            "  trascrivi letteralmente senza convertire.\n"
+            "- Separa ogni fuoco con '--- FUOCO N ---'.\n"
+            "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
+        ),
+
+        # ── Leva Militare (1865-1940) ────────────────────────────────────────────
+        "Ruolo di Matricola / Leva Militare (1865-1940)": (
+            "\nTIPOLOGIA: Ruolo di Matricola della Leva Militare (1865-1940).\n"
+            "Registro tabellare annuale redatto dal Distretto Militare per classe di nascita.\n"
+            "Ogni pagina elenca pi\u00f9 coscritti in righe; le colonne sono prestampate e fisse per legge.\n"
+            "\nSTRUTTURA DELLE COLONNE (dal modello ministeriale):\n"
+            "  Col.1  = N\u00b0 di matricola (progressivo del ruolo)\n"
+            "  Col.2  = Cognome\n"
+            "  Col.3  = Nome (e nome del padre)\n"
+            "  Col.4  = Data di nascita (giorno, mese, anno)\n"
+            "  Col.5  = Comune e provincia di nascita\n"
+            "  Col.6  = Professione al momento della leva\n"
+            "  Col.7  = Istruzione (sa leggere/scrivere / analfabeta)\n"
+            "  Col.8  = Statura in cm (es. '1m 68' o '168')\n"
+            "  Col.9  = Capelli (colore e forma: 'castani lisci', 'neri ricci', ecc.)\n"
+            "  Col.10 = Occhi (colore: 'castani', 'azzurri', 'grigi')\n"
+            "  Col.11 = Colorito (incarnato: 'sano', 'pallido', 'bruno')\n"
+            "  Col.12 = Segni particolari (cicatrici, nei, difetti fisici; spesso 'nessuno')\n"
+            "  Col.13 = Vaccinazioni (vaccinato / rivaccinato / non vaccinato)\n"
+            "  Col.14 = Stato civile (celibe / ammogliato)\n"
+            "  Col.15 = Decisione della commissione (abile / riformato / rimandato / esente)\n"
+            "  Col.16 = Corpo / reggimento assegnato\n"
+            "  Col.17 = Note e annotazioni (numerose: congedi, richiami, decorazioni, diserzione)\n"
+            "\nREGOLE OBBLIGATORIE PER LA TRASCRIZIONE A TABELLA:\n"
+            "- Trascrivi OGNI riga coscritto con valori separati da ' | ', nell'ordine delle colonne.\n"
+            "- Inizia con una riga di intestazione con i nomi delle colonne separati da ' | '.\n"
+            "- I segni ditto (\") o 'idem' indicano ripetizione del valore precedente: TRASCRIVILI\n"
+            "  come \" senza espanderli.\n"
+            "- NON saltare righe: anche quelle con soli segni ditto vanno trascritte.\n"
+            "- Se una colonna è vuota scrivi uno spazio tra i separatori: | |\n"
+            "- Se un valore è illeggibile usa [?].\n"
+            "\nCAMPI CRITICI:\n"
+            "- Statura: trascrivila in cm esatti ('168' o '1.68'); non arrotondare.\n"
+            "- Connotati fisici (capelli, occhi, colorito, segni): trascrivi la descrizione\n"
+            "  letteralmente, anche se apparentemente banale ('nessuno segno').\n"
+            "- Col.15 Decisione: valori tipici: 'abile', 'riformato' (con causa: es. 'riformato\n"
+            "  per miopia'), 'rimandato all'anno...', 'esente', 'dispensato'.\n"
+            "- Col.17 Note: campo molto variabile, spesso con abbreviazioni militari:\n"
+            "  'C.A.' = <Corpo d'Armata>; 'Regg.' = <Reggimento>; 'Brig.' = <Brigata>;\n"
+            "  's.f.' o 'senza famiglia' = <senza fissa dimora>; '\u00e8 morto' con data.\n"
+            "- MARGINALIA: trascrivi annotazioni a margine con il tag [MARGINE: ...].\n"
+            "- DOPPIA PAGINA: se l'immagine mostra due pagine affiancate (foglio aperto),\n"
+            "  le colonne di sinistra e destra formano una riga continua: trascrivile unite da ' | '.\n"
+        ),
+        "Foglio Matricolare (scheda individuale, 1865-1940)": (
+            "\nTIPOLOGIA: Foglio Matricolare individuale (1865-1940).\n"
+            "Documento pre-stampato di una o due pagine, dedicato a un singolo coscritto.\n"
+            "Non è un elenco tabellare: è una scheda con campi fissi e spazi da riempire a mano.\n"
+            "\nSTRUTTURA DELLA SCHEDA (ordine tipico):\n"
+            "SEZIONE ANAGRAFICA:\n"
+            "- N\u00b0 di matricola | Classe (anno di nascita)\n"
+            "- Cognome e Nome | Nome del padre | Nome della madre\n"
+            "- Data e luogo di nascita | Comune e provincia | Mandamento\n"
+            "- Professione | Istruzione (sa leggere/scrivere)\n"
+            "SEZIONE CONNOTATI FISICI:\n"
+            "- Statura in cm | Capelli | Occhi | Colorito | Segni particolari\n"
+            "- Vaccinazioni\n"
+            "SEZIONE DECISIONE DI LEVA:\n"
+            "- Anno e luogo della visita di leva\n"
+            "- Decisione (abile / riformato / rimandato): con eventuale causa medica\n"
+            "- Corpo e reggimento assegnato\n"
+            "SEZIONE SERVIZIO MILITARE (annotazioni cronologiche):\n"
+            "- Chiamata alle armi, incorporazione, fermate, congedi, richiami\n"
+            "- Promozioni, decorazioni, punizioni\n"
+            "- Data e causa di congedo definitivo o morte\n"
+            "SEZIONE NOTE:\n"
+            "- Spesso contiene aggiornamenti postumi: matrimonio, figli, cambio residenza, morte\n"
+            "\nREGOLE PER LA TRASCRIZIONE:\n"
+            "- NON usare il formato tabellare a ' | ': trascrivi i campi come coppie\n"
+            "  'NomeCampo: Valore' su righe separate, rispettando la struttura del documento.\n"
+            "- Separa le sezioni della scheda con una riga vuota e il nome della sezione\n"
+            "  tra parentesi quadre: [SEZIONE ANAGRAFICA], [CONNOTATI], [DECISIONE LEVA], ecc.\n"
+            "- Trascrivi TUTTI i campi, anche quelli vuoti: es. 'Segni particolari: nessuno'.\n"
+            "- Abbreviazioni militari frequenti (sciogli tra < >):\n"
+            "  c.a. = <congedo assoluto>; c.i. = <congedo illimitato>; r.t.e. = <in attesa>;\n"
+            "  d.a. = <dispensa d'arma>; Regg. = <Reggimento>; Comp. = <Compagnia>;\n"
+            "  Batt. = <Battaglione>; C.A. = <Corpo d'Armata>; D.M. = <Distretto Militare>.\n"
+            "- Le date militari sono in formato gg/mm/aaaa o gg mese aaaa: trascrivile esattamente.\n"
+            "- MARGINALIA: trascrivi annotazioni a margine con il tag [MARGINE: ...].\n"
+            "- Se il documento comprende due pagine, trascrivile in sequenza senza interruzione.\n"
+        ),
+
         "Documento Notarile": (
             "\nTIPOLOGIA: Documento notarile (contratto, testamento, atto di compravendita, ecc.).\n"
             "- Formula di apertura tipica: 'In Dei nomine amen...' o 'Regnante...'\n"
