@@ -49,6 +49,8 @@ def get_available_types():
         "Stato delle Anime / Censimento Parrocchiale",
         "Censimento Storico (Generico)",
         "Catasto Onciario (Due Sicilie, sec. XVIII)",
+        "Rivele / Numerazione dei Fuochi (Due Sicilie, sec. XVI-XVII)",
+        "Catasto Murattiano (Due Sicilie, 1808-1815)",
         "Catasto Gregoriano (Stato Pontificio, 1816-1835)",
         "Stato di Famiglia / Atto di Notoriet\u00e0 (SC)",
         # ── Leva Militare (1865-1940) ──────────────────────────────────────────────────
@@ -57,6 +59,8 @@ def get_available_types():
         # ── Emigrazione e documenti di viaggio (sec. XIX-XX) ──────────────────
         "Passaporto / Permesso di Espatrio (sec. XIX-XX)",
         "Atti Consolari Italiani all'Estero",
+        # ── Documenti ospedalieri e assistenziali ─────────────────────────────
+        "Registro dei Defunti Ospedalieri",
         "Indice / Registro degli Atti",
         "Protocollo Notarile (registro degli atti)",
         "Documento Notarile",
@@ -1078,6 +1082,61 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- Separa ogni fuoco con '--- FUOCO N ---'.\n"
             "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
         ),
+        "Rivele / Numerazione dei Fuochi (Due Sicilie, sec. XVI-XVII)": (
+            "\nTIPOLOGIA: Rivele o Numerazione dei Fuochi del Regno di Napoli (sec. XVI-XVII).\n"
+            "Strumento fiscale precedente il Catasto Onciario: ogni capofamiglia dichiarava\n"
+            "(\"rivelava\") i propri beni e componenti del fuoco. Fonte primaria per genealogia\n"
+            "meridionale in assenza di registri parrocchiali completi.\n"
+            "\nSTRUTTURA TIPICA:\n"
+            "- Intestazione: anno, universit\u00e0 (comune), ufficiale regio o mastrodatti.\n"
+            "- Per ogni fuoco / dichiarante:\n"
+            "  * Nome e cognome del capofamiglia (con titolo: 'mastro', 'magnifico', 'don').\n"
+            "  * Professione o condizione ('agricoltore', 'bracciale', 'artigiano', 'vedova').\n"
+            "  * Componenti del fuoco: moglie (con nome), figli (nome, et\u00e0 o condizione),\n"
+            "    altri conviventi.\n"
+            "  * Beni dichiarati: case, terre, animali, attrezzi; valore estimato in ducati/carlini.\n"
+            "  * Debiti o esenzioni eventuali.\n"
+            "- Firma o segno del dichiarante e del funzionario.\n"
+            "\nVARIANTI:\n"
+            "- Numerazioni fiscali quinquennali (1532, 1545, 1561, 1595, 1648, 1669, 1732):\n"
+            "  formato pu\u00f2 variare; alcune sono tabellari, altre narrative.\n"
+            "- Rivele di beni: solo elenco beni senza componenti familiari.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Grafia corsiva napoletana o meridionale arcaica (sec. XVI-XVII): molto abbreviata.\n"
+            "  Sciogli abbreviazioni con <> (es. 'mag.co' = <magnifico>, 'q.o' = <quondam>).\n"
+            "- 'Fu' / 'quondam' / 'q.o' indica genitore defunto: trascrivi e sciogli.\n"
+            "- Unit\u00e0 monetarie: ducati, carlini, grana, tarì: trascrivi senza convertire.\n"
+            "- Separa ogni fuoco con '--- FUOCO N ---'.\n"
+            "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
+        ),
+        "Catasto Murattiano (Due Sicilie, 1808-1815)": (
+            "\nTIPOLOGIA: Catasto Murattiano del Regno di Napoli (periodo napoleonico, 1808-1815).\n"
+            "Rilievo fondiario avviato da Gioacchino Murat sul modello del catasto francese;\n"
+            "non completato in tutto il regno. Intermedio tra il Catasto Onciario (per fuoco)\n"
+            "e il Catasto Borbonico unitario (per particella). Copre principalmente Campania,\n"
+            "Calabria, Basilicata, Puglia meridionale.\n"
+            "\nSTRUTTURA TIPICA:\n"
+            "  1. MAPPE CATASTALI (grafiche): trascrivere solo numeri di particella e didascalie.\n"
+            "  2. LIBRI FONDIARI (registri descrittivi delle particelle):\n"
+            "     - N\u00b0 di particella.\n"
+            "     - Propriet\u00e0: nome e cognome del proprietario (con titolo se presente).\n"
+            "     - Qualit\u00e0 colturale: 'seminatorio', 'vignato', 'olivato', 'bosco', 'casa', ecc.\n"
+            "     - Estensione: in moggi, tomoli, versure (unit\u00e0 locali); trascrivi senza convertire.\n"
+            "     - Rendita imponibile (in ducati e grana).\n"
+            "     - Contrada e confini cardinali (spesso in italiano napoletano).\n"
+            "  3. RUOLI DEI PROPRIETARI (sommarioni per proprietario):\n"
+            "     - Nome del proprietario; elenco particelle con superficie e rendita totale.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Grafia italiana del periodo napoleonico (1808-1815); pi\u00f9 leggibile dell'Onciario.\n"
+            "- Abbreviazioni: 'sem.' = <seminatorio>; 'vig.' = <vignato>; 'ol.' = <olivato>;\n"
+            "  'd.' o 'duc.' = <ducati>; 'gr.' = <grana>; 'tom.' = <tomoli>.\n"
+            "- Nomi dei proprietari: frequenti titoli nobiliari e professionali; trascrivi per intero.\n"
+            "- Confini: 'a settentrione', 'a mezzogiorno', 'a oriente', 'a occidente':\n"
+            "  trascrivi come scritti.\n"
+            "- Separa ogni particella con '--- PARTICELLA N ---'.\n"
+            "- Per i Ruoli proprietari, separa ogni proprietario con '--- PROPRIETARIO: nome ---'.\n"
+            "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
+        ),
         "Catasto Gregoriano (Stato Pontificio, 1816-1835)": (
             "\nTIPOLOGIA: Catasto Gregoriano dello Stato Pontificio (1816-1835).\n"
             "Rilievo fondiario istituito da Pio VII con Motu Proprio del 1816 e completato sotto\n"
@@ -1270,6 +1329,35 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- Timbri consolari, numeri di protocollo, date di spedizione: trascrivi per intero.\n"
             "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
             "- Separa atti multipli con '--- ATTO N ---'.\n"
+        ),
+        "Registro dei Defunti Ospedalieri": (
+            "\nTIPOLOGIA: Registro dei morti in ospedale o istituto assistenziale.\n"
+            "Tenuto dall'ospedale, dal brefotrofio, dall'ospizio o dall'infermeria conventuale.\n"
+            "Complementare ai registri parrocchiali e SC: copre morti di indigenti, forestieri,\n"
+            "soldati, pellegrini, brefotrofi.\n"
+            "\nSTRUTTURA TIPICA:\n"
+            "- Intestazione: nome dell'istituto, anno, medico o cappellano responsabile.\n"
+            "- Per ogni deceduto:\n"
+            "  * N\u00b0 di ingresso o di registro.\n"
+            "  * Nome e cognome (spesso parziali o con alias: 'detto...', 'noto come...').\n"
+            "  * Et\u00e0 dichiarata o stimata.\n"
+            "  * Luogo di origine (comune o regione; spesso 'forestiero', 'ignoto').\n"
+            "  * Data e ora di ricovero.\n"
+            "  * Data e ora del decesso.\n"
+            "  * Causa di morte: terminologia medica d'epoca (latina o italiana); frequenti\n"
+            "    'febbre terzana', 'idropisia', 'tisi', 'marasma', 'convulsioni neonatali'.\n"
+            "    Non correggere, trascrivi letteralmente.\n"
+            "  * Sepoltura: camposanto, cappella dell'istituto, ossario; data.\n"
+            "  * Eventuali sacramenti: 'munito dei sacramenti', 'impreparatus'.\n"
+            "  * Note: oggetti rinvenuti, parenti avvisati, disposizioni testamentarie.\n"
+            "\nFORMATO:\n"
+            "- Prevalentemente tabellare: usa ' | ' come separatore con riga di intestazione.\n"
+            "- Se narrativo, separa ogni scheda con '--- DECEDUTO N ---'.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- 'Ignoto' / 'sconosciuto' / 'N.N.': trascrivi letteralmente.\n"
+            "- Cause di morte arcaiche: non correggere, non modernizzare.\n"
+            "- 'Fu' o 'quondam': indica genitore defunto; trascrivi letteralmente.\n"
+            "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
         ),
 
         "Documento Notarile": (
