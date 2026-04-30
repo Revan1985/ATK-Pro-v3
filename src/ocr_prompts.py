@@ -6,6 +6,19 @@ Ogni tipo fornisce linee guida paleografiche specifiche all'IA.
 
 def get_available_types():
     return [
+        # ── Stato Civile Napoleonico (SCN, 1806-1815) ──────────────────────────
+        "SCN — Atto di Nascita (1806-1815)",
+        "SCN — Atto di Matrimonio (1806-1815)",
+        "SCN — Atto di Morte (1806-1815)",
+        # ── Stato Civile della Restaurazione (SCR, 1815-1865) ─────────────────
+        "SCR — Atto di Nascita (1815-1865)",
+        "SCR — Atto di Matrimonio (1815-1865)",
+        "SCR — Atto di Morte (1815-1865)",
+        # ── Stato Civile Italiano (SCI, dal 1866) ─────────────────────────────
+        "SCI — Atto di Nascita (dal 1866)",
+        "SCI — Atto di Matrimonio (dal 1866)",
+        "SCI — Atto di Morte (dal 1866)",
+        # ── Periodo incerto / generico ─────────────────────────────────────────
         "Atto di Stato Civile (Nascita / Battesimo)",
         "Atto di Stato Civile (Matrimonio)",
         "Atto di Stato Civile (Morte / Sepoltura)",
@@ -38,8 +51,209 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
     )
 
     type_specific = {
+        # ── SCN: Stato Civile Napoleonico (1806-1815) ──────────────────────────
+        "SCN — Atto di Nascita (1806-1815)": (
+            "\nTIPOLOGIA: Atto di nascita dello Stato Civile Napoleonico (SCN, 1806-1815).\n"
+            "Il SCN fu introdotto con il Codice Civile francese e redatto dagli ufficiali comunali"
+            " (sindaco o delegato), NON dai parroci.\n"
+            "\nSTRUTTURA DELL'ATTO:\n"
+            "- Intestazione: anno in lettere ('L'anno milleottocentosei'), giorno e mese in lettere,"
+            " nome del comune, nome e qualifica dell'ufficiale di stato civile.\n"
+            "- Comparente: il padre (o, in sua assenza, due testimoni adulti maschi) che 'presenta'"
+            " il neonato fisicamente all'ufficiale. Dati: nome, cognome, età, professione, domicilio.\n"
+            "- Neonato: sesso ('di sesso maschile/femminile'), nome imposto, data e ora di nascita.\n"
+            "- Due testimoni maschi maggiorenni: nome, cognome, età, professione, domicilio.\n"
+            "- Formula di chiusura: lettura dell'atto, firme del dichiarante e dei testimoni"
+            " (o croce/nota 'ha dichiarato di non saper firmare'), firma dell'ufficiale.\n"
+            "- N° atto: in genere nel margine sinistro o nell'intestazione.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Le date sono in lettere: 'il giorno tre maggio milleottocentosei'.\n"
+            "- Il termine 'fu' indica genitore defunto: trascrivilo letteralmente.\n"
+            "- Abbreviazioni frequenti: Gio. = Giovanni, Batta. = Battista, Fran.co = Francesco.\n"
+            "- MARGINALIA: trascrivi annotazioni a margine con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+        "SCN — Atto di Matrimonio (1806-1815)": (
+            "\nTIPOLOGIA: Atto di matrimonio dello Stato Civile Napoleonico (SCN, 1806-1815).\n"
+            "Redatto dall'ufficiale di stato civile comunale, preceduto da tre pubblicazioni (bandi).\n"
+            "\nSTRUTTURA DELL'ATTO:\n"
+            "- Intestazione: anno, giorno, mese in lettere; comune; nome dell'ufficiale.\n"
+            "- Sposo: nome, cognome, età, professione, domicilio, stato civile (celibe/vedovo);"
+            " nome del padre (con 'fu' se defunto) e della madre.\n"
+            "- Sposa: stesse informazioni dello sposo; cognome da nubile della madre.\n"
+            "- Consensi parentali: se uno degli sposi è minorenne, sono riportati i consensi"
+            " dei genitori (o, se defunti, del consiglio di famiglia).\n"
+            "- Dichiarazione di volontà: formula 'Dichiaro di voler prendere per mio/a sposo/a'"
+            " o equivalente; risposta dell'altro sposo.\n"
+            "- Proclamazione dell'ufficiale: formula 'In nome della legge dichiaro uniti in matrimonio'.\n"
+            "- Quattro testimoni maschi maggiorenni: nome, cognome, età, professione, domicilio.\n"
+            "- Firme degli sposi, dei testimoni, dell'ufficiale.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Le date sono in lettere.\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- Le pubblicazioni precedono l'atto e vanno trascritte separatamente con [PUBBLICAZIONE N:].\n"
+            "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+        "SCN — Atto di Morte (1806-1815)": (
+            "\nTIPOLOGIA: Atto di morte dello Stato Civile Napoleonico (SCN, 1806-1815).\n"
+            "Redatto dall'ufficiale di stato civile comunale su dichiarazione di due testimoni.\n"
+            "\nSTRUTTURA DELL'ATTO:\n"
+            "- Intestazione: anno, giorno, mese in lettere; comune; nome dell'ufficiale.\n"
+            "- Due dichiaranti (spesso vicini di casa, parenti o colleghi del defunto):"
+            " nome, cognome, età, professione, domicilio e loro qualifica di conoscenza.\n"
+            "- Defunto: nome, cognome, età (o data di nascita), professione, domicilio,"
+            " stato civile (celibe/coniugato/vedovo), nome del coniuge se coniugato,"
+            " nomi dei genitori (con 'fu' se defunti).\n"
+            "- Data, ora e luogo del decesso.\n"
+            "- Firme dei dichiaranti (o nota di analfabetismo), firma dell'ufficiale.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Le date sono in lettere.\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- Presta attenzione ai termini arcaici per le cause di morte (se indicate).\n"
+            "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+
+        # ── SCR: Stato Civile della Restaurazione (1815-1865) ─────────────────
+        "SCR — Atto di Nascita (1815-1865)": (
+            "\nTIPOLOGIA: Atto di nascita dello Stato Civile della Restaurazione (SCR, 1815-1865).\n"
+            "Dopo il 1815, ogni Stato pre-unitario adottò un sistema proprio. Il formato varia"
+            " significativamente per area geografica:\n"
+            "- Granducato di Toscana (dal 1817): compilato dal parroco con duplice copia all'Ufficio"
+            " dello Stato Civile di Firenze; struttura simile al SCN ma con formule miste civili"
+            " ed ecclesiastiche.\n"
+            "- Regno delle Due Sicilie (dal 1816) e Sicilia (dal 1820): formula simile al SCN.\n"
+            "- Ducato di Modena e Reggio: mantenne il sistema napoleonico quasi invariato.\n"
+            "- Regno di Sardegna (dal 1837): formato ibrido piemontese.\n"
+            "\nELEMENTI COMUNI A TUTTE LE VARIANTI:\n"
+            "- Intestazione con anno, data, comune, ufficiale o parroco.\n"
+            "- Comparente (padre o suoi delegati) che presenta il neonato.\n"
+            "- Sesso, nome e data di nascita del neonato.\n"
+            "- Nomi dei genitori e almeno un avo (con 'fu' se defunti).\n"
+            "- Due o più testimoni con dati anagrafici.\n"
+            "- Firme o note di analfabetismo, firma del redattore.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Le date possono essere in lettere o in cifre a seconda del sistema locale.\n"
+            "- 'Fu' (o 'quondam'/'q.m' nei testi latini) indica genitore defunto.\n"
+            "- In Toscana frequenti formule religiose anche negli atti civili.\n"
+            "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+        "SCR — Atto di Matrimonio (1815-1865)": (
+            "\nTIPOLOGIA: Atto di matrimonio dello Stato Civile della Restaurazione (SCR, 1815-1865).\n"
+            "Il formato varia per area geografica (vedi SCR-Nascita per le varianti regionali).\n"
+            "\nELEMENTI COMUNI:\n"
+            "- Intestazione con anno, data, comune, ufficiale o parroco officiante.\n"
+            "- Sposo e sposa con dati anagrafici completi (nome, cognome, età, professione,"
+            " domicilio, stato civile, nome dei genitori con 'fu' se defunti).\n"
+            "- Consensi parentali o del consiglio di famiglia per i minorenni.\n"
+            "- Pubblicazioni (bandi) precedenti: spesso richiamati nell'atto con date e luoghi.\n"
+            "- Dichiarazione di volontà di entrambi gli sposi.\n"
+            "- Testimoni (due o quattro a seconda del sistema) con dati anagrafici.\n"
+            "- In Toscana: possibile presenza di formule religiose e riferimenti al diritto canonico"
+            " nell'atto civile.\n"
+            "- Firme degli sposi, dei testimoni, dell'ufficiale o parroco.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Le date possono essere in lettere o in cifre.\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+        "SCR — Atto di Morte (1815-1865)": (
+            "\nTIPOLOGIA: Atto di morte dello Stato Civile della Restaurazione (SCR, 1815-1865).\n"
+            "Il formato varia per area geografica (vedi SCR-Nascita per le varianti regionali).\n"
+            "\nELEMENTI COMUNI:\n"
+            "- Intestazione con anno, data, comune, ufficiale o parroco.\n"
+            "- Due dichiaranti con dati anagrafici e relazione col defunto.\n"
+            "- Defunto: nome, cognome, età, professione, domicilio, stato civile,"
+            " nome del coniuge se coniugato o vedovo, nomi dei genitori (con 'fu' se defunti).\n"
+            "- Data, ora (a volte) e luogo del decesso.\n"
+            "- Causa di morte: quando indicata, usa terminologia arcaica o dialettale.\n"
+            "- Firme o note di analfabetismo, firma del redattore.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- In Toscana frequenti formule religiose (es. 'munito dei SS. Sacramenti').\n"
+            "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+
+        # ── SCI: Stato Civile Italiano (dal 1° gennaio 1866) ──────────────────
+        "SCI — Atto di Nascita (dal 1866)": (
+            "\nTIPOLOGIA: Atto di nascita dello Stato Civile Italiano (SCI, R.D. 15/11/1865,"
+            " in vigore dal 1/1/1866).\n"
+            "Formato standardizzato e prestampato, redatto dall'ufficiale di stato civile comunale.\n"
+            "\nSTRUTTURA DELL'ATTO:\n"
+            "- Intestazione prestampata: N° atto (nell'intestazione), anno, comune, ufficiale.\n"
+            "- Formula fissa: 'L'anno milleottocento..., addì... del mese di..., avanti di me...'\n"
+            "- Dichiarante: il padre o un altro comparente; nome, cognome, età, professione, domicilio.\n"
+            "- Nascita: luogo esatto (via, casa), data e ora, sesso del neonato ('di sesso maschile/femminile').\n"
+            "- Nome imposto al neonato.\n"
+            "- Madre: nome, cognome (da nubile), età, professione, domicilio.\n"
+            "- Padre: nome, cognome, età, professione, domicilio.\n"
+            "- Due testimoni maschi maggiorenni: nome, cognome, età, professione, domicilio.\n"
+            "- Formula di chiusura e firme: dichiarante, testimoni, ufficiale.\n"
+            "- Dal 1875: possibili annotazioni a margine (matrimoni futuri, morte, note).\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Il N° atto è in cifre arabiche: trascrivilo con precisione.\n"
+            "- Le date dell'anno sono in lettere; giorno e mese possono essere in cifre o lettere.\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- MARGINALIA (frequenti nel SCI): trascrivi tutte le annotazioni a margine"
+            " con il tag [MARGINE: ...]; contengono spesso riferimenti a matrimonio, morte,"
+            " riconoscimento di paternità — informazioni preziose.\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+        "SCI — Atto di Matrimonio (dal 1866)": (
+            "\nTIPOLOGIA: Atto di matrimonio dello Stato Civile Italiano (SCI, dal 1/1/1866).\n"
+            "Formato standardizzato prestampato. Nel SCI il matrimonio comprende tre fasi documentali:\n"
+            "1) Pubblicazioni (richiesta preventiva, tre domeniche consecutive);\n"
+            "2) Atto di matrimonio vero e proprio;\n"
+            "3) Eventuali allegati (estratti di nascita, consensi, dispense).\n"
+            "\nSTRUTTURA DELL'ATTO DI MATRIMONIO:\n"
+            "- Intestazione: N° atto, anno, comune, ufficiale di stato civile.\n"
+            "- Formula fissa: 'L'anno... avanti di me... si sono presentati...'\n"
+            "- Sposo: nome, cognome, luogo e data di nascita (o età), professione, domicilio,"
+            " stato civile (celibe/vedovo), nome del padre e della madre (con 'fu' se defunti).\n"
+            "- Sposa: stesse informazioni; cognome da nubile della madre.\n"
+            "- Dichiarazione delle pubblicazioni: date e luoghi delle tre pubblicazioni.\n"
+            "- Consensi dei genitori se minorenni, o nulla osta se maggiorenni.\n"
+            "- Dichiarazione di volontà: formula 'Dichiaro di voler...'; risposta dell'altro sposo.\n"
+            "- Proclamazione dell'ufficiale.\n"
+            "- Quattro testimoni: nome, cognome, età, professione, domicilio.\n"
+            "- Firme degli sposi, dei testimoni, dell'ufficiale.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Il N° atto è in cifre arabiche: trascrivilo con precisione.\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+        "SCI — Atto di Morte (dal 1866)": (
+            "\nTIPOLOGIA: Atto di morte dello Stato Civile Italiano (SCI, dal 1/1/1866).\n"
+            "Formato standardizzato prestampato, redatto dall'ufficiale di stato civile comunale.\n"
+            "\nSTRUTTURA DELL'ATTO:\n"
+            "- Intestazione: N° atto, anno, comune, ufficiale di stato civile.\n"
+            "- Formula fissa: 'L'anno... avanti di me... si sono presentati...'\n"
+            "- Due dichiaranti: nome, cognome, età, professione, domicilio e relazione col defunto.\n"
+            "- Defunto: nome, cognome, luogo e data di nascita (o età), professione, domicilio,"
+            " stato civile (celibe/coniugato/vedovo).\n"
+            "  Se coniugato o vedovo: nome e cognome del coniuge (con 'fu' se defunto).\n"
+            "  Nomi del padre e della madre del defunto (con 'fu' se defunti).\n"
+            "- Data, ora e luogo esatto del decesso.\n"
+            "- Causa di morte: se indicata, può usare terminologia medica ottocentesca.\n"
+            "- Firme dei dichiaranti (o nota di analfabetismo), firma dell'ufficiale.\n"
+            "- Dal 1875: possibili annotazioni a margine.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Il N° atto è in cifre arabiche: trascrivilo con precisione.\n"
+            "- 'Fu' indica genitore o coniuge defunto: trascrivi letteralmente.\n"
+            "- Cause di morte arcaiche comuni: 'apoplessia', 'idropisia', 'consunzione',"
+            " 'febbre perniciosa', 'mal sottile' (tisi/tubercolosi) — trascrivile esattamente.\n"
+            "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+
         "Atto di Stato Civile (Nascita / Battesimo)": (
-            "\nTIPOLOGIA: Atto di nascita o battesimo (XIX secolo, registro civile o parrocchiale).\n"
+            "\nTIPOLOGIA: Atto di nascita o battesimo (XIX secolo, registro civile o parrocchiale,"
+            " periodo non specificato).\n"
             "- Campi chiave: nome del neonato, genitori (padre e madre con cognome da nubile),"
             " data e luogo di nascita, testimoni, ufficiale o parroco.\n"
             "- I nomi di persona sono spesso abbreviati (Gio. = Giovanni, Batta. = Battista, Fran.co = Francesco).\n"
