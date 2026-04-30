@@ -24,6 +24,10 @@ def get_available_types():
         "SCR/Piemonte — Atto di Nascita (1837-1865)",
         "SCR/Piemonte — Atto di Matrimonio (1837-1865)",
         "SCR/Piemonte — Atto di Morte (1837-1865)",
+        # ── SCR/Veneto (Lombardo-Veneto / Impero austriaco, 1816-1866) ─────────
+        "SCR/Veneto — Atto di Nascita (1816-1866)",
+        "SCR/Veneto — Atto di Matrimonio (1816-1866)",
+        "SCR/Veneto — Atto di Morte (1816-1866)",
         # ── Stato Civile Italiano (SCI, dal 1866) ─────────────────────────────
         "SCI — Atto di Nascita (dal 1866)",
         "SCI — Atto di Matrimonio (dal 1866)",
@@ -38,14 +42,19 @@ def get_available_types():
         "Registro Parrocchiale — Battesimi (sec. XVI-XIX)",
         "Registro Parrocchiale — Matrimoni (sec. XVI-XIX)",
         "Registro Parrocchiale — Morti / Sepolture (sec. XVI-XIX)",
+        "Registro degli Esposti / Nati Illegittimi",
         "Stati delle Anime Granducato di Toscana",
         "Anagrafe / Censimento Lombardo-Veneto (sec. XIX)",
         "Stato delle Anime / Censimento Parrocchiale",
         "Censimento Storico (Generico)",
         "Catasto Onciario (Due Sicilie, sec. XVIII)",
+        "Catasto Gregoriano (Stato Pontificio, 1816-1835)",
         # ── Leva Militare (1865-1940) ──────────────────────────────────────────────────
         "Ruolo di Matricola / Leva Militare (1865-1940)",
         "Foglio Matricolare (scheda individuale, 1865-1940)",
+        # ── Emigrazione e documenti di viaggio (sec. XIX-XX) ──────────────────
+        "Passaporto / Permesso di Espatrio (sec. XIX-XX)",
+        "Atti Consolari Italiani all'Estero",
         "Indice / Registro degli Atti",
         "Documento Notarile",
         "Atto in Latino Ecclesiastico",
@@ -423,6 +432,73 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
         ),
 
+        # ── SCR/Veneto (Lombardo-Veneto / Impero austriaco, 1816-1866) ────────
+        "SCR/Veneto — Atto di Nascita (1816-1866)": (
+            "\nTIPOLOGIA: Atto di nascita del Lombardo-Veneto sotto dominazione austriaca (1816-1866).\n"
+            "Redatto in italiano (talvolta con intestazioni in tedesco) secondo il modello del\n"
+            "Codice Civile Austriaco (ABGB). Sostituisce i registri napoleonici SCN dopo il 1815.\n"
+            "\nSTRUTTURA DELL'ATTO:\n"
+            "- Intestazione: distretto, comune, anno, N° atto, nome dell'i.r. (imperiale-regio) funzionario.\n"
+            "- Data e luogo della nascita.\n"
+            "- Sesso del neonato e nome imposto.\n"
+            "- Padre: nome, cognome, professione, domicilio, religione.\n"
+            "- Madre: nome, cognome da nubile, religione.\n"
+            "- Due testimoni: nome, cognome, professione, domicilio.\n"
+            "- Firme o croci dei presenti, firma del funzionario.\n"
+            "\nPARTICOLARITÀ REGIONALI:\n"
+            "- Venezia e province venete: redatto in italiano con formula napoleonica adattata.\n"
+            "- Trento e zone bilingue: possibile presenza di intestazioni in tedesco o latino;\n"
+            "  trascrivere nella lingua in cui è scritto, senza tradurre.\n"
+            "- Il funzionario può avere il titolo 'i.r. Delegato', 'i.r. Commissario distrettuale',\n"
+            "  'Podestà': trascrivi il titolo per intero.\n"
+            "- Abbreviazione 'i.r.' = <imperial-regio>; scioglila se usata in forma abbreviata.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- Nomi di battesimo spesso in forma latinizzata o germanizzata: trascrivi come scritti.\n"
+            "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+        "SCR/Veneto — Atto di Matrimonio (1816-1866)": (
+            "\nTIPOLOGIA: Atto di matrimonio del Lombardo-Veneto / Impero austriaco (1816-1866).\n"
+            "Redatto dall'i.r. funzionario civile dopo la celebrazione religiosa (matrimonio concordatario)\n"
+            "o contestualmente ad essa in alcune aree.\n"
+            "\nSTRUTTURA DELL'ATTO:\n"
+            "- Intestazione: distretto, comune, anno, N° atto, funzionario.\n"
+            "- Sposo: nome, cognome, età o data di nascita, luogo di nascita, professione, domicilio,\n"
+            "  stato civile (celibe/vedovo), religione, nome e cognome del padre e della madre.\n"
+            "- Sposa: stesse informazioni; cognome da nubile.\n"
+            "- Eventuali atti preliminari citati: pubblicazioni (banns), nulla osta, dispense.\n"
+            "- Testimoni (di norma quattro): nome, cognome, età, professione, domicilio.\n"
+            "- Firma o croce degli sposi, dei testimoni, del funzionario.\n"
+            "\nPARTICOLARITÀ:\n"
+            "- Il consenso dei genitori è richiesto per i minori: spesso citato con nome e firma.\n"
+            "- 'Figlio/a di fu...' = padre o madre defunti: trascrivi 'fu' letteralmente.\n"
+            "- Possibili intestazioni bilingui (italiano/tedesco): trascrivi entrambe le versioni.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- MARGINALIA: trascrivi con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+        "SCR/Veneto — Atto di Morte (1816-1866)": (
+            "\nTIPOLOGIA: Atto di morte del Lombardo-Veneto / Impero austriaco (1816-1866).\n"
+            "Redatto dal funzionario i.r. civile su denuncia dei familiari o vicini.\n"
+            "\nSTRUTTURA DELL'ATTO:\n"
+            "- Intestazione: distretto, comune, anno, N° atto, funzionario.\n"
+            "- Dichiaranti (uno o due): nome, cognome, professione, domicilio, relazione col defunto.\n"
+            "- Defunto: nome, cognome, età, professione, domicilio, stato civile, religione.\n"
+            "- Nome del coniuge (per vedovi/vedove: cognome da nubile per le donne).\n"
+            "- Nomi dei genitori (con 'fu' se defunti).\n"
+            "- Data, ora e luogo del decesso.\n"
+            "- Causa di morte: spesso in latino o in terminologia medica d'epoca; frequenti\n"
+            "  'febris', 'convulsiones', 'apoplexia', 'colera morbus', 'vaiolo'.\n"
+            "- Firme o croci dei dichiaranti, firma del funzionario.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- Causa di morte: non correggere, trascrivi letteralmente.\n"
+            "- MARGINALIA: trascrivi con il tag [MARGINE: ...].\n"
+            "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
+        ),
+
         # ── SCI: Stato Civile Italiano (dal 1° gennaio 1866) ──────────────────
         "SCI — Atto di Nascita (dal 1866)": (
             "\nTIPOLOGIA: Atto di nascita dello Stato Civile Italiano (SCI, R.D. 15/11/1865,"
@@ -696,6 +772,37 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
             "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
         ),
+        "Registro degli Esposti / Nati Illegittimi": (
+            "\nTIPOLOGIA: Registro degli esposti (trovatelli) o dei nati illegittimi.\n"
+            "Tenuto dall'Orfanotrofio, dall'Ospedale degli Innocenti, dalla Ruota o dalla parrocchia;\n"
+            "in epoca SCI (dal 1866) l'atto è redatto dall'ufficiale di stato civile.\n"
+            "Fonte primaria per ricerche su figli illegittimi, bambini abbandonati, adozioni storiche.\n"
+            "\nTIPOLOGIE PRINCIPALI:\n"
+            "  A) REGISTRO DELL'ISTITUTO (Ospedale degli Innocenti, Pio Luogo, Ruota, ecc.):\n"
+            "     - N° di ingresso progressivo.\n"
+            "     - Data e ora del ritrovamento o della consegna.\n"
+            "     - Luogo di ritrovamento (scalino, ruota, porta della chiesa, strada).\n"
+            "     - Segni distintivi portati dal bambino: fasce, biglietti, monete spezzate, nastri,\n"
+            "       medaglie: trascrivi per intero ogni oggetto o nota allegata.\n"
+            "     - Sesso e nome imposto dall'istituto.\n"
+            "     - Balia o famiglia affidataria: nome, cognome, comune.\n"
+            "     - Eventuali annotazioni successive: riconoscimento da parte dei genitori naturali,\n"
+            "       morte, matrimonio, uscita dall'istituto.\n"
+            "  B) ATTO SCI DI NASCITA DI FIGLIO ILLEGITTIMO (dal 1866):\n"
+            "     - Struttura analoga all'atto di nascita SCI standard.\n"
+            "     - Padre: 'padre ignoto' o 'non dichiarato'; oppure nome se riconoscimento volontario.\n"
+            "     - Madre: nome o 'madre che vuole rimanere anonima'; se dichiarata, cognome da nubile.\n"
+            "     - MARGINALIA fondamentale: possibili riconoscimenti posticipati ('il padre X\n"
+            "       riconosce il figlio in data...'); trascrivi con [MARGINE: ...].\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Biglietti e note allegati al trovatello: trascrivi tra virgolette, lettera per lettera,\n"
+            "  anche se frammentari o dialettali.\n"
+            "- Nomi imposti dall'istituto: spesso santi del giorno, cognomi inventati (es. 'Colombo',\n"
+            "  'Innocenti', 'Diotallevi', 'Esposito'): trascrivi come scritti.\n"
+            "- 'Figlio/a di N.N.' = genitore ignoto: trascrivi letteralmente.\n"
+            "- Separa ogni scheda / atto con '--- ESPOSTO N ---'.\n"
+            "- MARGINALIA: trascrivi tutte le annotazioni con il tag [MARGINE: ...].\n"
+        ),
 
         "Stati delle Anime Granducato di Toscana": (
             "\nTIPOLOGIA: Stato delle Anime del Granducato di Toscana"
@@ -935,6 +1042,40 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- Separa ogni fuoco con '--- FUOCO N ---'.\n"
             "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
         ),
+        "Catasto Gregoriano (Stato Pontificio, 1816-1835)": (
+            "\nTIPOLOGIA: Catasto Gregoriano dello Stato Pontificio (1816-1835).\n"
+            "Rilievo fondiario istituito da Pio VII con Motu Proprio del 1816 e completato sotto\n"
+            "Gregorio XVI. Copre Lazio, Marche, Umbria, Romagna e Legazioni. Fonte primaria per\n"
+            "genealogia pre-SC dell'Italia centrale pontificia.\n"
+            "\nSTRUTTURA DEL CATASTO GREGORIANO:\n"
+            "Il Catasto Gregoriano è composto da diverse serie documentali:\n"
+            "  1. MAPPE (planimetrie): non testuali; trascrivere solo le didascalie e i numeri di\n"
+            "     particella eventualmente leggibili.\n"
+            "  2. BROGLIARDI (registri descrittivi delle particelle):\n"
+            "     - N° di particella (corrisponde alla mappa).\n"
+            "     - Proprietario: nome, cognome, professione, comune di residenza.\n"
+            "     - Qualità del suono (uso del suolo): 'seminativo', 'vignato', 'olivato', 'prato',\n"
+            "       'bosco', 'casa colonica', 'casa di abitazione', ecc.\n"
+            "     - Posizione: contrada, confini (nord/sud/est/ovest con nome del confinante).\n"
+            "     - Estensione in rubbi, scorzi, quartucci (unità pontificie); trascrivi senza convertire.\n"
+            "     - Rendita imponibile (in scudi romani).\n"
+            "  3. SOMMARIONI (registro per proprietario):\n"
+            "     - Nome del proprietario.\n"
+            "     - Elenco delle particelle possedute con superficie e rendita totale.\n"
+            "  4. TAVOLE INDICATIVE (elenchi per contrada).\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Grafia corsiva italiana del sec. XIX; abbreviazioni frequenti:\n"
+            "  'sem.' = <seminativo>; 'vig.' = <vignato>; 'ol.' = <olivato>; 'sc.' = <scudi>;\n"
+            "  'r.' / 'rub.' = <rubbi>; 'sc.' e 'sorz.' = <scorzi>.\n"
+            "- Trascrivi i numeri di particella con precisione (sono il collegamento con la mappa).\n"
+            "- Nomi dei proprietari: possono includere titoli nobiliari o ecclesiastici\n"
+            "  ('Principe', 'Marchese', 'Reverendo', 'Convento di...'); trascrivi per intero.\n"
+            "- Confini: 'a tramontana' = nord; 'a mezzogiorno' = sud; 'a levante' = est;\n"
+            "  'a ponente' = ovest: trascrivi come scritti, non convertire.\n"
+            "- Separa ogni scheda di particella con '--- PARTICELLA N ---'.\n"
+            "- Per i Sommarioni, separa ogni proprietario con '--- PROPRIETARIO: nome ---'.\n"
+            "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
+        ),
 
         # ── Leva Militare (1865-1940) ────────────────────────────────────────────
         "Ruolo di Matricola / Leva Militare (1865-1940)": (
@@ -1016,6 +1157,83 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- Le date militari sono in formato gg/mm/aaaa o gg mese aaaa: trascrivile esattamente.\n"
             "- MARGINALIA: trascrivi annotazioni a margine con il tag [MARGINE: ...].\n"
             "- Se il documento comprende due pagine, trascrivile in sequenza senza interruzione.\n"
+        ),
+
+        # ── Emigrazione e documenti di viaggio (sec. XIX-XX) ──────────────────
+        "Passaporto / Permesso di Espatrio (sec. XIX-XX)": (
+            "\nTIPOLOGIA: Passaporto o permesso di espatrio italiano (sec. XIX-XX).\n"
+            "Documento individuale (o familiare) rilasciato dalla Prefettura o dal Comune\n"
+            "per consentire l'espatrio o il viaggio all'estero. Fonte primaria per genealogia\n"
+            "della diaspora italiana (emigrazione verso Americhe, Australia, Europa).\n"
+            "\nPERIODI E FORMATI:\n"
+            "  - Sec. XIX (pre-1870): passaporto manoscritto o stampato parzialmente;\n"
+            "    intestazione del regno (Sardegna, Due Sicilie, Toscana, ecc.).\n"
+            "  - 1870-1900: passaporto del Regno d'Italia unito; connotati fisici descrittivi.\n"
+            "  - 1901-1940: modulo standard con foto (dal ~1912); include rubriche fisse.\n"
+            "  - Nulla osta / permesso di emigrazione: formato ministeriale (Commissariato\n"
+            "    Generale dell'Emigrazione, dal 1901); include porto di imbarco e destinazione.\n"
+            "\nELEMENTI DA RICONOSCERE E TRASCRIVERE:\n"
+            "  [INTESTAZIONE]\n"
+            "  - Autorità rilasciante (Prefettura di..., Podestà di..., R. Consolato di...).\n"
+            "  - N° del passaporto o del registro.\n"
+            "  - Data di rilascio e scadenza.\n"
+            "  [TITOLARE]\n"
+            "  - Nome, cognome, data e luogo di nascita.\n"
+            "  - Professione.\n"
+            "  - Domicilio / residenza.\n"
+            "  - Stato civile; se sposato: nome del coniuge.\n"
+            "  - Nome del padre e della madre.\n"
+            "  [CONNOTATI FISICI] (cruciali per identificazione)\n"
+            "  - Statura, capelli, occhi, colorito, segni particolari.\n"
+            "  - Trascrivi ogni connotato letteralmente.\n"
+            "  [ACCOMPAGNATORI / FAMILIARI] (se presenti sul documento)\n"
+            "  - Nome, relazione, età di ogni accompagnatore (moglie, figli).\n"
+            "  [DESTINAZIONE]\n"
+            "  - Paese / città di destinazione.\n"
+            "  - Porto di imbarco (es. Genova, Napoli, Palermo).\n"
+            "  - Durata del permesso.\n"
+            "  [VISTI E TIMBRI]\n"
+            "  - Trascrivi testi di visti consolari, timbri leggibili, date di rinnovo.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- Connotati fisici: trascrivi ogni termine esattamente (anche 'nessuno segno').\n"
+            "- Timbri e visti in lingue straniere (francese, inglese, spagnolo, portoghese):\n"
+            "  trascrivi nella lingua originale senza tradurre.\n"
+            "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
+        ),
+        "Atti Consolari Italiani all'Estero": (
+            "\nTIPOLOGIA: Atti consolari italiani all'estero (nascita, matrimonio, morte, cittadinanza).\n"
+            "Redatti dai Consolati e Ambasciate del Regno d'Italia (poi Repubblica Italiana)\n"
+            "per cittadini italiani residenti o transitanti all'estero. Depositati anche in Italia\n"
+            "nei Comuni di iscrizione e all'Archivio di Stato tramite il Ministero degli Esteri.\n"
+            "Fonte fondamentale per la diaspora italiana (Americhe, Australia, Nord Africa, Europa).\n"
+            "\nTIPOLOGIE PRINCIPALI:\n"
+            "  A) ATTO DI NASCITA CONSOLARE:\n"
+            "     - Struttura analoga all'atto SCI; intestazione: 'Consolato Generale d'Italia\n"
+            "       in [città], [paese]'.\n"
+            "     - Spesso redatto in italiano anche in paesi di lingua diversa.\n"
+            "     - Include paese e città di nascita (all'estero); eventuale nome locale.\n"
+            "  B) ATTO DI MATRIMONIO CONSOLARE:\n"
+            "     - Matrimonio celebrato davanti al Console; riconoscimento del matrimonio civile\n"
+            "       italiano anche all'estero.\n"
+            "     - Include luogo di nascita degli sposi (spesso in Italia) e comune di iscrizione.\n"
+            "  C) ATTO DI MORTE CONSOLARE:\n"
+            "     - Include luogo e causa di morte all'estero.\n"
+            "     - Informazioni sull'eventuale rimpatrio della salma o sepoltura locale.\n"
+            "  D) DICHIARAZIONE / ATTO DI CITTADINANZA:\n"
+            "     - Rinnovo o conservazione della cittadinanza italiana; rinuncia.\n"
+            "  E) ANNOTAZIONI SU ATTI COMUNALI ITALIANI:\n"
+            "     - Se il documento è un'annotazione (trascrizione/margine) su un atto italiano,\n"
+            "       segnalalo con [ANNOTAZIONE CONSOLARE: ...].\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Il documento è prevalentemente in italiano, ma può contenere parti in lingua locale;\n"
+            "  trascrivi ogni parte nella lingua originale senza tradurre.\n"
+            "- Nomi stranieri: trascrivi nella grafia del documento, poi la variante italiana\n"
+            "  (se presente) tra parentesi quadre: es. 'Giovanni [John]'.\n"
+            "- 'Fu' indica genitore defunto: trascrivi letteralmente.\n"
+            "- Timbri consolari, numeri di protocollo, date di spedizione: trascrivi per intero.\n"
+            "- MARGINALIA: trascrivi con [MARGINE: ...].\n"
+            "- Separa atti multipli con '--- ATTO N ---'.\n"
         ),
 
         "Documento Notarile": (
