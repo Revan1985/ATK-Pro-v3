@@ -38,6 +38,7 @@ def get_available_types():
         "Registro Parrocchiale — Matrimoni (sec. XVI-XIX)",
         "Registro Parrocchiale — Morti / Sepolture (sec. XVI-XIX)",
         "Stati delle Anime Granducato di Toscana",
+        "Anagrafe / Censimento Lombardo-Veneto (sec. XIX)",
         "Stato delle Anime / Censimento Parrocchiale",
         "Censimento Storico (Generico)",
         "Indice / Registro degli Atti",
@@ -778,6 +779,56 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             " (Nubile, col.10). Leggi PRIMA la casella per determinare il genere,"
             " poi trascrivi il NOME ESATTAMENTE come scritto: 'Tina' è un nome femminile valido"
             " (Nubile), 'Pietro' è maschile (Celibe). NON sovrascrivere mai il nome letto.\n"
+        ),
+        # ── Anagrafe asburgica Lombardo-Veneto (sec. XIX) ───────────────────
+        "Anagrafe / Censimento Lombardo-Veneto (sec. XIX)": (
+            "\nTIPOLOGIA: Anagrafe asburgica del Lombardo-Veneto (sec. XIX, circa 1816-1865).\n"
+            "Il sistema asburgico imponeva una rilevazione anagrafica periodica (Seelenbeschreibung\n"
+            "o Coscrizione / Descrizione delle anime) strutturata a colonne fisse per decreto\n"
+            "imperiale. Applicata in Lombardia, Veneto, Friuli, Trentino.\n"
+            "\nSTRUTTURA DELLE COLONNE (fissa per decreto, ma con varianti locali):\n"
+            "  Col.1  = N\u00b0 d'ordine della casa (numero civico asburgico)\n"
+            "  Col.2  = N\u00b0 della famiglia nella casa\n"
+            "  Col.3  = N\u00b0 progressivo della persona nella famiglia\n"
+            "  Col.4  = Cognome\n"
+            "  Col.5  = Nome (e nome del santo patrono, se indicato)\n"
+            "  Col.6  = Anno di nascita (NON l'et\u00e0: trascrivere l'anno, es. '1804')\n"
+            "  Col.7  = Luogo di nascita / Comune\n"
+            "  Col.8  = Sesso (M / F)\n"
+            "  Col.9  = Stato civile (celibe/ammogliato/vedovo o nubile/maritata/vedova)\n"
+            "  Col.10 = Relazione col capofamiglia (capofamiglia, moglie, figlio, ecc.)\n"
+            "  Col.11 = Religione (quasi sempre 'Cat.' o 'R.C.' = romano-cattolica)\n"
+            "  Col.12 = Professione / condizione\n"
+            "  Col.13 = Coscrizione militare (maschi: leva / esente / militare in servizio)\n"
+            "  Col.14 = Osservazioni / note\n"
+            "\nNOTA: il numero di colonne e la loro denominazione pu\u00f2 variare per anno e\n"
+            "  distretto. Leggi le intestazioni del documento e adattati.\n"
+            "\nREGOLE OBBLIGATORIE PER LA TRASCRIZIONE A TABELLA:\n"
+            "- Trascrivi OGNI riga come riga di testo con valori separati da ' | ',\n"
+            "  nell'ordine delle colonne stampate sul registro.\n"
+            "- Inizia con una riga di intestazione con i nomi delle colonne separati da ' | '.\n"
+            "- I segni ditto (\") o 'idem' indicano ripetizione del valore precedente in quella colonna:\n"
+            "  TRASCRIVILI come \" senza espanderli.\n"
+            "- Anno di nascita: trascrivilo come numero (es. '1832'), NON come età.\n"
+            "- Il CAPOFAMIGLIA (Hausvater / capofamiglia) è la prima riga della famiglia:\n"
+            "  la relazione nella colonna 10 è 'capofamiglia' o lasciata vuota.\n"
+            "- Relazioni col capofamiglia comuni: moglie, figlio, figlia, genero, nuora,\n"
+            "  nipote, servitore, garzone: trascrivile esattamente come appaiono.\n"
+            "- Coscrizione militare (col.13): valori tipici: 'atto', 'esente', 'in servizio',\n"
+            "  'riformato'; per le donne la colonna è spesso vuota o barrata.\n"
+            "- NON saltare righe: anche quelle con soli segni ditto vanno trascritte.\n"
+            "- Se una colonna è vuota scrivi uno spazio tra i separatori: | |\n"
+            "- Se un valore è illeggibile usa [?].\n"
+            "- DOPPIA PAGINA: se l'immagine mostra due pagine affiancate (foglio aperto),\n"
+            "  le colonne di sinistra e di destra formano insieme un'unica riga: trascrivile\n"
+            "  come riga continua unita da ' | ', non come due righe separate.\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- I cognomi possono essere in forma dialettale veneta, lombarda o friulana:\n"
+            "  non correggere, trascrivi esattamente.\n"
+            "- Termini tedeschi o latinizzati possono comparire nelle colonne Professione\n"
+            "  e Osservazioni: trascrivi nella lingua originale.\n"
+            "- Abbreviazioni: 'Cat.' = <Cattolico/a>; 'R.C.' = <Romano Cattolico/a>;\n"
+            "  'vid.' = <vedovo/vedova>; 'cell.' = <celibe/nubile>.\n"
         ),
         "Stato delle Anime / Censimento Parrocchiale": (
             "\nTIPOLOGIA: Stato delle Anime o censimento parrocchiale (TABELLA MULTI-COLONNA).\n"
