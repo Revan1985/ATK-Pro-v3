@@ -42,6 +42,7 @@ def get_available_types():
         "Registro Parrocchiale — Battesimi (sec. XVI-XIX)",
         "Registro Parrocchiale — Matrimoni (sec. XVI-XIX)",
         "Registro Parrocchiale — Morti / Sepolture (sec. XVI-XIX)",
+        "Registro Parrocchiale — Cresimati (sec. XVI-XIX)",
         "Registro degli Esposti / Nati Illegittimi",
         "Stati delle Anime Granducato di Toscana",
         "Anagrafe / Censimento Lombardo-Veneto (sec. XIX)",
@@ -49,6 +50,7 @@ def get_available_types():
         "Censimento Storico (Generico)",
         "Catasto Onciario (Due Sicilie, sec. XVIII)",
         "Catasto Gregoriano (Stato Pontificio, 1816-1835)",
+        "Stato di Famiglia / Atto di Notoriet\u00e0 (SC)",
         # ── Leva Militare (1865-1940) ──────────────────────────────────────────────────
         "Ruolo di Matricola / Leva Militare (1865-1940)",
         "Foglio Matricolare (scheda individuale, 1865-1940)",
@@ -56,6 +58,7 @@ def get_available_types():
         "Passaporto / Permesso di Espatrio (sec. XIX-XX)",
         "Atti Consolari Italiani all'Estero",
         "Indice / Registro degli Atti",
+        "Protocollo Notarile (registro degli atti)",
         "Documento Notarile",
         "Atto in Latino Ecclesiastico",
         "Lettera / Corrispondenza Privata",
@@ -772,6 +775,39 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- MARGINALIA: trascrivi annotazioni con il tag [MARGINE: ...].\n"
             "- Se la pagina contiene PIÙ DI UN ATTO, separa ciascuno con '--- ATTO N ---'.\n"
         ),
+        "Registro Parrocchiale — Cresimati (sec. XVI-XIX)": (
+            "\nTIPOLOGIA: Registro parrocchiale dei cresimati (Confirmati, sec. XVI-XIX).\n"
+            "Istituito dopo il Concilio di Trento; obbligatorio dal Rituale Romanum (1614).\n"
+            "Fornisce l'età approssimativa del cresimato (di norma 7-14 anni) e i nomi\n"
+            "del padrino/madrina: utile per estendere reti familiari e stimare anni di nascita.\n"
+            "\nSTRUTTURA (varia per diocesi e periodo):\n"
+            "- Intestazione: data della visita pastorale o della cerimonia, vescovo o suo delegato,\n"
+            "  chiesa/parrocchia.\n"
+            "- Per ogni cresimato:\n"
+            "  * Nome del cresimato (nome di battesimo + cognome, se già in uso).\n"
+            "  * Età o anno di nascita (spesso 'di anni X circa').\n"
+            "  * Nome del padre e della madre (con 'fu' o 'quondam' se defunti).\n"
+            "  * Padrino o madrina: nome, cognome, relazione (se specificata).\n"
+            "  * Nome di cresima assunto (dal sec. XVIII in poi, spesso indicato).\n"
+            "  * Firma o croce del celebrante.\n"
+            "\nFORMATI POSSIBILI:\n"
+            "- Narrativo (sec. XVI-XVII): 'Die X mensis Y, confirmatus fuit N., filius N. et N.,\n"
+            "  aetatis annorum X, patrino N.'.\n"
+            "- Tabellare (sec. XVIII-XIX): colonne per nome, età, padre, madre, padrino.\n"
+            "  Se tabellare, trascrivi con valori separati da ' | ', con riga di intestazione.\n"
+            "\nABBREVIAZIONI FREQUENTI (sciogli tra < >):\n"
+            "- conf. / confirm. = <confirmatus/a>\n"
+            "- patr. = <patrinus/a> (padrino/madrina)\n"
+            "- fil. = <filius/filia>\n"
+            "- q.m / qm = <quondam>\n"
+            "- an. / aet. = <annorum / aetatis>\n"
+            "\nREGOLE PALEOGRAFICHE:\n"
+            "- Testo spesso in latino: trascrivi senza tradurre.\n"
+            "- Età: trascrivi esattamente come scritta, anche se approssimativa.\n"
+            "- MARGINALIA: trascrivi con il tag [MARGINE: ...].\n"
+            "- Separa ogni atto/riga con '--- CRESIMATO N ---' se la struttura è narrativa;\n"
+            "  usa tabella a ' | ' se il registro è a colonne.\n"
+        ),
         "Registro degli Esposti / Nati Illegittimi": (
             "\nTIPOLOGIA: Registro degli esposti (trovatelli) o dei nati illegittimi.\n"
             "Tenuto dall'Orfanotrofio, dall'Ospedale degli Innocenti, dalla Ruota o dalla parrocchia;\n"
@@ -1289,6 +1325,31 @@ def compose_ocr_prompt(doc_type, user_instructions="", example_text=""):
             "- DOPPIA PAGINA: se l'immagine mostra due pagine affiancate (foglio aperto),"
             " le colonne di sinistra e di destra formano insieme un'unica riga: trascrivile come"
             " riga continua unita da ' | ', non come due righe separate.\n"
+        ),
+        "Protocollo Notarile (registro degli atti)": (
+            "\nTIPOLOGIA: Protocollo o repertorio notarile (registro cronologico degli atti stipulati).\n"
+            "Registro tenuto dal notaio per legge; elenca in ordine cronologico tutti gli atti\n"
+            "rogati, con una riga per ciascun atto. Utile per localizzare testamenti, compravendite,\n"
+            "doti, contratti d'affitto, procure, relativi a persone di interesse genealogico.\n"
+            "\nSTRUTTURA TIPICA (a colonne o a lista):\n"
+            "- N° di repertorio (progressivo annuale o totale).\n"
+            "- Data dell'atto (giorno, mese, anno).\n"
+            "- Natura dell'atto: 'vendita', 'testamento', 'mutuo', 'procura', 'dote',\n"
+            "  'locazione', 'quietanza', 'enfiteusi', ecc.\n"
+            "- Parti contraenti: nome e cognome del/dei roganti (con qualifica o professione).\n"
+            "- Oggetto/bene (se indicato): breve descrizione."
+            " Es. 'casa in contrada X', 'terreno sito in...'\n"
+            "- Valore del contratto (in lire, scudi, ducati, ecc.).\n"
+            "- Numero del foglio o della pagina nel protocollo originale.\n"
+            "- Eventuali note (es. 'annullato', 'surrogato', 'estratto il gg/mm/aaaa').\n"
+            "\nREGOLE OBBLIGATORIE:\n"
+            "- Trascrivi OGNI riga del registro, anche se contiene soli segni ditto (\" o idem):\n"
+            "  trascrivili come \" senza espandere.\n"
+            "- Usa ' | ' come separatore di colonna; includi riga di intestazione.\n"
+            "- I numeri di repertorio e di foglio sono riferimenti critici: massima precisione.\n"
+            "- Nomi delle parti: trascrivi esattamente, compresi titoli (\"Don\", \"fu\",\n"
+            "  \"vedova di\", \"Marchese\", ecc.).\n"
+            "- MARGINALIA (annotazioni di rettifica o estratti): trascrivi con [MARGINE: ...].\n"
         ),
         "Documento Generico / Non Classificato": (
             "\nTIPOLOGIA: Documento non classificato (nessuna tipologia predefinita applicabile).\n"
