@@ -56,7 +56,12 @@ class OCRReviewDialog(QDialog):
         self.glossario_data = glossario_data
         self.setWindowTitle(title if title else self.gm("Revisione Interattiva OCR"))
         from PySide6.QtCore import Qt
-        self.setWindowFlags(self.windowFlags() | Qt.Window)
+        self.setWindowFlags(
+            Qt.Window |
+            Qt.WindowTitleHint |
+            Qt.WindowMinMaxButtonsHint |
+            Qt.WindowCloseButtonHint
+        )
         self.setMinimumSize(900, 600)
         self.resize(1100, 750)
 
