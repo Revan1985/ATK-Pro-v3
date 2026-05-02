@@ -142,20 +142,24 @@ class GeminiHandler(AIProviderHandler):
     def _extract_text_only_gemini(self, prompt: str, debug_dir=None) -> list:
         """
         PIPELINE DUE FASI — MODALITÀ TESTO: chiamata diretta a Gemini senza
-        pipeline immagine. Usata quando il documento è già stato trascritto con
-        OCR Avanzato e il testo è incorporato nel prompt.
-        Valida per tutti i tipi documentali.
+        pipeline immagine.
         """
         import time
+        from ai_utils import get_best_gemini_model
         genai.configure(api_key=self.api_key)
 
-        # Modelli in ordine di preferenza: Pro per ragionamento, Flash come fallback
+        # Usa ai_utils per trovare i modelli reali disponibili per questa chiave
+        # invece di hardcodare modelli che potrebbero avere limit: 0 sul free tier
         target_models = [
-            "models/gemini-2.5-pro",
-            "models/gemini-pro-latest",
-            "models/gemini-2.0-flash",
-            "models/gemini-flash-latest",
+            get_best_gemini_model(self.api_key, preferred="pro"),
+            get_best_gemini_model(self.api_key, preferred="flash")
         ]
+        
+        # Rimuovi duplicati mantenendo l'ordine
+        seen = set()
+        target_models = [m for m in target_models if m not in seen and not seen.add(m)]
+        # Aggiungi 'models/' per l'SDK se non presente
+        target_models = [m if m.startswith('models/') else f'models/{m}' for m in target_models]
 
         for m_name in target_models:
             try:
