@@ -362,7 +362,7 @@ class GeminiHandler(AIProviderHandler):
         raise Exception("Errore critico durante lo split visivo.")
 
 class OpenAIHandler(AIProviderHandler):
-    def extract_genealogy(self, prompt, image_path=None, model=None):
+    def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
         from openai import OpenAI
         import httpx
         if not model: model = 'gpt-4o'
@@ -386,7 +386,7 @@ class OpenAIHandler(AIProviderHandler):
             raise e
 
 class ClaudeHandler(AIProviderHandler):
-    def extract_genealogy(self, prompt, image_path=None, model=None):
+    def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
         from anthropic import Anthropic
         import httpx
         if not model: model = 'claude-3-5-sonnet-20241022'
@@ -407,7 +407,7 @@ class ClaudeHandler(AIProviderHandler):
         try:
             response = client.messages.create(
                 model=model,
-                max_tokens=4096,
+                max_tokens=8192,
                 messages=[{"role": "user", "content": content}]
             )
             return response.content[0].text
