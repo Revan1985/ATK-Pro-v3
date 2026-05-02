@@ -389,7 +389,7 @@ class ClaudeHandler(AIProviderHandler):
     def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
         from anthropic import Anthropic
         import httpx
-        if not model: model = 'claude-3-5-sonnet-20241022'
+        if not model: model = 'claude-3-5-sonnet-latest'
         client = Anthropic(api_key=self.api_key, http_client=httpx.Client())
         content = []
         if image_path and os.path.exists(image_path):
