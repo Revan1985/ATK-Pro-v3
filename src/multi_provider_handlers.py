@@ -183,8 +183,11 @@ class GeminiHandler(AIProviderHandler):
                     return rows
             except Exception as e:
                 logging.warning(f"[TEXT-MODE] Errore con {m_name}: {e}")
-                if "429" in str(e) or "quota" in str(e).lower():
-                    time.sleep(10)
+                err_lower = str(e).lower()
+                if "429" in err_lower or "quota" in err_lower or "limit: 0" in err_lower:
+                    # Invece di ripiegare su Flash (che produce output scadenti),
+                    # solleviamo l'errore per innescare la rotazione alla chiave successiva (es. Billing)
+                    raise Exception(f"Quota esaurita o limitata su {m_name}: {e}")
                 continue
 
         raise Exception("Impossibile estrarre dati dal testo con i modelli Gemini disponibili.")
