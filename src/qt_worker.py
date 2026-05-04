@@ -29,12 +29,13 @@ class WorkerSignals(QObject):
 
 
 class ElaborazioneWorker(QThread):
-    def __init__(self, records, formats=None, glossario_data=None, lingua='IT'):
+    def __init__(self, records, formats=None, glossario_data=None, lingua='IT', portale='antenati'):
         super().__init__()
         self.records = records or []
         self.formats = formats
         self.glossario = glossario_data
         self.lingua = lingua
+        self.portale = portale
         self._is_cancelled = False
         self.signals = WorkerSignals()
 
@@ -94,7 +95,7 @@ class ElaborazioneWorker(QThread):
 
                 # Esegue l'elaborazione reale (sincrona)
 
-                elab = Elaborazione(modalita.lower(), url, out_dir, self.glossario, self.lingua)
+                elab = Elaborazione(modalita.lower(), url, out_dir, self.glossario, self.lingua, portale=self.portale)
                 elab.set_nome_file(nome_file)
                 # Callback per progresso canvas
                 try:

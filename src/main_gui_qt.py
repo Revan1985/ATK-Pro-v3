@@ -210,6 +210,7 @@ def _read_config_prefs() -> dict:
                 "output_folder_single": data.get("output_folder_single", None),
                 "output_folder_doc":    data.get("output_folder_doc", None),
                 "output_folder_reg":    data.get("output_folder_reg", None),
+                "portale_attivo":       data.get("portale_attivo", "antenati"),
             }
     except Exception as e:
         logging.debug(f"Errore lettura prefs config: {e}")
@@ -749,6 +750,62 @@ class MainWindow(QMainWindow):
             dlg.setLayout(layout)
             dlg.exec()
 
+    def cambia_portale(self):
+        """Dialog per selezionare il portale IIIF attivo (impostazione persistente)."""
+        from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox
+        gm = lambda k: get_msg(self.glossario_data, k, self.lingua) or k
+
+        PORTALI = [
+            ("antenati",          "Antenati (Cultura.gov.it)"),
+            ("gallica",           "Gallica (BnF)"),
+            ("internet_archive",  "Internet Archive"),
+            ("e_codices",         "e-codices (Unifr)"),
+            ("heidelberg",        "Heidelberg UB"),
+            ("bodleian",          "Bodleian Libraries Oxford"),
+            ("manifest_diretto",  "Manifest diretto (URL già noto)"),
+        ]
+
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Portale IIIF attivo")
+        _setup_dialog_pergamena(dlg, 520, 220)
+        layout = QVBoxLayout(dlg)
+
+        lbl = QLabel("Seleziona il portale da cui scaricherai le immagini:")
+        lbl.setStyleSheet("color: #fff; font-size: 15px;")
+        layout.addWidget(lbl)
+
+        combo = QComboBox()
+        combo.setStyleSheet("color: #222; background: #f5e6c3; font-size: 14px; padding: 4px;")
+        current_key = self.portale_attivo
+        current_idx = 0
+        for i, (key, label) in enumerate(PORTALI):
+            combo.addItem(label, key)
+            if key == current_key:
+                current_idx = i
+        combo.setCurrentIndex(current_idx)
+        layout.addWidget(combo)
+
+        btn_row = QHBoxLayout()
+        ok_btn = QPushButton("OK")
+        cancel_btn = QPushButton(gm("Annulla") or "Annulla")
+        ok_btn.clicked.connect(dlg.accept)
+        cancel_btn.clicked.connect(dlg.reject)
+        btn_row.addWidget(ok_btn)
+        btn_row.addWidget(cancel_btn)
+        layout.addLayout(btn_row)
+        dlg.setLayout(layout)
+
+        if dlg.exec() == QDialog.Accepted:
+            nuovo_portale = combo.currentData()
+            if nuovo_portale and nuovo_portale != self.portale_attivo:
+                self.portale_attivo = nuovo_portale
+                state["portale_attivo"] = nuovo_portale
+                _write_config_prefs("portale_attivo", nuovo_portale)
+                portale_label = combo.currentText()
+                info_lbl = QLabel(f"Portale attivo: {portale_label}")
+                info_lbl.setStyleSheet("color: #fff; font-size: 14px;")
+                show_operation_completed_dialog(self, self.glossario_data, self.lingua)
+
     def verifica_aggiornamenti(self):
         """Controlla se è disponibile una nuova versione su GitHub"""
         import urllib.request, json
@@ -947,6 +1004,9 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.glossario_data = glossario_data
         self.lingua = lingua
+        # Ripristina portale attivo dal config (default: antenati)
+        self.portale_attivo = _read_config_prefs().get("portale_attivo", "antenati")
+        state["portale_attivo"] = self.portale_attivo
 
         # Ripristina titlebar nativa
         self.setWindowTitle("ATK-Pro")
@@ -1017,6 +1077,7 @@ class MainWindow(QMainWindow):
 
         # --- Impostazioni ---
         impostazioni_menu = QMenu(gm("Impostazioni"), self)
+        impostazioni_menu.addAction(gm("Portale IIIF attivo"), self.cambia_portale)
         impostazioni_menu.addAction(gm("Cambia lingua"), self.cambia_lingua)
         impostazioni_menu.addAction(gm("Seleziona formati immagine"), self.seleziona_formati_immagine)
         impostazioni_menu.addAction(gm("Seleziona cartella output"), self.seleziona_cartella_output)
@@ -1191,7 +1252,7 @@ class MainWindow(QMainWindow):
             lingua = self.lingua
 
             progress_dialog = ProgressDialog(glossario, lingua, total=len(records), parent=self)
-            worker = ElaborazioneWorker(records, formats, glossario, lingua)
+            worker = ElaborazioneWorker(records, formats, glossario, lingua, portale=state.get("portale_attivo", "antenati"))
 
             def on_progress(cur, tot, name, page, page_total):
                 import re
@@ -2549,7 +2610,7 @@ def action_process(glossario_data, lingua, parent=None):
                 pass
 
             # Worker: useremo i record già arricchiti (output, gen_pdf)
-            worker = ElaborazioneWorker(records, formats=selected_formats, glossario_data=glossario_data, lingua=lingua)
+            worker = ElaborazioneWorker(records, formats=selected_formats, glossario_data=glossario_data, lingua=lingua, portale=state.get("portale_attivo", "antenati"))
 
             def on_progress(current, total, name, page=None, page_total=None):
                 try:
@@ -2675,7 +2736,7 @@ def action_process(glossario_data, lingua, parent=None):
                     except Exception:
                         pass
                         pd.show()
-                        worker = ElaborazioneWorker(records, formats=selected_formats, glossario_data=glossario_data, lingua=lingua)
+                        worker = ElaborazioneWorker(records, formats=selected_formats, glossario_data=glossario_data, lingua=lingua, portale=state.get("portale_attivo", "antenati"))
                         def on_progress(current, total, name):
                             try:
                                 pd.update(current=current, name=name)

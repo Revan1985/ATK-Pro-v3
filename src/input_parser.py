@@ -75,10 +75,15 @@ def parse_input_text(testo):
             logger.warning(f"⚠️ Modalità non riconosciuta: {modalita_raw}")
             continue
 
+        # Rileva se l'URL è direttamente un manifest IIIF (es. termina con /manifest.json o /manifest)
+        url_stripped = riga_url.split("?")[0].rstrip("/")
+        manifest_direct = url_stripped.endswith("/manifest.json") or url_stripped.endswith("/manifest")
+
         risultati.append({
             "modalita": modalita,
             "nome_file": nome_file,
-            "url": riga_url
+            "url": riga_url,
+            "manifest_direct": manifest_direct,
         })
 
     return risultati

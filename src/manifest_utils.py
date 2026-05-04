@@ -78,6 +78,71 @@ def _http_get(url: str, timeout: int = 20) -> requests.Response | None:
         logger.warning(f"[HTTP] Errore GET {url}: {e}")
         return None
 
+
+# ──────────────────────────────────────────────────────────────────
+# Builder URL manifest per portali IIIF supportati (Layer 1)
+# ──────────────────────────────────────────────────────────────────
+
+def _build_gallica_manifest(page_url: str) -> str | None:
+    """Gallica BnF: .../ark:/12148/{id} → .../iiif/ark:/12148/{id}/manifest.json"""
+    m = re.search(r'gallica\.bnf\.fr(.*/ark:/12148/[A-Za-z0-9]+)', page_url)
+    if m:
+        return f"https://gallica.bnf.fr/iiif{m.group(1)}/manifest.json"
+    return None
+
+
+def _build_ia_manifest(page_url: str) -> str | None:
+    """Internet Archive: archive.org/details/{id} → iiif.archivelab.org/iiif/{id}/manifest.json"""
+    m = re.search(r'archive\.org/details/([A-Za-z0-9._-]+)', page_url)
+    if m:
+        return f"https://iiif.archivelab.org/iiif/{m.group(1)}/manifest.json"
+    return None
+
+
+def _build_ecodices_manifest(page_url: str) -> str | None:
+    """e-codices: .../list/one/{lib}/{id} → .../metadata/iiif/{lib}-{id}/manifest.json"""
+    m = re.search(r'e-codices\.unifr\.ch/[a-z]+/[a-z]+/one/([A-Za-z0-9]+)/([A-Za-z0-9-]+)', page_url)
+    if m:
+        doc_id = f"{m.group(1)}-{m.group(2)}"
+        return f"https://www.e-codices.unifr.ch/metadata/iiif/{doc_id}/manifest.json"
+    return None
+
+
+def _build_heidelberg_manifest(page_url: str) -> str | None:
+    """Heidelberg UB: .../diglit/{id} → .../diglit/{id}/manifest"""
+    m = re.search(r'digi\.ub\.uni-heidelberg\.de/diglit/([A-Za-z0-9_-]+)', page_url)
+    if m:
+        return f"https://digi.ub.uni-heidelberg.de/diglit/{m.group(1)}/manifest"
+    return None
+
+
+# Mappa portale → funzione builder
+_PORTAL_BUILDERS = {
+    "gallica":          _build_gallica_manifest,
+    "internet_archive": _build_ia_manifest,
+    "e_codices":        _build_ecodices_manifest,
+    "heidelberg":       _build_heidelberg_manifest,
+}
+
+
+def resolve_manifest_url(page_url: str, portale: str) -> str | None:
+    """
+    Costruisce direttamente l'URL del manifest IIIF partendo dall'URL di pagina,
+    usando la logica specifica del portale.
+
+    - "manifest_diretto": l'URL è già il manifest, restituisce page_url invariato.
+    - "gallica", "internet_archive", "e_codices", "heidelberg": costruisce URL manifest.
+    - "antenati", "bodleian" (e altri): restituisce None → il chiamante usa
+      Selenium/Playwright + scraping HTML (percorso legacy).
+    """
+    portale_key = portale.lower().replace("-", "_").replace(" ", "_")
+    if portale_key == "manifest_diretto":
+        return page_url
+    builder = _PORTAL_BUILDERS.get(portale_key)
+    if builder:
+        return builder(page_url)
+    return None
+
 def find_manifest_url(driver) -> str | None:
     """
     Compatibilità v1.4.1: legge il DOM da Selenium e cerca containers/.../manifest.
@@ -152,20 +217,26 @@ def robust_find_manifest(page_url: str, html: str | None = None) -> str | None:
     print("[Manifest] Nessun manifest trovato.")
     return None
 
-def download_manifest(manifest_url: str, output_folder: str, titolo_doc: str = "documento") -> dict | None:
+def download_manifest(manifest_url: str, output_folder: str, titolo_doc: str = "documento", referer: str | None = None) -> dict | None:
     """
     Scarica il manifest replicando la logica v1.4.1:
     - HEADERS_UX completi (User-Agent, Accept, Referer, Origin, Accept-Language, Connection)
     - Gestione esplicita di 403 e 5xx
     - Salvataggio su disco con nome identico alla v1.4.1
     - Messaggi di log identici per verifica bit-a-bit
+    - referer: se fornito, sovrascrive Referer/Origin negli header (per portali non-Antenati)
     """
     print(f"[Manifest] Download da: {manifest_url}")
+    # Adatta gli header al portale: usa referer specificato o default Antenati
+    headers = dict(HEADERS_UX)
+    if referer:
+        headers["Referer"] = referer.rstrip("/") + "/"
+        headers["Origin"] = referer.rstrip("/")
     max_retries = 3
     delay = 1.0
     for attempt in range(1, max_retries + 1):
         try:
-            response = requests.get(manifest_url, headers=HEADERS_UX, timeout=25)
+            response = requests.get(manifest_url, headers=headers, timeout=25)
 
             # Log codici utili
             if response is None:

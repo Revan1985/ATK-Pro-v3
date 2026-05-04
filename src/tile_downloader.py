@@ -70,7 +70,24 @@ def download_tile(url, x, y, tile_size, output_dir):
             logger.info("[OK] Tile salvato correttamente: %s", filename)
             return filename
         elif response.status_code == 404:
-            logger.debug("Tile non trovato (404): %s", url_tile)
+            # Fallback .png: alcuni portali IIIF servono PNG invece di JPEG.
+            # Salviamo nel filename .jpg standard: Pillow legge dal contenuto, non dall'estensione.
+            url_tile_png = f"{url}/{pixel_x},{pixel_y},{tile_size},{tile_size}/full/0/default.png"
+            logger.debug("Tile .jpg non trovato (404), provo .png: %s", url_tile_png)
+            try:
+                resp_png = requests.get(url_tile_png, headers=HEADERS_UX, stream=True, timeout=30)
+                if resp_png.status_code == 200:
+                    with open(filename, "wb") as f:
+                        for chunk in resp_png.iter_content(8192):
+                            if chunk:
+                                f.write(chunk)
+                    if os.path.getsize(filename) > 1024:
+                        logger.info("[OK] Tile .png salvato come %s", filename)
+                        return filename
+                    else:
+                        os.remove(filename)
+            except Exception as e:
+                logger.debug("Fallback .png fallito per %s: %s", url_tile_png, e)
             return None
         else:
             logger.error("[Error] Errore HTTP %s per %s", response.status_code, url_tile)

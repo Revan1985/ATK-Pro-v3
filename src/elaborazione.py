@@ -223,7 +223,7 @@ def _make_placeholder_image(service_id: str, width: int = 800, height: int = 120
 
 
 class Elaborazione:
-    def __init__(self, record_type: str, ark_url: str, output_dir: str, glossario_data=None, lingua="IT"):
+    def __init__(self, record_type: str, ark_url: str, output_dir: str, glossario_data=None, lingua="IT", portale: str = "antenati"):
         self.record_type = record_type.upper()
         self.ark_url = ark_url
         self.output_dir = output_dir
@@ -232,6 +232,7 @@ class Elaborazione:
         self.manifest_path = None
         self.glossario_data = glossario_data
         self.lingua = lingua
+        self.portale = portale
 
     def set_nome_file(self, nome: str):
         """Imposta il nome file per il record."""
@@ -321,6 +322,14 @@ class Elaborazione:
 
     def _get_manifest_url(self):
         """Ricava URL manifest da selenium/playwright o mappatura hardcoded."""
+        from manifest_utils import resolve_manifest_url as _resolve_manifest_url
+
+        # Shortcut: portale manifest_diretto → l'URL fornito è già il manifest
+        portale_key = self.portale.lower().replace("-", "_").replace(" ", "_")
+        if portale_key == "manifest_diretto":
+            logger.info(f"[Manifest] manifest_diretto: uso URL diretto {self.ark_url}")
+            return self.ark_url
+
         # Tentativo 1: Prova browser automation
         try:
             driver = setup_selenium()
@@ -348,7 +357,13 @@ class Elaborazione:
         except Exception as e:
             logger.debug(f"[Playwright] Errore: {e}")
 
-        # Tentativo 3: Usa mappatura hardcoded o costruzione URL standard
+        # Tentativo 3: resolve_manifest_url (costruzione diretta per portale noto)
+        manifest_direct = _resolve_manifest_url(self.ark_url, self.portale)
+        if manifest_direct:
+            logger.info(f"[Manifest] resolve_manifest_url ({self.portale}): {manifest_direct}")
+            return manifest_direct
+
+        # Tentativo 4: Usa mappatura hardcoded o costruzione URL standard
         logger.info("Usando fallback build_manifest_url (mappatura hardcoded)")
         try:
             manifest_url = build_manifest_url(self.ark_url)
