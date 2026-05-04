@@ -100,8 +100,12 @@ def _build_ia_manifest(page_url: str) -> str | None:
 
 
 def _build_ecodices_manifest(page_url: str) -> str | None:
-    """e-codices: .../list/one/{lib}/{id} → .../metadata/iiif/{lib}-{id}/manifest.json"""
-    m = re.search(r'e-codices\.unifr\.ch/[a-z]+/[a-z]+/one/([A-Za-z0-9]+)/([A-Za-z0-9-]+)', page_url)
+    """e-codices: sia /en/{lib}/{id}/ che /list/one/{lib}/{id} → .../metadata/iiif/{lib}-{id}/manifest.json"""
+    # Formato viewer: /en/csg/0390/1r/max  oppure  /list/one/csg/0390
+    m = re.search(
+        r'e-codices\.unifr\.ch/(?:[a-z]+/[a-z]+/one/|[a-z]{2}/)([A-Za-z0-9]+)/([A-Za-z0-9-]+)',
+        page_url
+    )
     if m:
         doc_id = f"{m.group(1)}-{m.group(2)}"
         return f"https://www.e-codices.unifr.ch/metadata/iiif/{doc_id}/manifest.json"
@@ -109,10 +113,11 @@ def _build_ecodices_manifest(page_url: str) -> str | None:
 
 
 def _build_heidelberg_manifest(page_url: str) -> str | None:
-    """Heidelberg UB: .../diglit/{id} → .../diglit/{id}/manifest"""
-    m = re.search(r'digi\.ub\.uni-heidelberg\.de/diglit/([A-Za-z0-9_-]+)', page_url)
+    """Heidelberg UB: .../diglit/{id} → .../diglit/iiif/{id}/manifest.json (IIIF v2)"""
+    m = re.search(r'digi\.ub\.uni-heidelberg\.de/diglit/(?:iiif/)?([A-Za-z0-9_.-]+)', page_url)
     if m:
-        return f"https://digi.ub.uni-heidelberg.de/diglit/{m.group(1)}/manifest"
+        doc_id = m.group(1)
+        return f"https://digi.ub.uni-heidelberg.de/diglit/iiif/{doc_id}/manifest.json"
     return None
 
 
