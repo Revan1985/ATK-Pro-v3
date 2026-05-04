@@ -8,12 +8,13 @@ from key_manager import KeyManager
 
 
 class AdvancedOCRWorker:
-    def __init__(self, provider, api_key, formats, output_dir, custom_prompt="", example_text=""):
+    def __init__(self, provider, api_key, formats, output_dir, custom_prompt="", example_text="", custom_model=None):
         self.provider = provider
         self.formats = formats
         self.output_dir = output_dir
         self.custom_prompt = custom_prompt
         self.example_text = example_text
+        self.custom_model = custom_model
 
         # --- Gestione chiavi: Cassaforte > campo manuale ---
         km = KeyManager()
@@ -237,7 +238,7 @@ class AdvancedOCRWorker:
             + fmt_examples
         )
 
-        text = self._transcribe_gemini(api_key, b64_top, prompt_top)
+        text = self._transcribe_gemini(api_key, b64_top, prompt_top, model=self.custom_model)
         logging.info(f"[OCR] Calibrazione: anteprima TOP estratta — {len(text.splitlines())} righe")
         return tmp_path, text
 
@@ -248,25 +249,42 @@ class AdvancedOCRWorker:
         prompt   = self._build_prompt()
         provider = (self.provider or "Gemini").strip()
 
-        # Per provider non-Gemini usa il path diretto
         if "OpenAI" in provider or "GPT" in provider:
-            return self._transcribe_openai(api_key, self._prepare_image_b64(img_path), prompt)
+            return self._transcribe_openai(api_key, self._prepare_image_b64(img_path), prompt, model=self.custom_model)
         if "Anthropic" in provider or "Claude" in provider:
-            return self._transcribe_anthropic(api_key, self._prepare_image_b64(img_path), prompt)
+            return self._transcribe_claude(api_key, self._prepare_image_b64(img_path), prompt, model=self.custom_model)
+        if "Mistral" in provider:
+            return self._transcribe_openai_compat(api_key, img_path, prompt, "https://api.mistral.ai/v1", self.custom_model or "pixtral-large-latest")
+        if "Groq" in provider:
+            return self._transcribe_openai_compat(api_key, img_path, prompt, "https://api.groq.com/openai/v1", self.custom_model or "llama-3.2-90b-vision-preview")
+        if "DeepSeek" in provider:
+            # Solo testo — ignora immagine
+            return self._transcribe_openai_compat(api_key, None, prompt, "https://api.deepseek.com", self.custom_model or "deepseek-chat")
+        if "xAI" in provider:
+            return self._transcribe_openai_compat(api_key, img_path, prompt, "https://api.x.ai/v1", self.custom_model or "grok-2-vision-1212")
+        if "Ollama" in provider:
+            host = api_key.strip() if api_key and api_key.strip().startswith("http") else "http://localhost:11434"
+            return self._transcribe_openai_compat("ollama", img_path, prompt, host.rstrip("/") + "/v1", self.custom_model or "llava")
+        if "Hugging" in provider or "HuggingFace" in provider:
+            model = self.custom_model or "Qwen/Qwen2.5-VL-7B-Instruct"
+            # TrOCR e modelli image-to-text puri: path diretto REST (testo grezzo)
+            if any(m in model.lower() for m in ("trocr", "got-ocr", "olmocr", "pero-ocr")):
+                return self._transcribe_hf_image_to_text(api_key, img_path, model)
+            # Vision-language chat: endpoint OpenAI-compatibile
+            return self._transcribe_openai_compat(api_key, img_path, prompt, "https://api-inference.huggingface.co/v1/", model)
+        if "Transkribus" in provider:
+            return self._transcribe_transkribus(api_key, img_path)
 
-        # Gemini: split se la tipologia documentale prevede doppia pagina
-        # oppure se l'immagine è effettivamente molto larga (foglio aperto fisico)
+        # Default: Gemini con eventuale split doppia pagina
         with Image.open(img_path) as _probe:
             w, h = _probe.size
         is_double_page = (
-            "DOPPIA PAGINA" in prompt  # il tipo documentale lo dichiara esplicitamente
-            or ((w / h) >= 1.6 if h > 0 else False)  # o il formato è fisicamente panoramico
+            "DOPPIA PAGINA" in prompt
+            or ((w / h) >= 1.6 if h > 0 else False)
         )
-
         if is_double_page:
             return self._transcribe_gemini_split(img_path, api_key, prompt)
-
-        return self._transcribe_gemini(api_key, self._prepare_image_b64(img_path), prompt)
+        return self._transcribe_gemini(api_key, self._prepare_image_b64(img_path), prompt, model=self.custom_model)
 
     def _transcribe_gemini_split(self, img_path, api_key, prompt):
         """Split 2-vie (TOP/BOTTOM) con overlap 20% per immagini a doppia pagina.
@@ -322,7 +340,7 @@ class AdvancedOCRWorker:
         )
 
         logging.info("[OCR] Immagine doppia pagina — split TOP/BOTTOM (overlap 20%, max_size=4096, quality=95)")
-        text_top = self._transcribe_gemini(api_key, b64_top, prompt_top)
+        text_top = self._transcribe_gemini(api_key, b64_top, prompt_top, model=self.custom_model)
 
         # Contesto: ultime 3 righe del TOP per aiutare il BOTTOM a gestire i cambi nucleo
         _lines_ctx = [l for l in text_top.strip().splitlines() if l.strip()]
@@ -349,7 +367,7 @@ class AdvancedOCRWorker:
             + fmt_examples
             + _ctx_note
         )
-        text_bot = self._transcribe_gemini(api_key, b64_bot, prompt_bot)
+        text_bot = self._transcribe_gemini(api_key, b64_bot, prompt_bot, model=self.custom_model)
 
         # Salva diagnostica raw per debugging
         try:
@@ -449,39 +467,43 @@ class AdvancedOCRWorker:
             raise Exception(f"Risposta Gemini senza testo (finishReason={finish_reason})")
         raise Exception(f"Risposta Gemini vuota: {res_json}")
 
-    def _transcribe_gemini(self, api_key, b64_img, prompt):
+    def _transcribe_gemini(self, api_key, b64_img, prompt, model=None):
         """Trascrizione via Gemini REST. Per OCR usa pro → flash come fallback."""
         from ai_utils import get_best_gemini_model
 
         # Ordine di preferenza: prima pro (più accurato su tabelle), poi flash
-        model_candidates = [
-            get_best_gemini_model(api_key, preferred="pro"),
-            get_best_gemini_model(api_key, preferred="flash"),
-        ]
+        if model:
+            model_candidates = [model]
+        else:
+            model_candidates = [
+                get_best_gemini_model(api_key, preferred="pro"),
+                get_best_gemini_model(api_key, preferred="flash"),
+            ]
         # Rimuovi duplicati mantenendo l'ordine
         seen = set()
         model_candidates = [m for m in model_candidates if m not in seen and not seen.add(m)]
 
         last_error = None
-        for model in model_candidates:
+        for model_name in model_candidates:
             try:
-                logging.info(f"[OCR] Gemini — modello: {model}")
-                return self._call_gemini_rest(api_key, model, b64_img, prompt)
+                logging.info(f"[OCR] Gemini — modello: {model_name}")
+                return self._call_gemini_rest(api_key, model_name, b64_img, prompt)
             except Exception as e:
                 err_str = str(e).lower()
                 last_error = e
                 if any(k in err_str for k in ["404", "not found", "does_not_exist", "invalid"]):
-                    logging.warning(f"[OCR] Modello {model} non disponibile, provo successivo.")
+                    logging.warning(f"[OCR] Modello {model_name} non disponibile, provo successivo.")
                     continue
                 raise e
         raise Exception(f"[OCR] Nessun modello Gemini disponibile. Ultimo errore: {last_error}")
 
-    def _transcribe_openai(self, api_key, b64_img, prompt):
+    def _transcribe_openai(self, api_key, b64_img, prompt, model=None):
         """Trascrizione via OpenAI Vision (gpt-4o)."""
-        logging.info("[OCR] OpenAI — modello: gpt-4o")
+        if not model: model = 'gpt-4o'
+        logging.info(f"[OCR] OpenAI — modello: {model}")
         url = "https://api.openai.com/v1/chat/completions"
         payload = {
-            "model": "gpt-4o",
+            "model": model,
             "messages": [{
                 "role": "user",
                 "content": [
@@ -502,12 +524,13 @@ class AdvancedOCRWorker:
         except (KeyError, IndexError):
             raise Exception(f"Risposta OpenAI non valida: {res_json}")
 
-    def _transcribe_anthropic(self, api_key, b64_img, prompt):
-        """Trascrizione via Anthropic Messages API (claude-opus-4-5)."""
-        logging.info("[OCR] Anthropic — modello: claude-opus-4-5")
+    def _transcribe_claude(self, api_key, b64_img, prompt, model=None):
+        """Trascrizione via Anthropic Messages API."""
+        if not model: model = "claude-3-5-sonnet-latest"
+        logging.info(f"[OCR] Anthropic — modello: {model}")
         url = "https://api.anthropic.com/v1/messages"
         payload = {
-            "model": "claude-opus-4-5",
+            "model": model,
             "max_tokens": 4096,
             "messages": [{
                 "role": "user",
@@ -530,6 +553,207 @@ class AdvancedOCRWorker:
             return res_json["content"][0]["text"]
         except (KeyError, IndexError):
             raise Exception(f"Risposta Anthropic non valida: {res_json}")
+
+    def _transcribe_openai_compat(self, api_key, img_path, prompt, base_url, model):
+        """Trascrizione via endpoint OpenAI-compatibile (Mistral, Groq, xAI, Ollama, HuggingFace chat)."""
+        from openai import OpenAI
+        logging.info(f"[OCR] OpenAI-compat — base_url: {base_url} modello: {model}")
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        content = [{"type": "text", "text": prompt}]
+        if img_path and os.path.exists(img_path):
+            b64 = self._prepare_image_b64(img_path)
+            content.insert(0, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=8192,
+            messages=[{"role": "user", "content": content}]
+        )
+        return response.choices[0].message.content
+
+    def _transcribe_hf_image_to_text(self, api_key, img_path, model):
+        """Trascrizione via HuggingFace Inference API image-to-text (TrOCR, GOT-OCR2, ecc.).
+        Restituisce testo grezzo — adatto come input per la fase GEDCOM."""
+        logging.info(f"[OCR] HuggingFace image-to-text — modello: {model}")
+        url = f"https://api-inference.huggingface.co/models/{model}"
+        headers = {"Authorization": f"Bearer {api_key}"}
+        b64 = self._prepare_image_b64(img_path)
+        img_bytes = base64.b64decode(b64)
+        resp = requests.post(url, headers={**headers, "Content-Type": "image/jpeg"},
+                             data=img_bytes, timeout=120)
+        resp.raise_for_status()
+        result = resp.json()
+        if isinstance(result, list) and result:
+            return result[0].get("generated_text", str(result[0]))
+        if isinstance(result, dict):
+            return result.get("generated_text", str(result))
+        return str(result)
+
+    def _transcribe_transkribus(self, api_key, img_path):
+        """Trascrizione via Transkribus HTR REST API.
+        
+        Credenziali (campo API Key):
+          - Formato 'email:password': autenticazione classica con JSESSIONID
+          - Formato token bearer: qualsiasi stringa senza ':' (es. chiave API generata da account)
+        
+        Modello HTR (campo Override Modello):
+          - Lascia vuoto  → 48122 (Italian Handwriting M1, modello ufficiale Archivi di Stato)
+          - Inserisci ID numerico → usa quel modello specifico
+        
+        Il documento temporaneo caricato su Transkribus viene rimosso al termine.
+        """
+        import time
+        import xml.etree.ElementTree as ET
+
+        TRANSKRIBUS_BASE = "https://transkribus.eu/TrpServer/rest"
+        model_id = int(self.custom_model) if (self.custom_model or "").strip().isdigit() else 48122
+        logging.info(f"[OCR] Transkribus — modello HTR: {model_id}, file: {os.path.basename(img_path)}")
+
+        # ── 1. Autenticazione ─────────────────────────────────────────────────
+        if ":" in api_key:
+            # email:password → session cookie
+            email, password = api_key.split(":", 1)
+            r_auth = requests.post(
+                f"{TRANSKRIBUS_BASE}/auth/login",
+                data={"user": email.strip(), "pw": password.strip()},
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+                timeout=30,
+            )
+            r_auth.raise_for_status()
+            session_id = (r_auth.json() or {}).get("sessionId")
+            if not session_id:
+                raise Exception(f"[Transkribus] Login fallito. Risposta: {r_auth.text[:300]}")
+            auth_headers = {"Cookie": f"JSESSIONID={session_id}"}
+            logging.info("[OCR] Transkribus auth via email:password — OK")
+        else:
+            # Bearer token (API token generato dall'account)
+            auth_headers = {"Authorization": f"Bearer {api_key.strip()}"}
+            logging.info("[OCR] Transkribus auth via Bearer token")
+
+        # ── 2. Prima collection disponibile ───────────────────────────────────
+        r_coll = requests.get(
+            f"{TRANSKRIBUS_BASE}/collections/list",
+            headers=auth_headers, timeout=30,
+        )
+        r_coll.raise_for_status()
+        collections = r_coll.json()
+        if not collections:
+            raise Exception(
+                "[Transkribus] Nessuna collection trovata nell'account.\n"
+                "Crea almeno una collection su transkribus.eu prima di usare questo provider."
+            )
+        coll_id = collections[0]["colId"]
+        logging.info(f"[OCR] Transkribus — collection: {coll_id} ({collections[0].get('colName', '')})")
+
+        # ── 3. Upload immagine → crea documento temporaneo ───────────────────
+        mime = "image/png" if img_path.lower().endswith(".png") else "image/jpeg"
+        basename = os.path.basename(img_path)
+        with open(img_path, "rb") as fh:
+            img_bytes = fh.read()
+
+        r_upload = requests.post(
+            f"{TRANSKRIBUS_BASE}/collections/{coll_id}/createDocFromImages",
+            headers=auth_headers,
+            files={"file": (basename, img_bytes, mime)},
+            data={"title": f"ATKPro-tmp-{basename}"},
+            timeout=90,
+        )
+        r_upload.raise_for_status()
+        upload_data = r_upload.json()
+        doc_id = upload_data if isinstance(upload_data, int) else upload_data.get("docId")
+        if not doc_id:
+            raise Exception(f"[Transkribus] Upload fallito: {str(upload_data)[:200]}")
+        logging.info(f"[OCR] Transkribus — documento temporaneo creato: docId={doc_id}")
+
+        # ── 4. Avvia job HTR ──────────────────────────────────────────────────
+        htr_payload = {
+            "collId": coll_id,
+            "docList": {
+                "docs": [{"docId": doc_id, "pageList": {"pages": [{"pageNr": 1}]}}]
+            },
+            "htrId": model_id,
+        }
+        r_htr = requests.post(
+            f"{TRANSKRIBUS_BASE}/recognition/{coll_id}/htrRnn",
+            json=htr_payload,
+            headers={**auth_headers, "Content-Type": "application/json"},
+            timeout=60,
+        )
+        r_htr.raise_for_status()
+        job_data = r_htr.json()
+        job_id = job_data if isinstance(job_data, int) else job_data.get("jobId") or job_data.get("jobIds", [None])[0]
+        if not job_id:
+            raise Exception(f"[Transkribus] Avvio HTR fallito: {str(job_data)[:200]}")
+        logging.info(f"[OCR] Transkribus — job HTR avviato: jobId={job_id}")
+
+        # ── 5. Polling fino al completamento (max 180s) ───────────────────────
+        max_wait, poll_interval, elapsed = 180, 6, 0
+        final_state = None
+        while elapsed < max_wait:
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+            try:
+                r_status = requests.get(
+                    f"{TRANSKRIBUS_BASE}/jobs/{job_id}",
+                    headers=auth_headers, timeout=30,
+                )
+                if r_status.status_code != 200:
+                    continue
+                state = str(r_status.json().get("state", "")).upper()
+                logging.debug(f"[OCR] Transkribus job {job_id} — stato: {state} ({elapsed}s)")
+                if state == "FINISHED":
+                    final_state = state
+                    break
+                if state in ("FAILED", "CANCELED"):
+                    desc = r_status.json().get("description", "")
+                    raise Exception(f"[Transkribus] Job {job_id} {state}: {desc}")
+            except requests.RequestException:
+                pass  # Retry al prossimo ciclo
+        if final_state != "FINISHED":
+            raise Exception(f"[Transkribus] Timeout ({max_wait}s) attendendo il job {job_id}.")
+
+        # ── 6. Recupera PAGE XML della pagina trascritta ──────────────────────
+        r_page = requests.get(
+            f"{TRANSKRIBUS_BASE}/collections/{coll_id}/{doc_id}/1/curr",
+            headers=auth_headers, timeout=30,
+        )
+        r_page.raise_for_status()
+        page_xml = r_page.text
+
+        # ── 7. Estrazione testo da PAGE XML ───────────────────────────────────
+        text_lines = []
+        try:
+            root = ET.fromstring(page_xml)
+            # Supporta entrambe le versioni del namespace PAGE XML
+            for ns_uri in (
+                "http://schema.primaresearch.org/PAGE/gts/pagecontent/2013-07-15",
+                "http://schema.primaresearch.org/PAGE/gts/pagecontent/2019-07-15",
+            ):
+                tag = f"{{{ns_uri}}}Unicode"
+                nodes = root.iter(tag)
+                lines = [n.text for n in nodes if n.text and n.text.strip()]
+                if lines:
+                    text_lines = lines
+                    break
+        except ET.ParseError:
+            pass
+        if not text_lines:
+            # Fallback grezzo — estrae testo tra tag Unicode
+            import re as _re
+            text_lines = _re.findall(r"<Unicode>(.*?)</Unicode>", page_xml, _re.DOTALL)
+        result_text = "\n".join(text_lines)
+        logging.info(f"[OCR] Transkribus — {len(text_lines)} righe estratte")
+
+        # ── 8. Pulizia documento temporaneo (best-effort) ─────────────────────
+        try:
+            requests.delete(
+                f"{TRANSKRIBUS_BASE}/collections/{coll_id}/{doc_id}",
+                headers=auth_headers, timeout=20,
+            )
+            logging.info(f"[OCR] Transkribus — documento temporaneo {doc_id} rimosso")
+        except Exception as _cleanup_err:
+            logging.warning(f"[OCR] Transkribus — pulizia doc {doc_id} fallita (ignorata): {_cleanup_err}")
+
+        return result_text
 
     def _save_results(self, orig_path, text):
         base_name = os.path.splitext(os.path.basename(orig_path))[0]

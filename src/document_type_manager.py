@@ -26,84 +26,77 @@ def _custom_types_path():
 # Ogni entry ha: label, applicabilità per servizio (ocr/translation/gedcom),
 # e un riferimento al prompt nel modulo corrispondente.
 BUILTIN_TYPES = [
-    {
-        "label": "Atto di Stato Civile (Nascita / Battesimo)",
-        "ocr": True,
-        "translation": True,
-        "gedcom": True,
-    },
-    {
-        "label": "Atto di Stato Civile (Matrimonio)",
-        "ocr": True,
-        "translation": True,
-        "gedcom": True,
-    },
-    {
-        "label": "Atto di Stato Civile (Morte / Sepoltura)",
-        "ocr": True,
-        "translation": True,
-        "gedcom": True,
-    },
-    {
-        "label": "Stato delle Anime / Censimento Parrocchiale",
-        "ocr": True,
-        "translation": True,
-        "gedcom": True,
-    },
-    {
-        "label": "Stati delle Anime Granducato di Toscana",
-        "ocr": True,
-        "translation": False,
-        "gedcom": True,
-    },
-    {
-        "label": "Processetto / Allegati Matrimoniali",
-        "ocr": True,
-        "translation": True,
-        "gedcom": True,
-    },
-    {
-        "label": "Documento Notarile",
-        "ocr": True,
-        "translation": True,
-        "gedcom": False,
-    },
-    {
-        "label": "Lettera / Corrispondenza Privata",
-        "ocr": True,
-        "translation": True,
-        "gedcom": False,
-    },
-    {
-        "label": "Testo a Stampa Antico",
-        "ocr": True,
-        "translation": True,
-        "gedcom": False,
-    },
-    {
-        "label": "Atto in Latino Ecclesiastico",
-        "ocr": True,
-        "translation": True,
-        "gedcom": False,
-    },
-    {
-        "label": "Censimento Storico (Generico)",
-        "ocr": True,
-        "translation": False,
-        "gedcom": True,
-    },
-    {
-        "label": "Indice / Registro degli Atti",
-        "ocr": True,
-        "translation": False,
-        "gedcom": False,
-    },
-    {
-        "label": "Documento Generico / Non Classificato",
-        "ocr": True,
-        "translation": True,
-        "gedcom": True,
-    },
+    # ── Stato Civile Napoleonico (SCN) ─────────────────────────────────────────
+    {"label": "SCN — Atto di Nascita (1806-1815)",           "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCN — Atto di Matrimonio (1806-1815)",        "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCN — Atto di Morte (1806-1815)",             "ocr": True, "translation": True, "gedcom": True},
+    # ── Stato Civile della Restaurazione (SCR) ────────────────────────────────
+    {"label": "SCR — Atto di Nascita (1815-1865)",           "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR — Atto di Matrimonio (1815-1865)",        "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR — Atto di Morte (1815-1865)",             "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Toscana — Atto di Nascita (1817-1865)",   "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Toscana — Atto di Matrimonio (1817-1865)","ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Toscana — Atto di Morte (1817-1865)",     "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Due Sicilie — Atto di Nascita (1816-1865)",   "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Due Sicilie — Atto di Matrimonio (1816-1865)","ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Due Sicilie — Atto di Morte (1816-1865)",     "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Piemonte — Atto di Nascita (1837-1865)",  "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Piemonte — Atto di Matrimonio (1837-1865)","ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Piemonte — Atto di Morte (1837-1865)",    "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Veneto — Atto di Nascita (1816-1866)",    "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Veneto — Atto di Matrimonio (1816-1866)", "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCR/Veneto — Atto di Morte (1816-1866)",      "ocr": True, "translation": True, "gedcom": True},
+    # ── Stato Civile Italiano Unificato (SCI, dal 1866) ───────────────────────
+    {"label": "SCI — Atto di Nascita (dal 1866)",            "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCI — Atto di Matrimonio (dal 1866)",         "ocr": True, "translation": True, "gedcom": True},
+    {"label": "SCI — Atto di Morte (dal 1866)",              "ocr": True, "translation": True, "gedcom": True},
+    # ── Stato Civile Generico ─────────────────────────────────────────────────
+    {"label": "Atto di Stato Civile (Nascita / Battesimo)",  "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Atto di Stato Civile (Matrimonio)",           "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Atto di Stato Civile (Morte / Sepoltura)",    "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Processetto / Allegati Matrimoniali",         "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Pubblicazioni di Matrimonio (registro bandi)","ocr": True, "translation": True, "gedcom": True},
+    # ── Parrocchiali ──────────────────────────────────────────────────────────
+    {"label": "Registro Parrocchiale — Battesimi (sec. XVI-XIX)",         "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Registro Parrocchiale — Matrimoni (sec. XVI-XIX)",         "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Registro Parrocchiale — Morti / Sepolture (sec. XVI-XIX)", "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Registro Parrocchiale — Cresimati (sec. XVI-XIX)",         "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Registro degli Esposti / Nati Illegittimi",                "ocr": True, "translation": True, "gedcom": True},
+    # ── Censimenti / Anime ────────────────────────────────────────────────────
+    {"label": "Stati delle Anime Granducato di Toscana",                  "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Anagrafe / Censimento Lombardo-Veneto (sec. XIX)",         "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Stato delle Anime / Censimento Parrocchiale",              "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Censimento Storico (Generico)",                            "ocr": True, "translation": True, "gedcom": True},
+    # ── Catasti ───────────────────────────────────────────────────────────────
+    {"label": "Catasto Onciario (Due Sicilie, sec. XVIII)",               "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Rivele / Numerazione dei Fuochi (Due Sicilie, sec. XVI-XVII)", "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Catasto Murattiano (Due Sicilie, 1808-1815)",              "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Catasto Gregoriano (Stato Pontificio, 1816-1835)",         "ocr": True, "translation": True, "gedcom": True},
+    # ── Anagrafe / Militare ───────────────────────────────────────────────────
+    {"label": "Stato di Famiglia / Atto di Notorietà (SC)",               "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Ruolo di Matricola / Leva Militare (1865-1940)",           "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Foglio Matricolare (scheda individuale, 1865-1940)",       "ocr": True, "translation": True, "gedcom": True},
+    # ── Emigrazione / Esteri ──────────────────────────────────────────────────
+    {"label": "Passaporto / Permesso di Espatrio (sec. XIX-XX)",          "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Atti Consolari Italiani all'Estero",                       "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Registro dei Defunti Ospedalieri",                         "ocr": True, "translation": True, "gedcom": True},
+    # ── Indici / Atti amministrativi (Gedcom=False) ───────────────────────────
+    {"label": "Indice / Registro degli Atti",                             "ocr": True, "translation": True, "gedcom": False},
+    {"label": "Protocollo Notarile (registro degli atti)",                "ocr": True, "translation": True, "gedcom": False},
+    # ── Notarile / Latino ─────────────────────────────────────────────────────
+    {"label": "Documento Notarile",                                        "ocr": True, "translation": True, "gedcom": True},
+    {"label": "Atto in Latino Ecclesiastico",                              "ocr": True, "translation": True, "gedcom": True},
+    # ── Corrispondenza / Stampa (Gedcom=False) ────────────────────────────────
+    {"label": "Lettera / Corrispondenza Privata",                          "ocr": True, "translation": True, "gedcom": False},
+    {"label": "Testo a Stampa Antico",                                     "ocr": True, "translation": True, "gedcom": False},
+    # ── Generico ──────────────────────────────────────────────────────────────
+    {"label": "Documento Generico / Non Classificato",                     "ocr": True, "translation": True, "gedcom": True},
+    # ── Anagrafe comunale ─────────────────────────────────────────────────────
+    {"label": "Foglio di Famiglia Anagrafe Comunale (post-1864)",          "ocr": True, "translation": True, "gedcom": True},
+    # ── Testamento (Gedcom=False) ──────────────────────────────────────────────
+    {"label": "Testamento (atto notarile specifico)",                       "ocr": True, "translation": True, "gedcom": False},
+    # ── Matrimonio Religioso ──────────────────────────────────────────────────
+    {"label": "Matrimonio Religioso post-Concordato (1929+)",              "ocr": True, "translation": True, "gedcom": True},
 ]
 
 # Prefisso visivo per i tipi custom nel combo

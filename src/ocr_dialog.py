@@ -118,8 +118,9 @@ class OCRThread(QThread):
     finished = Signal(bool, str)
     review_requested = Signal(str, str)
 
-    def __init__(self, file_paths, provider, api_key, formats, output_dir, prefix_elab="Elaborazione: ", custom_prompt="", example_text="", interactive=False):
+    def __init__(self, file_paths, provider, api_key, formats, output_dir, prefix_elab="Elaborazione: ", custom_prompt="", example_text="", interactive=False, custom_model=None):
         super().__init__()
+        self.custom_model = custom_model
         self.file_paths = file_paths
         self.provider = provider
         self.api_key = api_key
@@ -134,7 +135,7 @@ class OCRThread(QThread):
 
     def run(self):
         try:
-            worker = AdvancedOCRWorker(self.provider, self.api_key, self.formats, self.output_dir, self.custom_prompt, self.example_text)
+            worker = AdvancedOCRWorker(self.provider, self.api_key, self.formats, self.output_dir, self.custom_prompt, self.example_text, custom_model=self.custom_model)
             
             def interceptor(img_path, raw_text):
                 if not self.interactive:
@@ -285,14 +286,29 @@ class AdvancedOCRDialog(QDialog):
         lbl_prov = QLabel(self.gm("Seleziona Provider IA:"))
         self.combo_prov = QComboBox()
         self.combo_prov.addItems([
-            self.gm("Google Gemini (Free/Consigliato)"), 
-            "OpenAI (GPT-4o)", 
-            "Anthropic (Claude 3.5)"
+            "Anthropic / Claude (Miglior Vision)",
+            "OpenAI (GPT-4o Vision)",
+            "Google Gemini (Vision)",
+            "Transkribus (Italian Handwriting HTR)",
+            "Hugging Face (Modelli Specializzati OCR)",
+            "xAI / Grok (Vision)",
+            "Mistral (Pixtral Vision)",
+            "Groq (Llama Vision)",
+            "Ollama (Locale/Privato)",
+            "DeepSeek (Solo Testo)"
         ])
         self.combo_prov.currentIndexChanged.connect(self.provider_changed)
         layout.addWidget(lbl_prov)
         layout.addWidget(self.combo_prov)
 
+        self.lbl_custom_model = QLabel(self.gm("Override Modello (opzionale):"))
+        self.inp_custom_model = QLineEdit()
+        self.inp_custom_model.setPlaceholderText("Es. gpt-5-preview (lascia vuoto per default)")
+        layout.addWidget(self.lbl_custom_model)
+        layout.addWidget(self.inp_custom_model)
+        
+        # Inizializza visibilità
+        self.provider_changed()
         # API Key
         self.lbl_api = QLabel(self.gm("API Key per il provider scelto:"))
         api_ly = QHBoxLayout()
@@ -508,9 +524,50 @@ class AdvancedOCRDialog(QDialog):
 
     def provider_changed(self):
         prov = self.combo_prov.currentText()
-        if "Gemini" in prov: self.lbl_api.setText(self.gm("Google Gemini API Key:"))
-        elif "OpenAI" in prov: self.lbl_api.setText(self.gm("OpenAI API Key:"))
-        else: self.lbl_api.setText(self.gm("Anthropic API Key:"))
+        if "Gemini" in prov:
+            self.lbl_api.setText(self.gm("Google Gemini API Key:"))
+            self.lbl_custom_model.setVisible(False)
+            self.inp_custom_model.setVisible(False)
+            self.inp_custom_model.clear()
+        elif "OpenAI" in prov:
+            self.lbl_api.setText(self.gm("OpenAI API Key:"))
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
+        elif "Mistral" in prov:
+            self.lbl_api.setText("Mistral API Key:")
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
+        elif "Groq" in prov:
+            self.lbl_api.setText("Groq API Key:")
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
+        elif "DeepSeek" in prov:
+            self.lbl_api.setText("DeepSeek API Key:")
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
+        elif "xAI" in prov:
+            self.lbl_api.setText("xAI API Key:")
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
+        elif "Ollama" in prov:
+            self.lbl_api.setText("Host Ollama (es. http://localhost:11434):")
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setPlaceholderText("Es. llava, llama3.2-vision, qwen2.5vl")
+            self.inp_custom_model.setVisible(True)
+        elif "Hugging Face" in prov:
+            self.lbl_api.setText("Hugging Face Token (hf_...):")
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setPlaceholderText("Es. microsoft/trocr-large-handwritten, stepfun-ai/GOT-OCR2_0")
+            self.inp_custom_model.setVisible(True)
+        elif "Transkribus" in prov:
+            self.lbl_api.setText("Transkribus — email:password oppure Bearer token:")
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setPlaceholderText("ID modello HTR (vuoto = 48122, Italian Handwriting M1)")
+            self.inp_custom_model.setVisible(True)
+        else:
+            self.lbl_api.setText(self.gm("Anthropic API Key:"))
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
 
     def load_settings(self):
         try:
@@ -531,6 +588,7 @@ class AdvancedOCRDialog(QDialog):
                 # Restore memory for textboxes
                 self.txt_istruzioni.setText(prefs.get('ocr_custom_prompt', ''))
                 self.txt_esempio.setText(prefs.get('ocr_example_text', ''))
+                self.inp_custom_model.setText(prefs.get('ocr_custom_model', ''))
 
                 # Restore saved prompts history
                 # Restore saved instructions (new dict format via ocr_instructions.json)
@@ -550,8 +608,16 @@ class AdvancedOCRDialog(QDialog):
 
             # Pre-carica la prima chiave disponibile dalla Cassaforte (KeyManager)
             prov_str = "Gemini"
-            if "OpenAI" in self.combo_prov.currentText(): prov_str = "OpenAI"
-            elif "Anthropic" in self.combo_prov.currentText(): prov_str = "Claude"
+            txt = self.combo_prov.currentText()
+            if "OpenAI" in txt: prov_str = "OpenAI"
+            elif "Anthropic" in txt: prov_str = "Claude"
+            elif "Mistral" in txt: prov_str = "Mistral"
+            elif "Groq" in txt: prov_str = "Groq"
+            elif "DeepSeek" in txt: prov_str = "DeepSeek"
+            elif "xAI" in txt: prov_str = "xAI"
+            elif "Ollama" in txt: prov_str = "Ollama"
+            elif "Hugging Face" in txt: prov_str = "HuggingFace"
+            elif "Transkribus" in txt: prov_str = "Transkribus"
             try:
                 from key_manager import KeyManager
                 km = KeyManager()
@@ -581,6 +647,7 @@ class AdvancedOCRDialog(QDialog):
             _write_config_prefs('ocr_doc_type', self.combo_type.currentText())
             _write_config_prefs('ocr_custom_prompt', self.txt_istruzioni.toPlainText().strip())
             _write_config_prefs('ocr_example_text', self.txt_esempio.toPlainText().strip())
+            _write_config_prefs('ocr_custom_model', self.inp_custom_model.text().strip())
             
             import logging
             logging.info(f"API Key saved. Length: {len(api_testo)}")
@@ -595,16 +662,26 @@ class AdvancedOCRDialog(QDialog):
         # La chiave può venire dalla Cassaforte (rotazione automatica nel worker)
         # ma se non c'è nemmeno quella nel campo, avvertiamo
         prov_str_check = "Gemini"
-        if "OpenAI" in self.combo_prov.currentText(): prov_str_check = "OpenAI"
-        elif "Anthropic" in self.combo_prov.currentText(): prov_str_check = "Claude"
+        txt = self.combo_prov.currentText()
+        if "OpenAI" in txt: prov_str_check = "OpenAI"
+        elif "Anthropic" in txt: prov_str_check = "Claude"
+        elif "Mistral" in txt: prov_str_check = "Mistral"
+        elif "Groq" in txt: prov_str_check = "Groq"
+        elif "DeepSeek" in txt: prov_str_check = "DeepSeek"
+        elif "xAI" in txt: prov_str_check = "xAI"
+        elif "Ollama" in txt: prov_str_check = "Ollama"
+        elif "Hugging Face" in txt: prov_str_check = "HuggingFace"
+        elif "Transkribus" in txt: prov_str_check = "Transkribus"
         from key_manager import KeyManager
         from config_utils import _config_file_path
-        if not os.path.exists(_config_file_path()) and not KeyManager().has_keys(prov_str_check):
-            QMessageBox.warning(self, "Attenzione", self.gm("Inserisci la API Key valida."))
-            return
-        if not self.txt_api.text().strip() and not KeyManager().has_keys(prov_str_check):
-            QMessageBox.warning(self, "Attenzione", self.gm("Inserisci la API Key valida."))
-            return
+        # Ollama non richiede API key (usa host locale)
+        if prov_str_check != "Ollama":
+            if not os.path.exists(_config_file_path()) and not KeyManager().has_keys(prov_str_check):
+                QMessageBox.warning(self, "Attenzione", self.gm("Inserisci la API Key valida."))
+                return
+            if not self.txt_api.text().strip() and not KeyManager().has_keys(prov_str_check):
+                QMessageBox.warning(self, "Attenzione", self.gm("Inserisci la API Key valida."))
+                return
 
         fmt = []
         if self.chk_txt.isChecked(): fmt.append("txt")
@@ -621,8 +698,16 @@ class AdvancedOCRDialog(QDialog):
         if not out_dir: return
 
         prov_str = "Gemini"
-        if "OpenAI" in self.combo_prov.currentText(): prov_str = "OpenAI"
-        elif "Anthropic" in self.combo_prov.currentText(): prov_str = "Claude"
+        txt = self.combo_prov.currentText()
+        if "OpenAI" in txt: prov_str = "OpenAI"
+        elif "Anthropic" in txt: prov_str = "Claude"
+        elif "Mistral" in txt: prov_str = "Mistral"
+        elif "Groq" in txt: prov_str = "Groq"
+        elif "DeepSeek" in txt: prov_str = "DeepSeek"
+        elif "xAI" in txt: prov_str = "xAI"
+        elif "Ollama" in txt: prov_str = "Ollama"
+        elif "Hugging Face" in txt: prov_str = "HuggingFace"
+        elif "Transkribus" in txt: prov_str = "Transkribus"
 
         # Costruisce il prompt dalla tipologia documentale selezionata
         ex_text = self.txt_esempio.toPlainText().strip()
@@ -680,7 +765,8 @@ class AdvancedOCRDialog(QDialog):
         self.thread = OCRThread(
             self.file_paths, prov_str, self.txt_api.text(),
             fmt, out_dir, self.gm("Elaborazione: "),
-            final_prompt, "", interact
+            final_prompt, "", interact,
+            custom_model=self.inp_custom_model.text().strip()
         )
         self.thread.review_requested.connect(self.show_review_dialog)
         self.thread.progress.connect(self.update_progress)

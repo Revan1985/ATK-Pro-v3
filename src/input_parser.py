@@ -37,6 +37,29 @@ def parse_input_text(testo):
             riga_url_orig = riga_url
             riga_url = riga_url.replace("www.antenati.san.beniculturali.it", "antenati.cultura.gov.it")
             logger.info(f"🔄 URL normalizzato: {riga_url_orig} → {riga_url}")
+
+        # Intercetta URL detail-nominative → risolvi all'ARK an_ud corrispondente
+        if "detail-nominative" in riga_url:
+            import requests as _req
+            logger.info(f"🔍 detail-nominative rilevato, risolvo ARK da: {riga_url}")
+            try:
+                _headers = {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                    "Referer": "https://antenati.cultura.gov.it/"
+                }
+                _resp = _req.get(riga_url, headers=_headers, timeout=10)
+                _resp.raise_for_status()
+                import re as _re
+                # Cerca il primo ARK an_ud (unità documentale = registro)
+                _match = _re.search(r'/ark:/12657/(an_ud[A-Za-z0-9]+)', _resp.text)
+                if _match:
+                    riga_url_orig = riga_url
+                    riga_url = f"https://antenati.cultura.gov.it/ark:/12657/{_match.group(1)}"
+                    logger.info(f"🔄 detail-nominative → {riga_url}")
+                else:
+                    logger.warning(f"⚠️ detail-nominative: nessun ARK trovato in {riga_url}")
+            except Exception as _e:
+                logger.warning(f"⚠️ detail-nominative: errore risoluzione ({_e}), URL invariato")
         # Estrai modalità e nome file
         if "-" in riga_modalita:
             parti = riga_modalita.split("-", 1)

@@ -52,31 +52,6 @@ class AIProviderHandler:
         
         return clean
 
-class GeminiHandler(AIProviderHandler):
-    """Sincronia v15.3: Implementazione Ufficiale Google-GenerativeAI"""
-    def _get_available_models(self):
-        """Interroga dinamicamente l'account e seleziona i 2 migliori per stabilità e quota."""
-        try:
-            genai.configure(api_key=self.api_key)
-            models = genai.list_models()
-            discovery = []
-            # Puntiamo ai modelli che hanno quote più ampie o sono i più recenti
-            preference = ['flash-lite-latest', '2.0-flash', 'flash-latest']
-            
-            discovered_names = [m.name for m in models if "generateContent" in m.supported_generation_methods]
-            
-            for pref in preference:
-                for dn in discovered_names:
-                    if pref in dn.lower():
-                        discovery.append(dn)
-                        break
-                if len(discovery) >= 2: break
-                
-            return discovery if discovery else ['models/gemini-1.5-flash']
-        except Exception as e:
-            logging.warning(f"[AUTO-DISCOVERY] Fallito: {e}")
-        return ['models/gemini-1.5-flash', 'models/gemini-flash-latest']
-
     def _parse_markdown_table(self, text):
         """Converte una tabella Markdown indicizzata (Num:Val) in JSON rigenerando le chiavi corrette."""
         rows = []
@@ -111,33 +86,71 @@ class GeminiHandler(AIProviderHandler):
         return rows
 
     def _sanitize_json_text(self, text: str) -> str:
-        """Ripara errori comuni di Gemini (es. virgolette triple per segni di ripetizione)."""
-        import re
-        # Ripara sequenze di 2 o più virgolette dopo i due punti: ": """ -> ": "\""
-        # Gestisce anche spazi intermedi: ": " " -> ": "\""
+        """Ripara errori comuni (es. virgolette triple per segni di ripetizione)."""
         text = re.sub(r'":\s*["\s]{2,}(?=[,}\s])', '": "\\""', text)
         return text
 
     def _parse_rows_from_text(self, raw_text: str) -> list:
         """Parser unificato: estrae lista di righe da JSON o tabella Markdown."""
-        json_match = re.search(r"(\{.*\})|(\[.*\])", raw_text, re.DOTALL)
-        if json_match:
+        def find_rows(obj):
+            if isinstance(obj, list): return obj
+            if isinstance(obj, dict):
+                if "righe" in obj: return obj["righe"]
+                for k, v in obj.items():
+                    if isinstance(v, list) and len(v) > 0: return v
+                if '3' in obj or 3 in obj: return [obj]
+                first_val = next(iter(obj.values()), None)
+                if isinstance(first_val, dict): return list(obj.values())
+            return []
+
+        sanitized = self._sanitize_json_text(raw_text)
+
+        arr_match = re.search(r"\[.*\]", sanitized, re.DOTALL)
+        if arr_match:
             try:
-                data = json.loads(self._sanitize_json_text(json_match.group(0)))
-                def find_rows(obj):
-                    if isinstance(obj, list): return obj
-                    if isinstance(obj, dict):
-                        if "righe" in obj: return obj["righe"]
-                        for k, v in obj.items():
-                            if isinstance(v, list) and len(v) > 0: return v
-                        if '3' in obj or 3 in obj: return [obj]
-                        first_val = next(iter(obj.values()), None)
-                        if isinstance(first_val, dict): return list(obj.values())
-                    return []
-                return find_rows(data)
+                data = json.loads(arr_match.group(0))
+                rows = find_rows(data)
+                if rows:
+                    return rows
             except Exception:
                 pass
+
+        obj_match = re.search(r"\{.*\}", sanitized, re.DOTALL)
+        if obj_match:
+            try:
+                data = json.loads(obj_match.group(0))
+                rows = find_rows(data)
+                if rows:
+                    return rows
+            except Exception:
+                pass
+
         return self._parse_markdown_table(raw_text)
+
+class GeminiHandler(AIProviderHandler):
+    """Sincronia v15.3: Implementazione Ufficiale Google-GenerativeAI"""
+    def _get_available_models(self):
+        """Interroga dinamicamente l'account e seleziona i 2 migliori per stabilità e quota."""
+        try:
+            genai.configure(api_key=self.api_key)
+            models = genai.list_models()
+            discovery = []
+            # Puntiamo ai modelli che hanno quote più ampie o sono i più recenti
+            preference = ['flash-lite-latest', '2.0-flash', 'flash-latest']
+            
+            discovered_names = [m.name for m in models if "generateContent" in m.supported_generation_methods]
+            
+            for pref in preference:
+                for dn in discovered_names:
+                    if pref in dn.lower():
+                        discovery.append(dn)
+                        break
+                if len(discovery) >= 2: break
+                
+            return discovery if discovery else ['models/gemini-1.5-flash']
+        except Exception as e:
+            logging.warning(f"[AUTO-DISCOVERY] Fallito: {e}")
+        return ['models/gemini-1.5-flash', 'models/gemini-flash-latest']
 
     def _extract_text_only_gemini(self, prompt: str, debug_dir=None) -> list:
         """
@@ -167,7 +180,7 @@ class GeminiHandler(AIProviderHandler):
                 vision_model = genai.GenerativeModel(model_name=m_name)
                 response = vision_model.generate_content(
                     [prompt],
-                    generation_config=GenerationConfig(temperature=0.0, max_output_tokens=8192)
+                    generation_config=GenerationConfig(temperature=0.0, max_output_tokens=65536)
                 )
                 if response.text:
                     raw_text = response.text
@@ -185,12 +198,14 @@ class GeminiHandler(AIProviderHandler):
                 logging.warning(f"[TEXT-MODE] Errore con {m_name}: {e}")
                 err_lower = str(e).lower()
                 if "429" in err_lower or "quota" in err_lower or "limit: 0" in err_lower:
-                    # Invece di ripiegare su Flash (che produce output scadenti),
-                    # solleviamo l'errore per innescare la rotazione alla chiave successiva (es. Billing)
-                    raise Exception(f"Quota esaurita o limitata su {m_name}: {e}")
+                    # Quota esaurita su questo modello: prova il prossimo della lista
+                    # (es. gemini-2.0-flash dopo gemini-2.5-pro). Se anche flash fallisce
+                    # l'eccezione finale innescherà la rotazione alla chiave successiva.
+                    logging.info(f"[TEXT-MODE] Quota esaurita su {m_name}, provo modello successivo...")
+                    continue
                 continue
 
-        raise Exception("Impossibile estrarre dati dal testo con i modelli Gemini disponibili.")
+        raise Exception(f"Tutti i modelli Gemini esauriti per questa chiave (text-only).")
 
     def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
         if not genai:
@@ -256,14 +271,17 @@ class GeminiHandler(AIProviderHandler):
         # Eseguiamo le passate (Strisce)
         all_quadrant_rows = []
         
-        # Sincro v36.3: PRIORITÀ ASSOLUTA PRO (Nomi Certificati 2026)
-        # Usiamo solo i nomi che abbiamo visto esistere con lo script di test
-        target_models = [
-            "models/gemini-pro-latest",
-            "models/gemini-2.5-pro",
-            "models/gemini-3.1-pro-preview",
-            "models/gemini-3-pro-preview"
-        ]
+        # Priorità: Pro migliore → Pro precedente → Flash (fallback quota free tier)
+        from ai_utils import get_best_gemini_model
+        best_pro   = get_best_gemini_model(self.api_key, preferred="pro")
+        best_flash = get_best_gemini_model(self.api_key, preferred="flash")
+        _seen = set()
+        target_models = []
+        for _m in [best_pro, "models/gemini-2.5-pro", best_flash, "models/gemini-2.0-flash"]:
+            _m = _m if _m.startswith('models/') else f'models/{_m}'
+            if _m not in _seen:
+                _seen.add(_m)
+                target_models.append(_m)
         
         # Log di verifica per debugging
         logging.info(f"[SINCRO] Modelli PRO certificati in prova: {target_models}")
@@ -279,7 +297,7 @@ class GeminiHandler(AIProviderHandler):
                     vision_model = genai.GenerativeModel(model_name=m_name)
                     # Temperatura 0.0 (Zero Assoluto) e Token Espansi per file completi (v46.1)
                     response = vision_model.generate_content([tile, side_prompt], 
-                                                           generation_config=GenerationConfig(temperature=0.0, max_output_tokens=8192))
+                                                           generation_config=GenerationConfig(temperature=0.0, max_output_tokens=65536))
                     if response.text:
                         raw_text = response.text
                         f_name = os.path.join(debug_dir if debug_dir else os.getcwd(), f"DIAGNOSTICA_trascrizione_IA_{label}.md")
@@ -364,57 +382,282 @@ class GeminiHandler(AIProviderHandler):
 class OpenAIHandler(AIProviderHandler):
     def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
         from openai import OpenAI
-        import httpx
         if not model: model = 'gpt-4o'
-        client = OpenAI(api_key=self.api_key, http_client=httpx.Client())
-        messages = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+        client = OpenAI(api_key=self.api_key)
+        content = [{"type": "text", "text": prompt}]
         if image_path and os.path.exists(image_path):
-            with open(image_path, "rb") as f:
-                base64_image = base64.b64encode(f.read()).decode('utf-8')
-                messages[0]["content"].append({
-                    "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}
-                })
+            ext = os.path.splitext(image_path)[1].lower()
+            if ext in (".tif", ".tiff"):
+                try:
+                    from PIL import Image
+                    import io
+                    with Image.open(image_path) as im:
+                        buf = io.BytesIO()
+                        im.convert("RGB").save(buf, format="JPEG", quality=90)
+                        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+                except Exception:
+                    b64 = None
+            else:
+                with open(image_path, "rb") as f:
+                    b64 = base64.b64encode(f.read()).decode("utf-8")
+            if b64:
+                content.insert(0, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
         try:
             response = client.chat.completions.create(
                 model=model,
-                messages=messages,
-                response_format={"type": "json_object"} if "json" in prompt.lower() else None
+                max_tokens=16000,
+                messages=[{"role": "user", "content": content}]
             )
-            return response.choices[0].message.content
+            raw_text = response.choices[0].message.content
+            if debug_dir:
+                d_path = os.path.join(debug_dir, "DIAGNOSTICA_trascrizione_IA_OPENAI.md")
+                try:
+                    with open(d_path, "w", encoding="utf-8") as f:
+                        f.write(raw_text)
+                except Exception:
+                    pass
+            rows = self._parse_rows_from_text(raw_text)
+            logging.info(f"[OpenAI] Righe estratte: {len(rows)}")
+            return rows
         except Exception as e:
             raise e
 
 class ClaudeHandler(AIProviderHandler):
     def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
         from anthropic import Anthropic
-        import httpx
-        if not model: model = 'claude-3-5-sonnet-latest'
-        client = Anthropic(api_key=self.api_key, http_client=httpx.Client())
+        if not model: model = 'claude-opus-4-5'
+        client = Anthropic(api_key=self.api_key)
         content = []
         if image_path and os.path.exists(image_path):
-             with open(image_path, "rb") as f:
-                img_data = base64.b64encode(f.read()).decode('utf-8')
+            ext = os.path.splitext(image_path)[1].lower()
+            media_type_map = {
+                ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                ".png": "image/png", ".gif": "image/gif",
+                ".webp": "image/webp", ".tif": "image/jpeg",
+                ".tiff": "image/jpeg",
+            }
+            media_type = media_type_map.get(ext, "image/jpeg")
+            # TIF non supportato direttamente: converti in JPEG in memoria
+            if ext in (".tif", ".tiff"):
+                try:
+                    from PIL import Image
+                    import io
+                    with Image.open(image_path) as im:
+                        buf = io.BytesIO()
+                        im.convert("RGB").save(buf, format="JPEG", quality=90)
+                        img_data = base64.b64encode(buf.getvalue()).decode("utf-8")
+                except Exception:
+                    img_data = None
+            else:
+                with open(image_path, "rb") as f:
+                    img_data = base64.b64encode(f.read()).decode("utf-8")
+            if img_data:
                 content.append({
                     "type": "image",
                     "source": {
                         "type": "base64",
-                        "media_type": "image/jpeg",
-                        "data": img_data
+                        "media_type": media_type,
+                        "data": img_data,
                     }
                 })
         content.append({"type": "text", "text": prompt})
         try:
-            response = client.messages.create(
+            with client.messages.stream(
+                model=model,
+                max_tokens=32000,
+                messages=[{"role": "user", "content": content}]
+            ) as stream:
+                raw_text = stream.get_final_text()
+            if debug_dir:
+                d_path = os.path.join(debug_dir, "DIAGNOSTICA_trascrizione_IA_CLAUDE.md")
+                try:
+                    with open(d_path, "w", encoding="utf-8") as f:
+                        f.write(raw_text)
+                except Exception:
+                    pass
+            rows = self._parse_rows_from_text(raw_text)
+            logging.info(f"[Claude] Righe estratte: {len(rows)}")
+            return rows
+        except Exception as e:
+            raise e
+
+class OpenAICompatibleHandler(AIProviderHandler):
+    """Handler generico per provider con API compatibile OpenAI (Mistral, Groq, DeepSeek, xAI)."""
+
+    _BASE_URLS = {
+        "Mistral":  "https://api.mistral.ai/v1",
+        "Groq":     "https://api.groq.com/openai/v1",
+        "DeepSeek": "https://api.deepseek.com",
+        "xAI":      "https://api.x.ai/v1",
+    }
+    _DEFAULT_MODELS = {
+        "Mistral":  "pixtral-large-latest",           # vision
+        "Groq":     "llama-3.2-90b-vision-preview",   # vision
+        "DeepSeek": "deepseek-chat",                  # testo (no vision)
+        "xAI":      "grok-2-vision-1212",             # vision
+    }
+    _NO_VISION = {"DeepSeek"}
+
+    def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
+        from openai import OpenAI
+        base_url = self._BASE_URLS.get(self.provider)
+        if not model:
+            model = self._DEFAULT_MODELS.get(self.provider, "gpt-4o")
+        client = OpenAI(api_key=self.api_key, base_url=base_url)
+        content = [{"type": "text", "text": prompt}]
+        if image_path and os.path.exists(image_path) and self.provider not in self._NO_VISION:
+            ext = os.path.splitext(image_path)[1].lower()
+            if ext in (".tif", ".tiff"):
+                try:
+                    from PIL import Image
+                    import io
+                    with Image.open(image_path) as im:
+                        buf = io.BytesIO()
+                        im.convert("RGB").save(buf, format="JPEG", quality=90)
+                        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+                except Exception:
+                    b64 = None
+            else:
+                with open(image_path, "rb") as f:
+                    b64 = base64.b64encode(f.read()).decode("utf-8")
+            if b64:
+                content.insert(0, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                max_tokens=16000,
+                messages=[{"role": "user", "content": content}]
+            )
+            raw_text = response.choices[0].message.content
+            if debug_dir:
+                d_path = os.path.join(debug_dir, f"DIAGNOSTICA_trascrizione_IA_{self.provider}.md")
+                try:
+                    with open(d_path, "w", encoding="utf-8") as f:
+                        f.write(raw_text)
+                except Exception:
+                    pass
+            rows = self._parse_rows_from_text(raw_text)
+            logging.info(f"[{self.provider}] Righe estratte: {len(rows)}")
+            return rows
+        except Exception as e:
+            raise e
+
+
+class OllamaHandler(AIProviderHandler):
+    """Handler per Ollama — modelli locali, nessuna API key.
+    api_key viene riutilizzato per l'host (es. http://localhost:11434).
+    """
+    _DEFAULT_HOST = "http://localhost:11434"
+    _DEFAULT_MODEL = "llava"  # più diffuso, supporta vision
+
+    def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
+        from openai import OpenAI
+        host = self.api_key.strip() if self.api_key and self.api_key.strip().startswith("http") else self._DEFAULT_HOST
+        base_url = host.rstrip("/") + "/v1"
+        if not model:
+            model = self._DEFAULT_MODEL
+        # Ollama accetta qualsiasi stringa come api_key
+        client = OpenAI(api_key="ollama", base_url=base_url)
+        content = [{"type": "text", "text": prompt}]
+        if image_path and os.path.exists(image_path):
+            ext = os.path.splitext(image_path)[1].lower()
+            if ext in (".tif", ".tiff"):
+                try:
+                    from PIL import Image
+                    import io
+                    with Image.open(image_path) as im:
+                        buf = io.BytesIO()
+                        im.convert("RGB").save(buf, format="JPEG", quality=90)
+                        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+                except Exception:
+                    b64 = None
+            else:
+                with open(image_path, "rb") as f:
+                    b64 = base64.b64encode(f.read()).decode("utf-8")
+            if b64:
+                content.insert(0, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[{"role": "user", "content": content}]
+            )
+            raw_text = response.choices[0].message.content
+            if debug_dir:
+                d_path = os.path.join(debug_dir, "DIAGNOSTICA_trascrizione_IA_OLLAMA.md")
+                try:
+                    with open(d_path, "w", encoding="utf-8") as f:
+                        f.write(raw_text)
+                except Exception:
+                    pass
+            rows = self._parse_rows_from_text(raw_text)
+            logging.info(f"[Ollama:{model}] Righe estratte: {len(rows)}")
+            return rows
+        except Exception as e:
+            raise e
+
+
+class HuggingFaceHandler(AIProviderHandler):
+    """Handler per Hugging Face Inference API (endpoint OpenAI-compatibile v1).
+    Supporta modelli vision come Qwen2.5-VL, LLaVA, TrOCR (solo testo).
+    api_key = HF token (hf_...).
+    """
+    _BASE_URL = "https://api-inference.huggingface.co/v1/"
+    _DEFAULT_MODEL = "Qwen/Qwen2.5-VL-7B-Instruct"   # ottimo per OCR documenti storici
+    # Modelli che non supportano vision — fallback a testo
+    _NO_VISION_PREFIXES = ("microsoft/trocr", "facebook/bart", "t5-")
+
+    def _is_vision_model(self, model: str) -> bool:
+        ml = model.lower()
+        return not any(ml.startswith(p) for p in self._NO_VISION_PREFIXES)
+
+    def extract_genealogy(self, prompt, image_path=None, model=None, debug_dir=None):
+        from openai import OpenAI
+        if not model:
+            model = self._DEFAULT_MODEL
+        client = OpenAI(api_key=self.api_key, base_url=self._BASE_URL)
+        content = [{"type": "text", "text": prompt}]
+        if image_path and os.path.exists(image_path) and self._is_vision_model(model):
+            ext = os.path.splitext(image_path)[1].lower()
+            if ext in (".tif", ".tiff"):
+                try:
+                    from PIL import Image
+                    import io
+                    with Image.open(image_path) as im:
+                        buf = io.BytesIO()
+                        im.convert("RGB").save(buf, format="JPEG", quality=90)
+                        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+                except Exception:
+                    b64 = None
+            else:
+                with open(image_path, "rb") as f:
+                    b64 = base64.b64encode(f.read()).decode("utf-8")
+            if b64:
+                content.insert(0, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
+        try:
+            response = client.chat.completions.create(
                 model=model,
                 max_tokens=8192,
                 messages=[{"role": "user", "content": content}]
             )
-            return response.content[0].text
+            raw_text = response.choices[0].message.content
+            if debug_dir:
+                d_path = os.path.join(debug_dir, "DIAGNOSTICA_trascrizione_IA_HUGGINGFACE.md")
+                try:
+                    with open(d_path, "w", encoding="utf-8") as f:
+                        f.write(raw_text)
+                except Exception:
+                    pass
+            rows = self._parse_rows_from_text(raw_text)
+            logging.info(f"[HuggingFace:{model}] Righe estratte: {len(rows)}")
+            return rows
         except Exception as e:
             raise e
 
+
 def get_handler(provider, api_key):
-    if provider == "OpenAI": return OpenAIHandler(provider, api_key)
-    if provider == "Claude": return ClaudeHandler(provider, api_key)
+    if provider == "OpenAI":   return OpenAIHandler(provider, api_key)
+    if provider == "Claude":   return ClaudeHandler(provider, api_key)
+    if provider == "Ollama":   return OllamaHandler(provider, api_key)
+    if provider == "HuggingFace": return HuggingFaceHandler(provider, api_key)
+    if provider in ("Mistral", "Groq", "DeepSeek", "xAI"): return OpenAICompatibleHandler(provider, api_key)
     return GeminiHandler("Gemini", api_key)

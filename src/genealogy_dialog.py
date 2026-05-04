@@ -60,8 +60,9 @@ class GenealogyWorker(QThread):
     error = Signal(str)
     request_provider_change = Signal(str, list)
 
-    def __init__(self, files, doc_type, tips, provider, output_file_path, base_path=None):
+    def __init__(self, files, doc_type, tips, provider, output_file_path, base_path=None, custom_model=None):
         super().__init__()
+        self.custom_model = custom_model
         self.files = files
         self.doc_type = doc_type
         self.tips = tips
@@ -126,22 +127,49 @@ class GenealogyWorker(QThread):
                         elif file_ext == '.txt':
                             with open(file_path, 'r', encoding='utf-8', errors='replace') as _tf:
                                 text_content = _tf.read()
+                            n_lines = text_content.count('\n') + 1
+                            logging.debug(f"[TXT-READ] path={file_path!r} | chars={len(text_content)} | righe={n_lines} | anteprima={repr(text_content[:120])}")
                             prompt = _enrich_prompt_with_text(prompt, text_content)
                             effective_image_path = None
 
-                        tx = handler.extract_genealogy(prompt, effective_image_path, debug_dir=debug_dir)
-                        
-                        # Se tx è già una lista (nuovo standard v36.9+), la usiamo direttamente
+                        tx = handler.extract_genealogy(prompt, effective_image_path, model=self.custom_model, debug_dir=debug_dir)
+                        if tx:
+                            logging.debug(f"[{current_prov}] Estrazione completata: {len(str(tx))} chars")
+                        # Se tx è già una lista (standard v36.9+: Gemini, Claude)
                         if isinstance(tx, list):
                             js = {"righe": tx}
+                        elif isinstance(tx, dict):
+                            js = tx
                         else:
-                            # Vecchio standard: scavo nel testo per trovare il JSON
-                            jm = re.search(r"(\{.*\})", str(tx), re.DOTALL)
-                            js = json.loads(jm.group(1) if jm else str(tx).strip())
+                            # Fallback: tenta parsing JSON dal testo grezzo
+                            tx_str = str(tx).strip()
+                            arr_m = re.search(r"\[.*\]", tx_str, re.DOTALL)
+                            obj_m = re.search(r"\{.*\}", tx_str, re.DOTALL)
+                            raw = arr_m.group(0) if arr_m else (obj_m.group(0) if obj_m else tx_str)
+                            js = json.loads(raw)
+                            if isinstance(js, list):
+                                js = {"righe": js}
                         
                         if hasattr(generator, 'parse_user_notes_metadata'):
                             generator.parse_user_notes_metadata(self.tips)
-                            
+
+                        # Leggi il sidecar JSON dell'immagine per ottenere Source URL e Page
+                        # Il sidecar è salvato da ATK-Pro accanto all'immagine con lo stesso nome base
+                        sidecar_path = os.path.splitext(file_path)[0] + ".json"
+                        if os.path.exists(sidecar_path):
+                            try:
+                                with open(sidecar_path, 'r', encoding='utf-8') as _sf:
+                                    sidecar = json.load(_sf)
+                                src_url = sidecar.get('Source', '')
+                                page_lbl = sidecar.get('Page', '') or sidecar.get('PageLabel', '')
+                                if src_url and hasattr(generator, 'set_canvas_source'):
+                                    generator.set_canvas_source(src_url, page_label=page_lbl)
+                            except Exception:
+                                pass  # sidecar assente o malformato: procedi senza SOUR URL
+                        # Collega l'immagine sorgente al canvas corrente → OBJE su ogni INDI
+                        if effective_image_path and hasattr(generator, 'set_canvas_image'):
+                            generator.set_canvas_image(effective_image_path)
+
                         generator.process_ai_json(js)
                         c_count = len(js.get('righe', js.get('records', [])))
                         if 'famiglie' in js:
@@ -161,7 +189,7 @@ class GenealogyWorker(QThread):
                         
                         if wrapped:
                             # Esaurite tutte le chiavi per questo provider (giro completo)
-                            other_provs = [p for p in ["Gemini", "OpenAI", "Claude"] if km.get_all_keys(p) and p != current_prov]
+                            other_provs = [p for p in ["Gemini", "OpenAI", "Claude", "Mistral", "Groq", "DeepSeek", "xAI", "Ollama", "HuggingFace"] if km.get_all_keys(p) and p != current_prov]
                             if other_provs:
                                 # SINCRO v5: Richiesta interattiva di cambio provider
                                 self.mutex.lock()
@@ -297,8 +325,17 @@ class GenealogyDialog(QDialog):
         # 5. MOTORE IA & CAVEAU
         fl.addWidget(QLabel("5. MOTORE IA & CAVEAU CHIAVI", styleSheet=t_css))
         fm = QFormLayout()
-        self.combo_provider = QComboBox(); self.combo_provider.addItems(["Gemini", "OpenAI", "Claude"]); self.combo_provider.setStyleSheet(inp_css)
+        self.combo_provider = QComboBox(); self.combo_provider.addItems(["Claude", "OpenAI", "Gemini", "Mistral", "xAI", "DeepSeek", "Groq", "HuggingFace", "Ollama"]); self.combo_provider.setStyleSheet(inp_css)
         fm.addRow(QLabel("Provider:", styleSheet=lbl_css), self.combo_provider)
+        
+        self.inp_custom_model = QLineEdit()
+        self.inp_custom_model.setPlaceholderText("Es. claude-4-sonnet (lascia vuoto per default)")
+        self.inp_custom_model.setStyleSheet(inp_css)
+        self.lbl_custom_model = QLabel("Override Modello:", styleSheet=lbl_css)
+        fm.addRow(self.lbl_custom_model, self.inp_custom_model)
+        
+        # Nascondi di default se Gemini
+        self._toggle_custom_model()
         
         km_ly = QHBoxLayout()
         self.btn_manage_keys = QPushButton("🗝️ GESTISCI CAVEAU CHIAVI (CSV)"); self.btn_manage_keys.setStyleSheet(btn_css)
@@ -316,6 +353,18 @@ class GenealogyDialog(QDialog):
         self.combo_source.currentIndexChanged.connect(self.save_config)
         self.combo_type.currentIndexChanged.connect(self.save_config)
         self.combo_provider.currentIndexChanged.connect(self.save_config)
+        self.combo_provider.currentIndexChanged.connect(self._toggle_custom_model)
+        self.inp_custom_model.textChanged.connect(self.save_config)
+
+    def _toggle_custom_model(self):
+        prov = self.combo_provider.currentText()
+        if prov == "Gemini":
+            self.lbl_custom_model.setVisible(False)
+            self.inp_custom_model.setVisible(False)
+            self.inp_custom_model.clear()
+        else:
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
 
     def _on_type_changed_geo(self):
         label = self.combo_type.currentText()
@@ -391,6 +440,7 @@ class GenealogyDialog(QDialog):
                     if c.get("last_doc_type"): self.combo_type.setCurrentText(c["last_doc_type"])
                     if c.get("last_tips"): self.txt_tips.setPlainText(c["last_tips"])
                     if c.get("last_provider"): self.combo_provider.setCurrentText(c["last_provider"])
+                    if c.get("last_custom_model"): self.inp_custom_model.setText(c["last_custom_model"])
                     if c.get("last_source"): self.combo_source.setCurrentText(c["last_source"])
                     if c.get("last_base_path") and os.path.exists(c["last_base_path"]):
                         self.base_path = c["last_base_path"]
@@ -413,6 +463,7 @@ class GenealogyDialog(QDialog):
             data["last_doc_type"] = self.combo_type.currentText()
             data["last_tips"] = self.txt_tips.toPlainText()
             data["last_provider"] = self.combo_provider.currentText()
+            data["last_custom_model"] = self.inp_custom_model.text().strip()
             data["last_source"] = self.combo_source.currentText()
             if self.base_path:
                 data["last_base_path"] = self.base_path
@@ -486,7 +537,7 @@ class GenealogyDialog(QDialog):
             if custom_gedcom:
                 tips_text = custom_gedcom + ("\n" + tips_text if tips_text else "")
             doc_type_raw = "Ricerca Libera / Altro"  # fallback built-in nel worker
-        self.worker = GenealogyWorker(self.selected_files, doc_type_raw, tips_text, self.combo_provider.currentText(), fp, self.base_path)
+        self.worker = GenealogyWorker(self.selected_files, doc_type_raw, tips_text, self.combo_provider.currentText(), fp, self.base_path, custom_model=self.inp_custom_model.text().strip())
         self.worker.progress.connect(lambda v,m: (self.progress_bar.setValue(v), self.progress_bar.setFormat(m)))
         self.worker.request_provider_change.connect(self.handle_provider_change)
         self.worker.finished.connect(self.process_finished); self.worker.error.connect(self.process_error); self.worker.start()

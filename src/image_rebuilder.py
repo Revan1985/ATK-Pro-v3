@@ -29,13 +29,15 @@ def rebuild_image(info, tile_dir, source_url=None, update_status=None, update_pr
     try:
         width = info["width"]
         height = info["height"]
-        tile_size = info["tiles"][0]["width"]
+        tile_w = info["tiles"][0]["width"]
+        tile_h = info["tiles"][0].get("height", tile_w)  # tile rettangolari (AID §th)
+        tile_size = tile_w  # mantenuto per paste coordinates
 
         # --- FOOTER LOGIC ---
         footer_height = 60 if source_url else 0
         final_image = Image.new("RGB", (width, height + footer_height), (255, 255, 255))
-        cols = (width + tile_size - 1) // tile_size
-        rows = (height + tile_size - 1) // tile_size
+        cols = (width + tile_w - 1) // tile_w
+        rows = (height + tile_h - 1) // tile_h
         total = cols * rows
         done = 0
 
@@ -70,7 +72,7 @@ def rebuild_image(info, tile_dir, source_url=None, update_status=None, update_pr
                             logger.warning("Tile corrotto o troppo piccolo: %s", tile_filename)
                             print(f"Tile corrotto o troppo piccolo: {tile_filename}")
                             continue
-                    final_image.paste(tile, (x * tile_size, y * tile_size))
+                    final_image.paste(tile, (x * tile_w, y * tile_h))
                 except Exception as e:
                     logger.error("Errore con il tile %s: %s", tile_filename, e)
                     print(f"Errore con il tile {tile_filename}: {e}")

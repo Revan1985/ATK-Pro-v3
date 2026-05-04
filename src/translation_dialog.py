@@ -51,7 +51,7 @@ class TranslationDialog(QDialog):
         
         lbl_prov = QLabel(self.gm("Provider IA:"))
         self.combo_prov = QComboBox()
-        self.combo_prov.addItems(["Google Gemini (Free/Consigliato)", "OpenAI (GPT-4o)", "Anthropic (Claude 3.5)"])
+        self.combo_prov.addItems(["Anthropic / Claude (Miglior Testo)", "OpenAI (GPT-4o)", "Google Gemini", "DeepSeek (Economico/Testo)", "Mistral", "xAI / Grok", "Groq (Veloce)", "Hugging Face (Inference API)", "Ollama (Locale/Privato)"])
 
         # Tipologia Documentale
         from document_type_manager import DocumentTypeManager
@@ -87,6 +87,15 @@ class TranslationDialog(QDialog):
 
         top_layout.addWidget(lbl_prov)
         top_layout.addWidget(self.combo_prov)
+        self.combo_prov.currentIndexChanged.connect(self._toggle_custom_model)
+
+        self.lbl_custom_model = QLabel("Modello:")
+        self.inp_custom_model = QLineEdit()
+        self.inp_custom_model.setPlaceholderText("Es. gpt-5")
+        self.inp_custom_model.setFixedWidth(100)
+        top_layout.addWidget(self.lbl_custom_model)
+        top_layout.addWidget(self.inp_custom_model)
+        
         top_layout.addSpacing(20)
         btn_add_type_tr = QPushButton("+")
         btn_add_type_tr.setObjectName("btn_add_type")
@@ -118,6 +127,7 @@ class TranslationDialog(QDialog):
         top_layout.addWidget(self.combo_lingua)
         
         main_layout.addLayout(top_layout)
+        self._toggle_custom_model()
 
         # Splitter main content
         splitter = QSplitter(Qt.Horizontal)
@@ -194,6 +204,26 @@ class TranslationDialog(QDialog):
         bottom_ly.addWidget(self.btn_traduci)
         
         main_layout.addLayout(bottom_ly)
+
+    def _toggle_custom_model(self):
+        prov = self.combo_prov.currentText()
+        if "Gemini" in prov:
+            self.lbl_custom_model.setVisible(False)
+            self.inp_custom_model.setVisible(False)
+            self.inp_custom_model.clear()
+        elif "Ollama" in prov:
+            self.lbl_api.setText("Host Ollama:")
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
+            self.inp_custom_model.setPlaceholderText("Es. llava, llama3.2-vision, qwen2.5vl")
+        elif "Hugging Face" in prov:
+            self.lbl_api.setText("Hugging Face Token (hf_...):")
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
+            self.inp_custom_model.setPlaceholderText("Es. Qwen/Qwen2.5-VL-7B-Instruct")
+        else:
+            self.lbl_custom_model.setVisible(True)
+            self.inp_custom_model.setVisible(True)
 
     def _on_type_changed_tr(self):
         label = self.combo_type.currentText()
@@ -273,6 +303,7 @@ class TranslationDialog(QDialog):
                     if idx >= 0: self.combo_type.setCurrentIndex(idx)
                 # Translation specific
                 self.txt_ctx.setText(prefs.get('translation_context', ''))
+                self.inp_custom_model.setText(prefs.get('translation_custom_model', ''))
             
             # Default Language logic based on self.lingua (e.g. "it" -> Italiano)
             lang_map = {"it": "Italiano", "en": "English", "fr": "Français", "es": "Español", "de": "Deutsch"}
@@ -291,6 +322,7 @@ class TranslationDialog(QDialog):
             _write_config_prefs('ocr_provider', self.combo_prov.currentIndex())
             _write_config_prefs('translation_doc_type', self.combo_type.currentText())
             _write_config_prefs('translation_context', self.txt_ctx.toPlainText().strip())
+            _write_config_prefs('translation_custom_model', self.inp_custom_model.text().strip())
         except:
             pass
 
@@ -310,15 +342,18 @@ class TranslationDialog(QDialog):
             return
 
         api_key = self.txt_api.text().strip()
-        if not api_key:
+        # Ollama non richiede API key (usa host locale)
+        if not api_key and "Ollama" not in self.combo_prov.currentText():
             QMessageBox.warning(self, self.gm("Attenzione"), self.gm("Inserire la API Key per il provider scelto."))
             return
 
         self.save_settings()
 
-        prov_str = self.combo_prov.currentText().split()[0]  # "Google" → "Gemini"
+        txt = self.combo_prov.currentText()
+        prov_str = txt.split()[0]  # "Google" → "Gemini", "Ollama" → "Ollama", ecc.
         if prov_str == "Google": prov_str = "Gemini"
         elif prov_str == "Anthropic": prov_str = "Claude"
+        elif prov_str == "Hugging": prov_str = "HuggingFace"
 
         # Costruisce il prompt dalla tipologia documentale selezionata
         doc_type = self.combo_type.currentText()
@@ -326,7 +361,7 @@ class TranslationDialog(QDialog):
             custom_tr = self._dtm.get_translation_prompt(doc_type) or ""
             from translation_prompts import compose_translation_prompt
             final_prompt_text = compose_translation_prompt(
-                doc_type="Traduzione Libera (Nessun Contesto Specifico)",
+                doc_type="Documento Generico / Non Classificato",
                 source_text=src_text,
                 target_lang=self.combo_lingua.currentText(),
                 context_info=(custom_tr + "\n" + self.txt_ctx.toPlainText().strip()).strip()
@@ -349,7 +384,8 @@ class TranslationDialog(QDialog):
             api_key=api_key,
             source_text=final_prompt_text,  # il prompt già include il testo sorgente
             target_lang_autonym=self.combo_lingua.currentText(),
-            context_info=""  # già incluso nel prompt composto
+            context_info="",  # già incluso nel prompt composto
+            custom_model=self.inp_custom_model.text().strip()
         )
         self.worker.finished.connect(self.on_traduzione_completata)
         self.worker.start()

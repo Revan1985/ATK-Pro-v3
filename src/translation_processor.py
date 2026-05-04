@@ -1,17 +1,21 @@
 from PySide6.QtCore import QThread, Signal
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
 import openai
 import os
 
 class TranslationWorker(QThread):
     finished = Signal(bool, str)
 
-    def __init__(self, provider, api_key, source_text, target_lang_autonym, context_info=""):
+    def __init__(self, provider, api_key, source_text, target_lang_autonym, context_info="", custom_model=None):
         super().__init__()
         self.provider = provider
         self.source_text = source_text
         self.target_lang = target_lang_autonym
         self.context_info = context_info
+        self.custom_model = custom_model
 
         # --- Gestione chiavi: Cassaforte > campo manuale ---
         from key_manager import KeyManager
@@ -43,19 +47,37 @@ class TranslationWorker(QThread):
             for key in self.api_keys:
                 try:
                     if self.provider == "Gemini":
-                        from ai_utils import get_best_gemini_model
-                        model_name = get_best_gemini_model(key, preferred="flash")
+                        if self.custom_model:
+                            model_name = self.custom_model
+                        else:
+                            from ai_utils import get_best_gemini_model
+                            model_name = get_best_gemini_model(key, preferred="flash")
                         genai.configure(api_key=key)
                         gemini_model = genai.GenerativeModel(model_name)
                         logging.info(f"[TRANS] Uso modello {model_name} con chiave {key[:6]}...")
                         translated_text = self._call_gemini_model(gemini_model, prompt)
                     elif self.provider == "OpenAI":
                         self.openai_client = openai.OpenAI(api_key=key)
-                        translated_text = self._call_openai(prompt)
+                        translated_text = self._call_openai(prompt, model=self.custom_model)
                     elif self.provider == "Claude":
                         import anthropic
                         self.anthropic_client = anthropic.Anthropic(api_key=key)
-                        translated_text = self._call_claude(prompt)
+                        translated_text = self._call_claude(prompt, model=self.custom_model)
+                    elif self.provider == "Mistral":
+                        translated_text = self._call_openai_compat(key, prompt, "https://api.mistral.ai/v1", self.custom_model or "mistral-large-latest")
+                    elif self.provider == "Groq":
+                        translated_text = self._call_openai_compat(key, prompt, "https://api.groq.com/openai/v1", self.custom_model or "llama-3.3-70b-versatile")
+                    elif self.provider == "DeepSeek":
+                        translated_text = self._call_openai_compat(key, prompt, "https://api.deepseek.com", self.custom_model or "deepseek-chat")
+                    elif self.provider == "xAI":
+                        translated_text = self._call_openai_compat(key, prompt, "https://api.x.ai/v1", self.custom_model or "grok-3-mini")
+                    elif self.provider == "Ollama":
+                        host = key.strip() if key.strip().startswith("http") else "http://localhost:11434"
+                        translated_text = self._call_openai_compat("ollama", prompt, host.rstrip("/") + "/v1", self.custom_model or "llama3.2")
+                    elif self.provider == "HuggingFace":
+                        translated_text = self._call_openai_compat(key, prompt, "https://api-inference.huggingface.co/v1/", self.custom_model or "Qwen/Qwen2.5-72B-Instruct")
+                    else:
+                        raise ValueError(f"Provider non supportato: {self.provider}")
                     self.finished.emit(True, translated_text.strip())
                     return
                 except Exception as e:
@@ -107,19 +129,33 @@ class TranslationWorker(QThread):
         response = model.generate_content(prompt, request_options={"timeout": 600})
         return response.text
 
-    def _call_openai(self, prompt):
+    def _call_openai(self, prompt, model=None):
+        if not model: model = "gpt-4o"
         response = self.openai_client.chat.completions.create(
-            model="gpt-4o",
+            model=model,
             messages=[{"role": "user", "content": prompt}],
             timeout=600
         )
         return response.choices[0].message.content
 
-    def _call_claude(self, prompt):
-        response = self.anthropic_client.messages.create(
-            model="claude-3-5-sonnet-20240620",
+    def _call_claude(self, prompt, model=None):
+        if not model: model = "claude-3-5-sonnet-latest"
+        with self.anthropic_client.messages.stream(
+            model=model,
+            max_tokens=8192,
+            messages=[{"role": "user", "content": prompt}],
+            timeout=600
+        ) as stream:
+            return stream.get_final_text()
+
+    def _call_openai_compat(self, api_key, prompt, base_url, model):
+        """Chiamata testo-only verso qualsiasi endpoint OpenAI-compatibile."""
+        from openai import OpenAI
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        response = client.chat.completions.create(
+            model=model,
             max_tokens=8192,
             messages=[{"role": "user", "content": prompt}],
             timeout=600
         )
-        return response.content[0].text
+        return response.choices[0].message.content

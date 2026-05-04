@@ -74,7 +74,8 @@ if not logger.hasHandlers():
                 embed_metadata_and_save(image, path, meta)
             else:
                 image.convert("RGB").save(path, format='JPEG',
-                                          quality=95, progressive=True, optimize=True)
+                                          quality=95, progressive=True, optimize=True,
+                                          subsampling=0)  # 4:4:4, nessun degrado cromatico (AID)
             logger.info(f"💾 Salvata immagine in formato JPEG: {path}")
             if update_status:
                 update_status(f"JPEG salvato: {path}")

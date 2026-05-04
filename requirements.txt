@@ -1,14 +1,14 @@
 # ============================================================================
-# ATK-Pro v2.0 - Complete Dependencies
+# ATK-Pro v3.0.0 - Complete Dependencies
 # ============================================================================
-# Generated: 2025-12-15
+# Generated: 2026-05-03
 # Python version: 3.12.3
 # Usage: pip install -r requirements.txt
 # ============================================================================
 # ============================================================================
-# ATK-Pro v2.0 - Complete Dependencies
+# ATK-Pro v3.0.0 - Complete Dependencies
 # ============================================================================
-# Generated: 2025-12-15
+# Generated: 2026-05-03
 # Python version: 3.12.3
 # Usage: pip install -r requirements.txt
 # ============================================================================
@@ -20,6 +20,24 @@ certifi==2025.10.5                    # SSL certificates
 charset-normalizer==3.4.4             # Character encoding
 idna==3.11                            # Internationalized domain names
 # httpx==0.13.3                         # HTTPX (compatibile con idna 3.11)
+
+# === AI PROVIDERS ===
+google-generativeai>=0.8.0            # Gemini AI SDK (Google)
+openai==2.33.0                         # OpenAI SDK (GPT-4, o1, ecc.)
+anthropic==0.97.0                     # Claude SDK (Anthropic) — richiede httpx, anyio, jiter
+httpx==0.28.1                         # HTTP client asincrono (dipendenza anthropic/openai)
+httpcore==1.0.9                       # HTTP core (dipendenza httpx)
+anyio==4.13.0                         # Async I/O (dipendenza anthropic)
+distro==1.9.0                         # OS detection (dipendenza anthropic)
+docstring-parser==0.18.0              # Docstring parser (dipendenza anthropic)
+jiter==0.14.0                         # JSON iterativo (dipendenza anthropic/openai)
+pydantic==2.13.3                      # Validazione dati (dipendenza anthropic/openai)
+pydantic-core==2.46.3                 # Core Pydantic
+annotated-types==0.7.0                # Typed annotations
+typing-inspection==0.4.2              # Ispezione typing
+google-auth>=2.0.0                    # Google Authentication
+proto-plus>=1.22.0                    # Protocol Buffers wrapper (Google)
+protobuf>=4.25.0                      # Protocol Buffers (Google)
 
 # === IMAGE PROCESSING ===
 Pillow==12.0.0                        # Image manipulation

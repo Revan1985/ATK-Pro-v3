@@ -85,10 +85,12 @@ def download_tiles(infojson, output_dir, update_progress=None):
     base_url = infojson["@id"]
     width = infojson["width"]
     height = infojson["height"]
-    tile_size = infojson["tiles"][0]["width"]
+    tile_w = infojson["tiles"][0]["width"]
+    tile_h = infojson["tiles"][0].get("height", tile_w)  # tile rettangolari (AID §th)
+    tile_size = tile_w  # mantenuto per compatibilità con download_tile()
 
-    cols = (width + tile_size - 1) // tile_size
-    rows = (height + tile_size - 1) // tile_size
+    cols = (width + tile_w - 1) // tile_w
+    rows = (height + tile_h - 1) // tile_h
     total = cols * rows
     logger.info("Inizio download di %d x %d tiles (tile_size=%d)", cols, rows, tile_size)
     os.makedirs(output_dir, exist_ok=True)
