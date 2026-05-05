@@ -146,7 +146,11 @@ def download_tiles(infojson, output_dir, update_progress=None):
         for idx, (x, y) in enumerate([(x, y) for y in range(rows) for x in range(cols)]):
             fname = expected_tile_filename(x, y)
             if fname in missing_files:
-                    args_to_download.append((base_url, x, y, tile_size, output_dir, quality))
+                args_to_download.append((base_url, x, y, tile_size, output_dir, quality))
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_tile = {executor.submit(download_tile, *args): args for args in args_to_download}
+            for future in concurrent.futures.as_completed(future_to_tile):
                 result = future.result()
                 done += 1
                 if result:
