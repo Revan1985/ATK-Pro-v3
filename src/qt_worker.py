@@ -97,6 +97,9 @@ class ElaborazioneWorker(QThread):
 
                 elab = Elaborazione(modalita.lower(), url, out_dir, self.glossario, self.lingua, portale=self.portale)
                 elab.set_nome_file(nome_file)
+                # Range canvas opzionale (es. canvas 1-5)
+                elab.canvas_da = record.get('canvas_da') or None
+                elab.canvas_a = record.get('canvas_a') or None
                 # Callback per progresso canvas
                 try:
                     def _canvas_progress(c_idx, c_tot, c_name=None):

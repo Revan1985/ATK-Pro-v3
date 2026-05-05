@@ -263,6 +263,15 @@ class Elaborazione:
                 logger.error("[Error] Nessun canvas nel manifest")
                 return False
 
+            # Applica range canvas se specificato (1-based, inclusi)
+            canvas_da = getattr(self, 'canvas_da', None)
+            canvas_a = getattr(self, 'canvas_a', None)
+            if canvas_da is not None or canvas_a is not None:
+                _da = max(1, int(canvas_da or 1)) - 1  # converti in 0-based
+                _a = int(canvas_a) if canvas_a is not None else len(tiles_info)
+                tiles_info = tiles_info[_da:_a]
+                logger.info(f"[Range] Canvas filtrati: {_da+1}-{_a} ({len(tiles_info)} totali)")
+
             metadata = self.manifest.get("metadata", {})
 
             # Processa in base al tipo

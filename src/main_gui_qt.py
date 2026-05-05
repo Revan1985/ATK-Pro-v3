@@ -723,6 +723,79 @@ class _DownloadThread(QThread):
             self.error_occurred.emit(str(exc))
 
 
+def _ask_canvas_range(parent, glossario_data, lingua):
+    """Dialog opzionale per limitare il range di canvas elaborati (solo registri R).
+    Restituisce (canvas_da, canvas_a) come interi 1-based, oppure (None, None) per elaborare tutto.
+    """
+    from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
+                                   QPushButton, QSpinBox, QCheckBox)
+    from PySide6.QtCore import Qt
+
+    dlg = QDialog(parent)
+    dlg.setWindowTitle("Range canvas")
+    dlg.resize(420, 220)
+    dlg.setStyleSheet("""
+        QDialog { background-color: #111216; color: #fff; border: 2px solid #a67c52; }
+        QLabel, QCheckBox { color: #fff; font-size: 13px; }
+        QSpinBox { background: #222; color: #fff; border: 1px solid #a67c52; padding: 2px 6px; font-size: 13px; }
+        QPushButton { background-color: #222; color: #fff; border: 1px solid #a67c52;
+                      padding: 5px 16px; border-radius: 5px; font-size: 13px; }
+        QPushButton:hover { background-color: #333; }
+    """)
+    layout = QVBoxLayout(dlg)
+
+    info = QLabel("Limita l'elaborazione a un range di canvas (opzionale).\nLascia disabilitato per elaborare tutti i canvas.")
+    info.setWordWrap(True)
+    info.setStyleSheet("color: #fff; font-size: 13px;")
+    layout.addWidget(info)
+
+    chk = QCheckBox("Abilita range canvas")
+    chk.setStyleSheet("color: #fff; font-size: 14px;")
+    layout.addWidget(chk)
+
+    range_row = QHBoxLayout()
+    lbl_da = QLabel("Da canvas:")
+    lbl_da.setStyleSheet("color: #ccc; font-size: 13px;")
+    spin_da = QSpinBox()
+    spin_da.setMinimum(1)
+    spin_da.setMaximum(99999)
+    spin_da.setValue(1)
+    spin_da.setEnabled(False)
+    lbl_a = QLabel("  A canvas:")
+    lbl_a.setStyleSheet("color: #ccc; font-size: 13px;")
+    spin_a = QSpinBox()
+    spin_a.setMinimum(1)
+    spin_a.setMaximum(99999)
+    spin_a.setValue(5)
+    spin_a.setEnabled(False)
+    range_row.addWidget(lbl_da)
+    range_row.addWidget(spin_da)
+    range_row.addWidget(lbl_a)
+    range_row.addWidget(spin_a)
+    layout.addLayout(range_row)
+
+    chk.toggled.connect(spin_da.setEnabled)
+    chk.toggled.connect(spin_a.setEnabled)
+
+    btn_row = QHBoxLayout()
+    ok_btn = QPushButton("OK")
+    skip_btn = QPushButton("Tutti i canvas")
+    ok_btn.clicked.connect(dlg.accept)
+    skip_btn.clicked.connect(dlg.reject)
+    btn_row.addWidget(ok_btn)
+    btn_row.addWidget(skip_btn)
+    layout.addLayout(btn_row)
+    dlg.setLayout(layout)
+
+    if dlg.exec() == QDialog.Accepted and chk.isChecked():
+        da = spin_da.value()
+        a = spin_a.value()
+        if a < da:
+            a = da
+        return da, a
+    return None, None
+
+
 class MainWindow(QMainWindow):
     def cambia_lingua(self):
         nuova_lingua = scegli_lingua(self.glossario_data, self.lingua)
@@ -1249,6 +1322,14 @@ class MainWindow(QMainWindow):
                 return
             if not formats:
                 return
+
+            # Dialog range canvas: solo per singolo record R (non disturba i batch)
+            reg_records = [r for r in records if str(r.get('modalita', '')).strip().upper() == 'R']
+            if len(reg_records) == 1:
+                canvas_da_glob, canvas_a_glob = _ask_canvas_range(self, glossario, lingua)
+                if canvas_da_glob is not None or canvas_a_glob is not None:
+                    reg_records[0]['canvas_da'] = canvas_da_glob
+                    reg_records[0]['canvas_a'] = canvas_a_glob
 
             # Import dinamico per evitare problemi di import circolare
             import elaborazione

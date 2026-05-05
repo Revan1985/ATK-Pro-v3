@@ -69,6 +69,9 @@ def parse_input_text(testo):
             modalita_raw = riga_modalita.strip()
             nome_file = "Senza nome"
 
+        canvas_da = None
+        canvas_a = None
+
         # Normalizza modalità
         modalita = modalita_raw.upper()
         if modalita not in ["D", "R"]:
@@ -84,6 +87,8 @@ def parse_input_text(testo):
             "nome_file": nome_file,
             "url": riga_url,
             "manifest_direct": manifest_direct,
+            "canvas_da": canvas_da,
+            "canvas_a": canvas_a,
         })
 
     return risultati
