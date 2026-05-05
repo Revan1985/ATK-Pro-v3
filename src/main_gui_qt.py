@@ -771,6 +771,7 @@ class MainWindow(QMainWindow):
             ("e_codices",         "e-codices (Unifr)"),
             ("heidelberg",        "Heidelberg UB"),
             ("bodleian",          "Bodleian Libraries Oxford"),
+            ("brixiana",          "Brixiana (Biblioteca Queriniana Brescia)"),
             ("manifest_diretto",  "Manifest diretto (URL già noto)"),
         ]
 

@@ -233,12 +233,24 @@ def _build_heidelberg_manifest(page_url: str) -> str | None:
     return None
 
 
+def _build_brixiana_manifest(page_url: str) -> str | None:
+    """Brixiana (MLOL/Memooria): .../schedadl.aspx?id={guid}
+    → https://brixiana.jarvis.memooria.org/meta/iiif/{guid}/manifest (IIIF v2)
+    """
+    m = re.search(r'[?&]id=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', page_url, re.IGNORECASE)
+    if m:
+        guid = m.group(1).lower()
+        return f"https://brixiana.jarvis.memooria.org/meta/iiif/{guid}/manifest"
+    return None
+
+
 # Mappa portale → funzione builder
 _PORTAL_BUILDERS = {
     "gallica":          _build_gallica_manifest,
     "internet_archive": _build_ia_manifest,
     "e_codices":        _build_ecodices_manifest,
     "heidelberg":       _build_heidelberg_manifest,
+    "brixiana":         _build_brixiana_manifest,
 }
 
 
