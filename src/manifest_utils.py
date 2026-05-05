@@ -92,11 +92,123 @@ def _build_gallica_manifest(page_url: str) -> str | None:
 
 
 def _build_ia_manifest(page_url: str) -> str | None:
-    """Internet Archive: archive.org/details/{id} → iiif.archivelab.org/iiif/{id}/manifest.json"""
-    m = re.search(r'archive\.org/details/([A-Za-z0-9._-]+)', page_url)
+    """Internet Archive: restituisce un placeholder URL riconoscibile; il manifest
+    sintetico viene costruito da build_ia_synthetic_manifest() in elaborazione."""
+    m = re.search(r'archive\.org/(?:details|stream|download)/([A-Za-z0-9._-]+)', page_url)
     if m:
         return f"https://iiif.archivelab.org/iiif/{m.group(1)}/manifest.json"
     return None
+
+
+def build_ia_synthetic_manifest(page_url: str) -> dict | None:
+    """
+    Costruisce un manifest IIIF sintetico per un item di Internet Archive usando:
+      - archive.org/metadata/{item_id}  → server, dir, file list
+      - {server}{dir}/{item_id}_page_numbers.json → conteggio pagine
+      - BookReaderImages.php  → URL immagine per ogni pagina
+
+    Il manifest prodotto usa 'ia_direct' come contesto del service, riconoscibile
+    da download_ia_page() in elaborazione.py per il download diretto senza tile.
+    """
+    m = re.search(r'archive\.org/(?:details|stream|download)/([A-Za-z0-9._-]+)', page_url)
+    if not m:
+        logger.error(f"[IA] URL non riconoscibile: {page_url}")
+        return None
+    item_id = m.group(1)
+
+    try:
+        _h = dict(HEADERS_UX)
+        meta_r = requests.get(f'https://archive.org/metadata/{item_id}', headers=_h, timeout=15)
+        meta_r.raise_for_status()
+        data = meta_r.json()
+    except Exception as e:
+        logger.error(f"[IA] Metadata API fallita per {item_id}: {e}")
+        return None
+
+    server = data.get('server', '')
+    dir_ = data.get('dir', '')
+    files = data.get('files', [])
+    item_meta = data.get('metadata', {})
+
+    if not server or not dir_:
+        logger.error(f"[IA] Metadati incompleti per {item_id}: server={server!r} dir={dir_!r}")
+        return None
+
+    # Trova JP2 ZIP (non-raw, primo disponibile)
+    jp2_zip = next(
+        (f for f in files
+         if f.get('name', '').endswith('_jp2.zip') and 'raw' not in f.get('name', '')),
+        None
+    )
+    if not jp2_zip:
+        logger.error(f"[IA] Nessun JP2 ZIP trovato per {item_id}")
+        return None
+
+    zip_name = jp2_zip['name'].replace('_jp2.zip', '')
+    zip_path = dir_ + '/' + jp2_zip['name']
+
+    # Conta le pagine tramite page_numbers.json
+    pn_file = next((f for f in files if f.get('name', '').endswith('_page_numbers.json')), None)
+    num_pages = 0
+    if pn_file:
+        try:
+            pn_r = requests.get(
+                f'https://{server}{dir_}/{pn_file["name"]}', headers=_h, timeout=12
+            )
+            if pn_r.ok:
+                num_pages = len(pn_r.json().get('pages', []))
+        except Exception as e:
+            logger.warning(f"[IA] page_numbers.json non disponibile: {e}")
+
+    if num_pages == 0:
+        logger.error(f"[IA] Impossibile determinare numero pagine per {item_id}")
+        return None
+
+    title = item_meta.get('title', item_id)
+    if isinstance(title, list):
+        title = title[0]
+
+    def _make_ia_canvas(page_num: int) -> dict:
+        page_file = f'{zip_name}_jp2/{zip_name}_{str(page_num).zfill(4)}.jp2'
+        img_url = (
+            f'https://{server}/BookReader/BookReaderImages.php'
+            f'?zip={zip_path}&file={page_file}&id={item_id}&scale=1&rotate=0'
+        )
+        return {
+            '@id': f'https://archive.org/bookreader/{item_id}/canvas/{page_num}',
+            '@type': 'sc:Canvas',
+            'label': f'Page {page_num}',
+            'width': 800,
+            'height': 1200,
+            'images': [{
+                '@type': 'oa:Annotation',
+                'motivation': 'sc:painting',
+                'resource': {
+                    '@type': 'dctypes:Image',
+                    '@id': img_url,
+                    'format': 'image/jpeg',
+                    'service': {
+                        '@context': 'ia_direct',
+                        '@id': img_url,
+                        'profile': 'ia_direct'
+                    }
+                }
+            }]
+        }
+
+    canvases = [_make_ia_canvas(i) for i in range(1, num_pages + 1)]
+    logger.info(f"[IA] Manifest sintetico costruito: {item_id}, {num_pages} pagine")
+
+    return {
+        '@context': 'http://iiif.io/api/presentation/2/context.json',
+        '@id': f'https://archive.org/details/{item_id}',
+        '@type': 'sc:Manifest',
+        'label': title,
+        'sequences': [{
+            '@type': 'sc:Sequence',
+            'canvases': canvases
+        }]
+    }
 
 
 def _build_ecodices_manifest(page_url: str) -> str | None:
