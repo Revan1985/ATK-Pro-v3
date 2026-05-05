@@ -25,7 +25,7 @@ HEADERS_UX = {
     "Connection": "keep-alive",
 }
 
-def download_tile(url, x, y, tile_size, output_dir):
+def download_tile(url, x, y, tile_size, output_dir, quality="default"):
     """Scarica un singolo tile IIIF e lo salva nella cartella di output."""
     # x,y possono arrivare come offset in pixel oppure come indici di col/row.
     # Se sono indici (es. 0,1) li moltiplichiamo per ottenere gli offset in pixel.
@@ -41,7 +41,7 @@ def download_tile(url, x, y, tile_size, output_dir):
         row = int(pixel_y // tile_size)
 
     filename = os.path.join(output_dir, f"tile_{col}_{row}.jpg")
-    url_tile = f"{url}/{pixel_x},{pixel_y},{tile_size},{tile_size}/full/0/default.jpg"
+    url_tile = f"{url}/{pixel_x},{pixel_y},{tile_size},{tile_size}/full/0/{quality}.jpg"
 
     # Tile già presente e valido
     if os.path.exists(filename) and os.path.getsize(filename) > 1024:
@@ -72,7 +72,7 @@ def download_tile(url, x, y, tile_size, output_dir):
         elif response.status_code == 404:
             # Fallback .png: alcuni portali IIIF servono PNG invece di JPEG.
             # Salviamo nel filename .jpg standard: Pillow legge dal contenuto, non dall'estensione.
-            url_tile_png = f"{url}/{pixel_x},{pixel_y},{tile_size},{tile_size}/full/0/default.png"
+            url_tile_png = f"{url}/{pixel_x},{pixel_y},{tile_size},{tile_size}/full/0/{quality}.png"
             logger.debug("Tile .jpg non trovato (404), provo .png: %s", url_tile_png)
             try:
                 resp_png = requests.get(url_tile_png, headers=HEADERS_UX, stream=True, timeout=30)
@@ -102,8 +102,16 @@ def download_tiles(infojson, output_dir, update_progress=None):
     base_url = infojson["@id"]
     width = infojson["width"]
     height = infojson["height"]
-    tile_w = infojson["tiles"][0]["width"]
-    tile_h = infojson["tiles"][0].get("height", tile_w)  # tile rettangolari (AID §th)
+    # IIIF Image API v1.1 (es. Gallica BnF) non ha il campo "tiles"; usa tile 512px e quality "native"
+    if "tiles" in infojson:
+        tile_w = infojson["tiles"][0]["width"]
+        tile_h = infojson["tiles"][0].get("height", tile_w)
+        quality = "default"
+    else:
+        tile_w = 512
+        tile_h = 512
+        profile = infojson.get("profile", "")
+        quality = "native" if (isinstance(profile, str) and "1.1" in profile) else "default"
     tile_size = tile_w  # mantenuto per compatibilità con download_tile()
 
     cols = (width + tile_w - 1) // tile_w
@@ -117,7 +125,7 @@ def download_tiles(infojson, output_dir, update_progress=None):
         row = int(y)
         return os.path.join(output_dir, f"tile_{col}_{row}.jpg")
 
-    tile_args = [(base_url, x, y, tile_size, output_dir) for y in range(rows) for x in range(cols)]
+    tile_args = [(base_url, x, y, tile_size, output_dir, quality) for y in range(rows) for x in range(cols)]
     expected_files = [expected_tile_filename(x, y) for y in range(rows) for x in range(cols)]
 
     max_global_retries = 3
@@ -138,11 +146,7 @@ def download_tiles(infojson, output_dir, update_progress=None):
         for idx, (x, y) in enumerate([(x, y) for y in range(rows) for x in range(cols)]):
             fname = expected_tile_filename(x, y)
             if fname in missing_files:
-                args_to_download.append((base_url, x, y, tile_size, output_dir))
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            future_to_tile = {executor.submit(download_tile, *args): args for args in args_to_download}
-            for future in concurrent.futures.as_completed(future_to_tile):
+                    args_to_download.append((base_url, x, y, tile_size, output_dir, quality))
                 result = future.result()
                 done += 1
                 if result:
