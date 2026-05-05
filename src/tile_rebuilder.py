@@ -243,7 +243,8 @@ def rebuild_image(info: Dict[str, Any], tile_dir: str, source_url: str = None) -
     """
     width = info.get("width", 256)
     height = info.get("height", 256)
-    tile_size = info["tiles"][0]["width"]
+    # IIIF Image API v1.1 (es. Gallica) non ha il campo "tiles"
+    tile_size = info["tiles"][0]["width"] if "tiles" in info else 512
     
     # Calcola grid
     cols = (width + tile_size - 1) // tile_size
