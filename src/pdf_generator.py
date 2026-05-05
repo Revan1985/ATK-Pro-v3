@@ -189,8 +189,8 @@ def enrich_pdf_metadata(pdf_path: str, title: str, subject: str, ua: str | None,
     Rispecchia i metadati immagini (Description/UA/ARK/Software).
     """
     try:
-        from PyPDF2 import PdfReader, PdfWriter
-        
+        from pypdf import PdfReader, PdfWriter
+
         reader = PdfReader(pdf_path)
         writer = PdfWriter()
         for page in reader.pages:

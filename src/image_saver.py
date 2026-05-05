@@ -25,23 +25,11 @@ def save_image_variants(image: Image.Image, output_folder: str, base_filename: s
     - Se meta è presente, embed metadati nell'immagine.
     - Sidecar JSON salvato una sola volta per base_filename.
     """
-import os
-import logging
-from logging.handlers import RotatingFileHandler
     os.makedirs(output_folder, exist_ok=True)
 
     # Sidecar JSON (una sola volta)
     if meta:
         try:
-ATKPRO_ENV = os.environ.get("ATKPRO_ENV", "development").lower()
-if not logger.hasHandlers():
-    handler = logging.StreamHandler()
-    handler.setLevel(logging.DEBUG if ATKPRO_ENV != "production" else logging.WARNING)
-    logger.addHandler(handler)
-    if ATKPRO_ENV != "production":
-        file_handler = RotatingFileHandler('atkpro_output.log', maxBytes=5*1024*1024, backupCount=3, encoding='utf-8')
-        file_handler.setLevel(logging.DEBUG)
-        logger.addHandler(file_handler)
             _save_sidecar_json_once(output_folder, base_filename, meta)
         except Exception as e:
             msg = f"⚠️ Errore salvataggio sidecar JSON: {e}"

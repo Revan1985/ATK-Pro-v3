@@ -635,6 +635,15 @@ import os
 import json
 import logging
 from logging.handlers import RotatingFileHandler
+
+class SafeRotatingFileHandler(RotatingFileHandler):
+    """RotatingFileHandler che ignora PermissionError su Windows durante il rollover."""
+    def doRollover(self):
+        try:
+            super().doRollover()
+        except PermissionError:
+            pass
+
 # Configurazione logging IMMEDIATA
 _is_frozen = getattr(sys, 'frozen', False)
 ATKPRO_ENV = os.environ.get("ATKPRO_ENV", "development").lower()
@@ -643,7 +652,7 @@ _log_format = "%(levelname)s: %(message)s" if _is_frozen or ATKPRO_ENV == "produ
 log_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'atkpro_debug.log')
 handlers = [logging.StreamHandler(sys.stdout)]
 if ATKPRO_ENV != "production":
-    handlers.append(RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=3, encoding='utf-8'))
+    handlers.append(SafeRotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=3, encoding='utf-8', delay=True))
 logging.basicConfig(level=_log_level, format=_log_format, handlers=handlers)
 logging.info('TEST LOG INIZIO FILE')
 

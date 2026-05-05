@@ -32,7 +32,15 @@ def setup_logging():
     handlers = [logging.StreamHandler(sys.stdout)]
     if ATKPRO_ENV != "production":
         from logging.handlers import RotatingFileHandler
-        handlers.append(RotatingFileHandler(log_path, maxBytes=5*1024*1024, backupCount=3, encoding="utf-8"))
+
+        class SafeRotatingFileHandler(RotatingFileHandler):
+            def doRollover(self):
+                try:
+                    super().doRollover()
+                except PermissionError:
+                    pass
+
+        handlers.append(SafeRotatingFileHandler(log_path, maxBytes=5*1024*1024, backupCount=3, encoding="utf-8", delay=True))
     logging.basicConfig(
         level=logging.DEBUG if ATKPRO_ENV != "production" else logging.WARNING,
         format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
