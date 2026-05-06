@@ -140,7 +140,6 @@ def download_tiles(infojson, output_dir, update_progress=None, portale=None):
         row = int(y)
         return os.path.join(output_dir, f"tile_{col}_{row}.jpg")
 
-    tile_args = [(base_url, x, y, tile_size, output_dir, quality, width, height, inter_delay) for y in range(rows) for x in range(cols)]
     expected_files = [expected_tile_filename(x, y) for y in range(rows) for x in range(cols)]
 
     max_global_retries = 3
@@ -156,6 +155,7 @@ def download_tiles(infojson, output_dir, update_progress=None, portale=None):
     except Exception:
         max_workers = 4
     inter_delay = 0.3 if is_heidelberg else 0.0
+    tile_args = [(base_url, x, y, tile_size, output_dir, quality, width, height, inter_delay) for y in range(rows) for x in range(cols)]
     attempt = 0
     tiles_downloaded = set()
     missing_files = set(expected_files)
