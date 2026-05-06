@@ -387,6 +387,12 @@ class Elaborazione:
             logger.info(f"[Manifest] manifest_diretto: uso URL diretto {self.ark_url}")
             return self.ark_url
 
+        # Shortcut: URL è già un manifest IIIF diretto (.json o /manifest)
+        _url_lower = self.ark_url.lower().rstrip("/")
+        if _url_lower.endswith(".json") or "/manifest/" in _url_lower or _url_lower.endswith("/manifest"):
+            logger.info(f"[Manifest] URL è già un manifest diretto: {self.ark_url}")
+            return self.ark_url
+
         # Tentativo 1: Prova browser automation
         try:
             driver = setup_selenium()
