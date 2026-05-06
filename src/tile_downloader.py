@@ -114,7 +114,7 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width
 def download_tiles(infojson, output_dir, update_progress=None, portale=None):
     """Scarica tutti i tile definiti in un info.json IIIF e restituisce la lista completa."""
     import concurrent.futures
-    base_url = infojson["@id"]
+    base_url = infojson.get("@id") or infojson.get("id") or infojson.get("@context", "")
     width = infojson["width"]
     height = infojson["height"]
     # IIIF Image API v1.1 (es. Gallica BnF) non ha il campo "tiles"; usa tile 512px e quality "native"
