@@ -61,3 +61,36 @@ def setup_playwright(url):
     except Exception as e:
         logger.error(f"Errore in setup_playwright: {e}", exc_info=True)
         return None
+
+
+def fetch_manifest_json_via_playwright(url: str) -> dict | None:
+    """
+    Scarica un manifest IIIF JSON usando Playwright (page.goto + response.body).
+    Bypassa il TLS fingerprinting dei portali che bloccano Python/urllib3
+    (es. Gallica BnF) perché usa il TLS stack completo di Chromium.
+    """
+    import json as _json
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                extra_http_headers={
+                    "Accept": "application/ld+json, application/json, */*",
+                }
+            )
+            page = context.new_page()
+            # page.goto usa il TLS Chromium completo (non Node.js HTTP)
+            response = page.goto(url, timeout=25000, wait_until="networkidle")
+            if response and response.ok:
+                body = response.body()
+                data = _json.loads(body)
+                browser.close()
+                logger.info(f"[OK] Playwright fetch manifest ({response.status}): {url}")
+                return data
+            status = response.status if response else "N/A"
+            logger.warning(f"[Playwright] fetch manifest status {status} per {url}")
+            browser.close()
+            return None
+    except Exception as e:
+        logger.error(f"[Playwright] fetch_manifest_json_via_playwright fallito: {e}", exc_info=True)
+        return None

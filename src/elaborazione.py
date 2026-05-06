@@ -789,7 +789,6 @@ class Elaborazione:
                         logger.info(f"[Cleanup] Cartella tiles eliminata (dopo errore): {tile_dir}")
 
             # Parallelizzazione automatica: usa metà dei core disponibili, minimo 2, massimo 8
-            # import os rimosso, già presente in testa al file
             try:
                 cpu_count = os.cpu_count() or 4
                 max_workers = min(8, max(2, cpu_count // 2))
