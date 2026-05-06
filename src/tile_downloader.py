@@ -5,6 +5,7 @@ Scarica tutti i tiles IIIF di un canvas e restituisce la lista completa.
 """
 
 import os
+import time
 import logging
 import requests
 
@@ -48,8 +49,10 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default"):
         logger.info("Tile già presente e valido: %s", filename)
         return filename
 
-    # Ciclo di retry
+    # Ciclo di retry con backoff crescente
     for attempt in range(1, MAX_RETRIES + 1):
+        if attempt > 1:
+            time.sleep(2 * (attempt - 1))  # 2s al 2° tentativo, 4s al 3°
         logger.info("[Tile] Scarico tile (tentativo %d/%d) da URL: %s", attempt, MAX_RETRIES, url_tile)
         try:
             response = requests.get(url_tile, headers=HEADERS_UX, stream=True, timeout=30)

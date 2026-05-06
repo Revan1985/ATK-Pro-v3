@@ -728,7 +728,7 @@ def _ask_canvas_range(parent, glossario_data, lingua):
     Restituisce (canvas_da, canvas_a) come interi 1-based, oppure (None, None) per elaborare tutto.
     """
     from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-                                   QPushButton, QSpinBox, QCheckBox)
+                                   QPushButton, QSpinBox)
     from PySide6.QtCore import Qt
 
     dlg = QDialog(parent)
@@ -744,14 +744,11 @@ def _ask_canvas_range(parent, glossario_data, lingua):
     """)
     layout = QVBoxLayout(dlg)
 
-    info = QLabel("Limita l'elaborazione a un range di canvas (opzionale).\nLascia disabilitato per elaborare tutti i canvas.")
+    info = QLabel("Vuoi limitare l'elaborazione a un range di canvas?\n"
+                  "Clicca OK per usare il range, oppure \"Tutti i canvas\" per elaborare tutto.")
     info.setWordWrap(True)
     info.setStyleSheet("color: #fff; font-size: 13px;")
     layout.addWidget(info)
-
-    chk = QCheckBox("Abilita range canvas")
-    chk.setStyleSheet("color: #fff; font-size: 14px;")
-    layout.addWidget(chk)
 
     range_row = QHBoxLayout()
     lbl_da = QLabel("Da canvas:")
@@ -760,25 +757,20 @@ def _ask_canvas_range(parent, glossario_data, lingua):
     spin_da.setMinimum(1)
     spin_da.setMaximum(99999)
     spin_da.setValue(1)
-    spin_da.setEnabled(False)
     lbl_a = QLabel("  A canvas:")
     lbl_a.setStyleSheet("color: #ccc; font-size: 13px;")
     spin_a = QSpinBox()
     spin_a.setMinimum(1)
     spin_a.setMaximum(99999)
     spin_a.setValue(5)
-    spin_a.setEnabled(False)
     range_row.addWidget(lbl_da)
     range_row.addWidget(spin_da)
     range_row.addWidget(lbl_a)
     range_row.addWidget(spin_a)
     layout.addLayout(range_row)
 
-    chk.toggled.connect(spin_da.setEnabled)
-    chk.toggled.connect(spin_a.setEnabled)
-
     btn_row = QHBoxLayout()
-    ok_btn = QPushButton("OK")
+    ok_btn = QPushButton("OK (usa range)")
     skip_btn = QPushButton("Tutti i canvas")
     ok_btn.clicked.connect(dlg.accept)
     skip_btn.clicked.connect(dlg.reject)
@@ -787,7 +779,7 @@ def _ask_canvas_range(parent, glossario_data, lingua):
     layout.addLayout(btn_row)
     dlg.setLayout(layout)
 
-    if dlg.exec() == QDialog.Accepted and chk.isChecked():
+    if dlg.exec() == QDialog.Accepted:
         da = spin_da.value()
         a = spin_a.value()
         if a < da:
@@ -1337,8 +1329,6 @@ class MainWindow(QMainWindow):
             from qt_worker import ElaborazioneWorker
             from PySide6.QtCore import QCoreApplication
 
-            records = state["records"]
-            formats = state["formats"]
             glossario = self.glossario_data
             lingua = self.lingua
 
