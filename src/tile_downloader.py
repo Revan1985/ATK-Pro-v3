@@ -26,7 +26,7 @@ HEADERS_UX = {
     "Connection": "keep-alive",
 }
 
-def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width=None, img_height=None):
+def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width=None, img_height=None, inter_delay=0.0):
     """Scarica un singolo tile IIIF e lo salva nella cartella di output."""
     # x,y possono arrivare come offset in pixel oppure come indici di col/row.
     # Se sono indici (es. 0,1) li moltiplichiamo per ottenere gli offset in pixel.
@@ -60,8 +60,10 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width
 
     # Ciclo di retry con backoff crescente
     for attempt in range(1, MAX_RETRIES + 1):
-        if attempt > 1:
-            time.sleep(2 * (attempt - 1))  # 2s al 2° tentativo, 4s al 3°
+        if attempt == 1 and inter_delay > 0:
+            time.sleep(inter_delay)  # delay tra richieste per portali con rate-limiting (es. Heidelberg)
+        elif attempt > 1:
+            time.sleep(5 * (attempt - 1) if inter_delay > 0 else 2 * (attempt - 1))  # backoff: 5s/10s Heidelberg, 2s/4s altri
         logger.info("[Tile] Scarico tile (tentativo %d/%d) da URL: %s", attempt, MAX_RETRIES, url_tile)
         try:
             response = requests.get(url_tile, headers=HEADERS_UX, stream=True, timeout=30)
@@ -138,20 +140,22 @@ def download_tiles(infojson, output_dir, update_progress=None, portale=None):
         row = int(y)
         return os.path.join(output_dir, f"tile_{col}_{row}.jpg")
 
-    tile_args = [(base_url, x, y, tile_size, output_dir, quality, width, height) for y in range(rows) for x in range(cols)]
+    tile_args = [(base_url, x, y, tile_size, output_dir, quality, width, height, inter_delay) for y in range(rows) for x in range(cols)]
     expected_files = [expected_tile_filename(x, y) for y in range(rows) for x in range(cols)]
 
     max_global_retries = 3
     # Parallelizzazione automatica: usa metà dei core disponibili, minimo 2, massimo 8
-    # Heidelberg UB applica rate-limiting aggressivo: limita a 2 worker per evitare timeout a cascata
+    # Heidelberg UB applica rate-limiting aggressivo: download sequenziale con delay tra richieste
+    is_heidelberg = portale and "heidelberg" in portale.lower()
     try:
         cpu_count = os.cpu_count() or 4
-        if portale and "heidelberg" in portale.lower():
-            max_workers = 2
+        if is_heidelberg:
+            max_workers = 1
         else:
             max_workers = min(8, max(2, cpu_count // 2))
     except Exception:
         max_workers = 4
+    inter_delay = 0.3 if is_heidelberg else 0.0
     attempt = 0
     tiles_downloaded = set()
     missing_files = set(expected_files)
@@ -163,7 +167,7 @@ def download_tiles(infojson, output_dir, update_progress=None, portale=None):
         for idx, (x, y) in enumerate([(x, y) for y in range(rows) for x in range(cols)]):
             fname = expected_tile_filename(x, y)
             if fname in missing_files:
-                args_to_download.append((base_url, x, y, tile_size, output_dir, quality, width, height))
+                args_to_download.append((base_url, x, y, tile_size, output_dir, quality, width, height, inter_delay))
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_tile = {executor.submit(download_tile, *args): args for args in args_to_download}
