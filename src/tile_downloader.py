@@ -26,7 +26,7 @@ HEADERS_UX = {
     "Connection": "keep-alive",
 }
 
-def download_tile(url, x, y, tile_size, output_dir, quality="default"):
+def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width=None, img_height=None):
     """Scarica un singolo tile IIIF e lo salva nella cartella di output."""
     # x,y possono arrivare come offset in pixel oppure come indici di col/row.
     # Se sono indici (es. 0,1) li moltiplichiamo per ottenere gli offset in pixel.
@@ -41,11 +41,20 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default"):
         col = int(pixel_x // tile_size)
         row = int(pixel_y // tile_size)
 
+    # Calcola le dimensioni reali del tile (tile di bordo possono essere più piccoli)
+    region_w = min(tile_size, img_width - pixel_x) if img_width is not None else tile_size
+    region_h = min(tile_size, img_height - pixel_y) if img_height is not None else tile_size
+    region_w = max(1, region_w)
+    region_h = max(1, region_h)
+
+    # Soglia minima proporzionale all'area del tile (tile di bordo possono essere < 1024 byte)
+    min_file_size = max(16, (region_w * region_h) // 128)
+
     filename = os.path.join(output_dir, f"tile_{col}_{row}.jpg")
-    url_tile = f"{url}/{pixel_x},{pixel_y},{tile_size},{tile_size}/full/0/{quality}.jpg"
+    url_tile = f"{url}/{pixel_x},{pixel_y},{region_w},{region_h}/full/0/{quality}.jpg"
 
     # Tile già presente e valido
-    if os.path.exists(filename) and os.path.getsize(filename) > 1024:
+    if os.path.exists(filename) and os.path.getsize(filename) >= min_file_size:
         logger.info("Tile già presente e valido: %s", filename)
         return filename
 
@@ -65,9 +74,10 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default"):
                 for chunk in response.iter_content(8192):
                     if chunk:
                         f.write(chunk)
-            # Controllo dimensione minima
-            if os.path.getsize(filename) <= 1024:
-                logger.warning("[Warning] Tile troppo piccolo: %s", filename)
+            # Controllo dimensione minima proporzionale
+            if os.path.getsize(filename) < min_file_size:
+                logger.warning("[Warning] Tile troppo piccolo (%d byte, min=%d): %s",
+                               os.path.getsize(filename), min_file_size, filename)
                 os.remove(filename)
                 continue
             logger.info("[OK] Tile salvato correttamente: %s", filename)
@@ -75,7 +85,7 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default"):
         elif response.status_code == 404:
             # Fallback .png: alcuni portali IIIF servono PNG invece di JPEG.
             # Salviamo nel filename .jpg standard: Pillow legge dal contenuto, non dall'estensione.
-            url_tile_png = f"{url}/{pixel_x},{pixel_y},{tile_size},{tile_size}/full/0/{quality}.png"
+            url_tile_png = f"{url}/{pixel_x},{pixel_y},{region_w},{region_h}/full/0/{quality}.png"
             logger.debug("Tile .jpg non trovato (404), provo .png: %s", url_tile_png)
             try:
                 resp_png = requests.get(url_tile_png, headers=HEADERS_UX, stream=True, timeout=30)
@@ -84,7 +94,7 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default"):
                         for chunk in resp_png.iter_content(8192):
                             if chunk:
                                 f.write(chunk)
-                    if os.path.getsize(filename) > 1024:
+                    if os.path.getsize(filename) >= min_file_size:
                         logger.info("[OK] Tile .png salvato come %s", filename)
                         return filename
                     else:
@@ -128,7 +138,7 @@ def download_tiles(infojson, output_dir, update_progress=None):
         row = int(y)
         return os.path.join(output_dir, f"tile_{col}_{row}.jpg")
 
-    tile_args = [(base_url, x, y, tile_size, output_dir, quality) for y in range(rows) for x in range(cols)]
+    tile_args = [(base_url, x, y, tile_size, output_dir, quality, width, height) for y in range(rows) for x in range(cols)]
     expected_files = [expected_tile_filename(x, y) for y in range(rows) for x in range(cols)]
 
     max_global_retries = 3
@@ -149,7 +159,7 @@ def download_tiles(infojson, output_dir, update_progress=None):
         for idx, (x, y) in enumerate([(x, y) for y in range(rows) for x in range(cols)]):
             fname = expected_tile_filename(x, y)
             if fname in missing_files:
-                args_to_download.append((base_url, x, y, tile_size, output_dir, quality))
+                args_to_download.append((base_url, x, y, tile_size, output_dir, quality, width, height))
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_tile = {executor.submit(download_tile, *args): args for args in args_to_download}
@@ -165,8 +175,18 @@ def download_tiles(infojson, output_dir, update_progress=None):
                         update_progress(progress)
                     except Exception:
                         pass
-        # Dopo ogni ciclo, aggiorna missing_files
-        missing_files = set(f for f in expected_files if not (os.path.exists(f) and os.path.getsize(f) > 1024))
+        # Dopo ogni ciclo, aggiorna missing_files (soglia minima proporzionale per tile di bordo)
+        def _is_valid(f, x, y):
+            if not os.path.exists(f):
+                return False
+            rw = min(tile_size, width - x * tile_size)
+            rh = min(tile_size, height - y * tile_size)
+            return os.path.getsize(f) >= max(16, (rw * rh) // 128)
+        missing_files = set(
+            expected_tile_filename(x, y)
+            for y in range(rows) for x in range(cols)
+            if not _is_valid(expected_tile_filename(x, y), x, y)
+        )
         attempt += 1
 
     if missing_files:
