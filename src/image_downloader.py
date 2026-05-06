@@ -26,6 +26,6 @@ def download_info_json(url):
         ),
         "Referer": "https://antenati.cultura.gov.it/"
     }
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, timeout=30)
     response.raise_for_status()
     return response.json()

@@ -789,9 +789,13 @@ class Elaborazione:
                         logger.info(f"[Cleanup] Cartella tiles eliminata (dopo errore): {tile_dir}")
 
             # Parallelizzazione automatica: usa metà dei core disponibili, minimo 2, massimo 8
+            # Heidelberg UB: canvas sequenziali per evitare blocco connessioni simultanee
             try:
                 cpu_count = os.cpu_count() or 4
-                max_workers = min(8, max(2, cpu_count // 2))
+                if self.portale and "heidelberg" in self.portale.lower():
+                    max_workers = 1
+                else:
+                    max_workers = min(8, max(2, cpu_count // 2))
             except Exception:
                 max_workers = 4
             with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
