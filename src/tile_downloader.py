@@ -109,7 +109,7 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width
     logger.error("[Error] Tutti i tentativi di download falliti per %s", url_tile)
     return None
 
-def download_tiles(infojson, output_dir, update_progress=None):
+def download_tiles(infojson, output_dir, update_progress=None, portale=None):
     """Scarica tutti i tile definiti in un info.json IIIF e restituisce la lista completa."""
     import concurrent.futures
     base_url = infojson["@id"]
@@ -143,9 +143,13 @@ def download_tiles(infojson, output_dir, update_progress=None):
 
     max_global_retries = 3
     # Parallelizzazione automatica: usa metà dei core disponibili, minimo 2, massimo 8
+    # Heidelberg UB applica rate-limiting aggressivo: limita a 2 worker per evitare timeout a cascata
     try:
         cpu_count = os.cpu_count() or 4
-        max_workers = min(8, max(2, cpu_count // 2))
+        if portale and "heidelberg" in portale.lower():
+            max_workers = 2
+        else:
+            max_workers = min(8, max(2, cpu_count // 2))
     except Exception:
         max_workers = 4
     attempt = 0

@@ -527,7 +527,7 @@ class Elaborazione:
             logger.info(f"[Tiles] Scaricando tiles da info.json")
             tile_dir = os.path.join(self.output_dir, "tiles_doc")
             os.makedirs(tile_dir, exist_ok=True)
-            tiles_ok, tiles_missing = download_tiles(info, tile_dir)
+            tiles_ok, tiles_missing = download_tiles(info, tile_dir, portale=self.portale)
             if tiles_missing:
                 logger.warning(f"[Elaborazione] Tile mancanti per {self.nome_file}: {len(tiles_missing)}")
                 for mf in tiles_missing:
@@ -735,7 +735,7 @@ class Elaborazione:
                     # --- IIIF normale ---
                     info = download_info_json(image_info_url)
                     os.makedirs(tile_dir, exist_ok=True)
-                    tiles_ok, tiles_missing = download_tiles(info, tile_dir)
+                    tiles_ok, tiles_missing = download_tiles(info, tile_dir, portale=self.portale)
                     if tiles_missing:
                         logger.warning(f"[Elaborazione] Tile mancanti per {nome_base}: {len(tiles_missing)}")
                         for mf in tiles_missing:
