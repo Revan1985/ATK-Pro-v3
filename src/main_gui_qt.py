@@ -829,15 +829,30 @@ class MainWindow(QMainWindow):
         from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox
         gm = lambda k: get_msg(self.glossario_data, k, self.lingua) or k
 
-        PORTALI = [
-            ("antenati",          "Antenati (Cultura.gov.it)"),
-            ("gallica",           "Gallica (BnF)"),
-            ("internet_archive",  "Internet Archive"),
-            ("e_codices",         "e-codices (Unifr)"),
-            ("heidelberg",        "Heidelberg UB"),
-            ("bodleian",          "Bodleian Libraries Oxford"),
-            ("brixiana",          "Brixiana (Biblioteca Queriniana Brescia)"),
-            ("manifest_diretto",  "Manifest diretto (URL già noto)"),
+        PORTALI_GROUPED = [
+            ("── Italia ──", [
+                ("antenati",         "Antenati (Cultura.gov.it)"),
+                ("brixiana",         "Brixiana (Biblioteca Queriniana Brescia)"),
+                ("memooria",         "Memooria/Jarvis (qualsiasi biblioteca)"),
+            ]),
+            ("── Francia ──", [
+                ("gallica",          "Gallica (BnF)"),
+            ]),
+            ("── Germania ──", [
+                ("heidelberg",       "Heidelberg UB"),
+            ]),
+            ("── Regno Unito ──", [
+                ("bodleian",         "Bodleian Libraries Oxford"),
+            ]),
+            ("── Svizzera ──", [
+                ("e_codices",        "e-codices (Unifr)"),
+            ]),
+            ("── Internazionale ──", [
+                ("internet_archive", "Internet Archive"),
+            ]),
+            ("── Avanzato ──", [
+                ("manifest_diretto", "Manifest diretto (URL già noto)"),
+            ]),
         ]
 
         dlg = QDialog(self)
@@ -851,12 +866,27 @@ class MainWindow(QMainWindow):
 
         combo = QComboBox()
         combo.setStyleSheet("color: #222; background: #f5e6c3; font-size: 14px; padding: 4px;")
+        from PySide6.QtGui import QStandardItemModel, QStandardItem, QColor, QFont as _QFont
+        _model = QStandardItemModel()
+        combo.setModel(_model)
         current_key = self.portale_attivo
-        current_idx = 0
-        for i, (key, label) in enumerate(PORTALI):
-            combo.addItem(label, key)
-            if key == current_key:
-                current_idx = i
+        current_idx = 1  # default: primo portale selezionabile
+        _cidx = 0
+        for _group_label, _portals in PORTALI_GROUPED:
+            _hdr = QStandardItem(_group_label)
+            _hdr.setFlags(Qt.NoItemFlags)
+            _hf = _QFont(); _hf.setBold(True)
+            _hdr.setFont(_hf)
+            _hdr.setForeground(QColor("#7a5c1e"))
+            _model.appendRow(_hdr)
+            _cidx += 1
+            for _key, _label in _portals:
+                _it = QStandardItem("   " + _label)
+                _it.setData(_key, Qt.UserRole)
+                _model.appendRow(_it)
+                if _key == current_key:
+                    current_idx = _cidx
+                _cidx += 1
         combo.setCurrentIndex(current_idx)
         layout.addWidget(combo)
 

@@ -233,15 +233,26 @@ def _build_heidelberg_manifest(page_url: str) -> str | None:
     return None
 
 
-def _build_brixiana_manifest(page_url: str) -> str | None:
-    """Brixiana (MLOL/Memooria): .../schedadl.aspx?id={guid}
-    → https://brixiana.jarvis.memooria.org/meta/iiif/{guid}/manifest (IIIF v2)
+def _build_memooria_manifest(page_url: str) -> str | None:
+    """Memooria/Jarvis (qualsiasi biblioteca): .../schedadl.aspx?id={guid}
+    → https://{subdomain}.jarvis.memooria.org/meta/iiif/{guid}/manifest (IIIF v2/v3)
+    Funziona per Brixiana, e per qualsiasi altra biblioteca sulla piattaforma Memooria.
     """
-    m = re.search(r'[?&]id=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', page_url, re.IGNORECASE)
-    if m:
-        guid = m.group(1).lower()
+    # Estrae il hostname dalla URL (es. brixiana.jarvis.memooria.org)
+    host_m = re.search(r'https?://([^/]+\.jarvis\.memooria\.org)', page_url, re.IGNORECASE)
+    guid_m = re.search(r'[?&]id=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', page_url, re.IGNORECASE)
+    if host_m and guid_m:
+        host = host_m.group(1).lower()
+        guid = guid_m.group(1).lower()
+        return f"https://{host}/meta/iiif/{guid}/manifest"
+    # Fallback per URL senza hostname Memooria esplicito (es. URL copiato da iframe)
+    if guid_m:
+        guid = guid_m.group(1).lower()
         return f"https://brixiana.jarvis.memooria.org/meta/iiif/{guid}/manifest"
     return None
+
+# Alias per compatibilità con portale "brixiana" già configurato
+_build_brixiana_manifest = _build_memooria_manifest
 
 
 # Mappa portale → funzione builder
@@ -250,7 +261,8 @@ _PORTAL_BUILDERS = {
     "internet_archive": _build_ia_manifest,
     "e_codices":        _build_ecodices_manifest,
     "heidelberg":       _build_heidelberg_manifest,
-    "brixiana":         _build_brixiana_manifest,
+    "brixiana":         _build_memooria_manifest,
+    "memooria":         _build_memooria_manifest,
 }
 
 
