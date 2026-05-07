@@ -351,6 +351,114 @@ def build_findbuch_synthetic_manifest(page_url: str) -> dict | None:
     }
 
 
+def _build_matricula_manifest(page_url: str) -> str | None:
+    """Matricula Online: https://data.matricula-online.eu/de/{nazione}/{diocesi}/{parrocchia}/{libro}/
+    Restituisce l'URL della pagina come placeholder (elaborato da build_matricula_synthetic_manifest).
+    """
+    if re.search(r'data\.matricula-online\.eu/', page_url, re.IGNORECASE):
+        return page_url
+    return None
+
+
+def build_matricula_synthetic_manifest(page_url: str) -> dict | None:
+    """
+    Costruisce un manifest IIIF sintetico per un registro Matricula Online.
+    Scarica l'HTML del libro, estrae i /image/base64url dal viewer JS
+    MatriculaDocView, decodifica ogni URL JPEG e costruisce il manifest.
+
+    Le immagini usano service['@context'] = 'matricula_direct' per essere
+    riconosciute da elaborazione.py (nessun header speciale richiesto).
+    """
+    import base64 as _b64
+    try:
+        _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        r = requests.get(page_url, headers=_h, timeout=20)
+        r.raise_for_status()
+        r.encoding = 'utf-8'
+        html = r.text
+    except Exception as e:
+        logger.error(f"[Matricula] Errore fetch pagina {page_url}: {e}")
+        return None
+
+    # Estrai URL immagini codificate base64 dal viewer MatriculaDocView
+    encoded_imgs = re.findall(r'"/image/([A-Za-z0-9+/=]{20,})"', html)
+    if not encoded_imgs:
+        logger.error(f"[Matricula] Nessuna immagine trovata in {page_url}")
+        return None
+
+    # Decodifica ogni URL base64 → URL JPEG su hosted-images.matricula-online.eu
+    img_urls = []
+    for enc in encoded_imgs:
+        try:
+            padded = enc + '=' * (-len(enc) % 4)
+            decoded = _b64.b64decode(padded).decode('utf-8').rstrip('/?')
+            decoded = decoded.replace('http://', 'https://', 1)  # forza HTTPS
+            img_urls.append(decoded)
+        except Exception:
+            continue
+
+    if not img_urls:
+        logger.error(f"[Matricula] Nessuna URL decodificabile in {page_url}")
+        return None
+
+    # Etichette pagina dall'array "labels"
+    labels_m = re.search(r'"labels":\s*\[([^\]]+)\]', html)
+    if labels_m:
+        labels = re.findall(r'"([^"]+)"', labels_m.group(1))
+    else:
+        labels = [f"Pagina {i + 1}" for i in range(len(img_urls))]
+
+    # Titolo dal <title>: "Taufbuch - 01-001 | Parrocchia | Diocesi | Matricula Online"
+    title_m = re.search(r'<title>([^<]+)</title>', html)
+    title = title_m.group(1).strip() if title_m else "Registro Matricula"
+    if ' | Matricula' in title:
+        title = title[:title.index(' | Matricula')]
+
+    # ID univoco dall'URL (es. "oesterreich/wien/01-st-stephan/01-001")
+    mat_id = re.sub(r'https?://data\.matricula-online\.eu/[a-z]{2}/', '', page_url).strip('/')
+
+    def _make_canvas(idx: int, img_url: str, label: str) -> dict:
+        return {
+            '@id': f"synthetic://matricula/{mat_id}/canvas/{idx}",
+            '@type': 'sc:Canvas',
+            'label': label,
+            'width': 1000,
+            'height': 1400,
+            'images': [{
+                '@type': 'oa:Annotation',
+                'motivation': 'sc:painting',
+                'resource': {
+                    '@type': 'dctypes:Image',
+                    '@id': img_url,
+                    'format': 'image/jpeg',
+                    'service': {
+                        '@context': 'matricula_direct',
+                        '@id': img_url,
+                        'profile': 'matricula_direct'
+                    }
+                }
+            }]
+        }
+
+    canvases = [
+        _make_canvas(i, u, labels[i] if i < len(labels) else f"Pagina {i + 1}")
+        for i, u in enumerate(img_urls)
+    ]
+    logger.info(f"[Matricula] Manifest sintetico: '{title}', {len(img_urls)} immagini")
+
+    return {
+        '@context': 'http://iiif.io/api/presentation/2/context.json',
+        '@id': f"synthetic://matricula/{mat_id}",
+        '@type': 'sc:Manifest',
+        'label': title,
+        'sequences': [{
+            '@id': f"synthetic://matricula/{mat_id}/sequence/1",
+            '@type': 'sc:Sequence',
+            'canvases': canvases
+        }]
+    }
+
+
 # Mappa portale → funzione builder
 _PORTAL_BUILDERS = {
     "gallica":          _build_gallica_manifest,
@@ -360,6 +468,7 @@ _PORTAL_BUILDERS = {
     "brixiana":         _build_memooria_manifest,
     "memooria":         _build_memooria_manifest,
     "findbuch":         _build_findbuch_manifest,
+    "matricula":        _build_matricula_manifest,
 }
 
 

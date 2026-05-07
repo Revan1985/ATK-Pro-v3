@@ -838,6 +838,9 @@ class MainWindow(QMainWindow):
             ("── Alto Adige / Südtirol ──", [
                 ("findbuch",         "Kirchenbücher Südtirol (findbuch.net)"),
             ]),
+            ("── Europa Centrale (AT/DE/SI/...) ──", [
+                ("matricula",        "Matricula Online (Kirchenbücher AT/DE/SI/LU)"),
+            ]),
             ("── Francia ──", [
                 ("gallica",          "Gallica (BnF)"),
             ]),
