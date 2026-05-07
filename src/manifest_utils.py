@@ -234,18 +234,24 @@ def _build_heidelberg_manifest(page_url: str) -> str | None:
 
 
 def _build_memooria_manifest(page_url: str) -> str | None:
-    """Memooria/Jarvis (qualsiasi biblioteca): .../schedadl.aspx?id={guid}
+    """Memooria/Jarvis (qualsiasi biblioteca):
+    - URL legacy:  .../schedadl.aspx?id={guid}
+    - URL nuovo COOSMO: .../catalog/{collUuid}/cultural-item/{guid}
     → https://{subdomain}.jarvis.memooria.org/meta/iiif/{guid}/manifest (IIIF v2/v3)
-    Funziona per Brixiana, e per qualsiasi altra biblioteca sulla piattaforma Memooria.
     """
-    # Estrae il hostname dalla URL (es. brixiana.jarvis.memooria.org)
+    # Estrae il hostname (es. brixiana.jarvis.memooria.org, parma.jarvis.memooria.org)
     host_m = re.search(r'https?://([^/]+\.jarvis\.memooria\.org)', page_url, re.IGNORECASE)
-    guid_m = re.search(r'[?&]id=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', page_url, re.IGNORECASE)
+    _guid_pat = r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})'
+    # Formato COOSMO nuovo: /cultural-item/{guid}
+    coosmo_m = re.search(r'/cultural-item/' + _guid_pat, page_url, re.IGNORECASE)
+    # Formato legacy Jarvis: ?id={guid}
+    legacy_m = re.search(r'[?&]id=' + _guid_pat, page_url, re.IGNORECASE)
+    guid_m = coosmo_m or legacy_m
     if host_m and guid_m:
         host = host_m.group(1).lower()
         guid = guid_m.group(1).lower()
         return f"https://{host}/meta/iiif/{guid}/manifest"
-    # Fallback per URL senza hostname Memooria esplicito (es. URL copiato da iframe)
+    # Fallback: nessun hostname esplicito ma GUID presente
     if guid_m:
         guid = guid_m.group(1).lower()
         return f"https://brixiana.jarvis.memooria.org/meta/iiif/{guid}/manifest"
