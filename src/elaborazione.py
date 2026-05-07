@@ -319,9 +319,29 @@ class Elaborazione:
                 "e_codices":        "https://www.e-codices.unifr.ch",
                 "heidelberg":       "https://digi.ub.uni-heidelberg.de",
                 "bodleian":         "https://digital.bodleian.ox.ac.uk",
+                "findbuch":         "https://www.findbuch.net",
             }
             portale_key = self.portale.lower().replace("-", "_").replace(" ", "_")
             referer = _portale_referers.get(portale_key)
+
+            # --- findbuch.net: manifest sintetico da HTML scraping ---
+            if portale_key == "findbuch":
+                from manifest_utils import build_findbuch_synthetic_manifest
+                manifest = build_findbuch_synthetic_manifest(self.ark_url)
+                if manifest:
+                    os.makedirs(working_folder, exist_ok=True)
+                    manifest_filename = f"manifest_{container_id}_{titolo_pulito}.json"
+                    manifest_path = os.path.join(working_folder, manifest_filename)
+                    with open(manifest_path, 'w', encoding='utf-8') as _f:
+                        json.dump(manifest, _f, ensure_ascii=False, indent=2)
+                    self.manifest_path = manifest_path
+                    self.output_dir = working_folder
+                    n_canvas = len(manifest['sequences'][0]['canvases'])
+                    logger.info(f"[Findbuch] Manifest sintetico salvato: {manifest_path} ({n_canvas} canvas)")
+                    return manifest
+                else:
+                    logger.error("[Findbuch] Impossibile costruire manifest sintetico per findbuch.net")
+                    return None
 
             # --- Internet Archive: manifest sintetico (iiif.archivelab.org è down) ---
             if portale_key == "internet_archive":
@@ -504,6 +524,41 @@ class Elaborazione:
                     return False
                 final_img = Image.open(_BytesIO(_r_ia.content)).copy()
                 logger.info(f"[IA] Documento scaricato direttamente: {_r_ia.headers.get('content-length','?')} byte")
+                ua = _parse_ua_from_url(self.ark_url)
+                ark = _parse_ark_from_url(self.ark_url)
+                page_label = canvas.get('label', None)
+                meta = build_image_metadata(ua=ua, ark=ark, canvas_id="page_1", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                formats = self.formats if hasattr(self, 'formats') and self.formats else state.get('formats', [])
+                if not formats:
+                    formats = ['PNG', 'JPEG', 'TIFF']
+                _norm_fmts = [_normalize_format(f) for f in formats]
+                _img_fmts = [f for f in formats if _normalize_format(f) != 'PDF']
+                _pdf_in_fmts = 'PDF' in _norm_fmts
+                if _img_fmts:
+                    save_image_variants(final_img, self.output_dir, self.nome_file, _img_fmts, meta=meta)
+                if _pdf_in_fmts:
+                    _tmp_dir = os.path.join(self.output_dir, "_tmp_pdf_images")
+                    os.makedirs(_tmp_dir, exist_ok=True)
+                    _tmp_png = os.path.join(_tmp_dir, f"{self.nome_file}_pdftmp.png")
+                    final_img.save(_tmp_png, format='PNG')
+                    _pdf_out = os.path.join(self.output_dir, f"{self.nome_file}.pdf")
+                    create_pdf_from_images(_tmp_dir, _pdf_out)
+                    shutil.rmtree(_tmp_dir, ignore_errors=True)
+                return True
+            # --- Findbuch: download diretto JPEG con Referer ---
+            if service_id and 'findbuch.net/a_pics' in service_id:
+                from io import BytesIO as _BytesIO
+                import requests as _req
+                _h_fb = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
+                    'Referer': 'https://www.findbuch.net/',
+                }
+                _r_fb = _req.get(service_id, headers=_h_fb, timeout=45)
+                if not _r_fb.ok:
+                    logger.error(f"[Findbuch] HTTP {_r_fb.status_code} per documento: {service_id[:80]}")
+                    return False
+                final_img = Image.open(_BytesIO(_r_fb.content)).copy()
+                logger.info(f"[Findbuch] Documento scaricato: {_r_fb.headers.get('content-length','?')} byte")
                 ua = _parse_ua_from_url(self.ark_url)
                 ark = _parse_ark_from_url(self.ark_url)
                 page_label = canvas.get('label', None)
@@ -737,6 +792,37 @@ class Elaborazione:
                                 _use_img.save(_pdf_png_path, format='PNG')
                             except Exception as _e:
                                 logger.error(f"[PDF] Errore PNG IA canvas {idx}: {_e}")
+                        return  # nessuna cartella tile da pulire
+                    # --- Findbuch: download diretto JPEG con Referer ---
+                    if service_id and 'findbuch.net/a_pics' in service_id:
+                        from io import BytesIO as _BytesIO
+                        import requests as _req
+                        _h_fb = {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
+                            'Referer': 'https://www.findbuch.net/',
+                        }
+                        _r_fb = _req.get(service_id, headers=_h_fb, timeout=45)
+                        if _r_fb.ok:
+                            final_img = Image.open(_BytesIO(_r_fb.content)).copy()
+                            logger.info(f"[Findbuch] Pagina {idx} scaricata: {_r_fb.headers.get('content-length','?')} byte")
+                        else:
+                            logger.error(f"[Findbuch] HTTP {_r_fb.status_code} per canvas {idx}")
+                            final_img = None
+                        ua = _parse_ua_from_url(self.ark_url)
+                        ark = _parse_ark_from_url(self.ark_url)
+                        page_label = canvas.get('label', None)
+                        meta = build_image_metadata(ua=ua, ark=ark, canvas_id=f"page_{idx}", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                        _use_img = final_img if final_img is not None else _make_placeholder_image(
+                            service_id, glossario_data=self.glossario_data, lingua=self.lingua,
+                            canvas_url=canvas.get('@id') or canvas.get('id'))
+                        if image_formats:
+                            save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)
+                        if pdf_in_formats:
+                            _pdf_png_path = os.path.join(temp_pdf_dir, f"{nome_base}_pdftmp.png")
+                            try:
+                                _use_img.save(_pdf_png_path, format='PNG')
+                            except Exception as _e:
+                                logger.error(f"[PDF] Errore PNG Findbuch canvas {idx}: {_e}")
                         return  # nessuna cartella tile da pulire
                     # --- IIIF normale ---
                     info = download_info_json(image_info_url)

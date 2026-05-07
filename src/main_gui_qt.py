@@ -835,6 +835,9 @@ class MainWindow(QMainWindow):
                 ("brixiana",         "Brixiana (Biblioteca Queriniana Brescia)"),
                 ("memooria",         "Memooria/Jarvis (qualsiasi biblioteca)"),
             ]),
+            ("── Alto Adige / Südtirol ──", [
+                ("findbuch",         "Kirchenbücher Südtirol (findbuch.net)"),
+            ]),
             ("── Francia ──", [
                 ("gallica",          "Gallica (BnF)"),
             ]),

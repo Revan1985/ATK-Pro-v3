@@ -261,6 +261,96 @@ def _build_memooria_manifest(page_url: str) -> str | None:
 _build_brixiana_manifest = _build_memooria_manifest
 
 
+def _build_findbuch_manifest(page_url: str) -> str | None:
+    """findbuch.net: *.findbuch.net/php/view.php?link={hex}
+    Supporta: kirchenbücher-südtirol.findbuch.net e tutti i subdomain findbuch.net
+    Restituisce l'URL della pagina come placeholder (elaborato da build_findbuch_synthetic_manifest).
+    """
+    if re.search(r'findbuch\.net/php/view\.php', page_url, re.IGNORECASE):
+        return page_url
+    return None
+
+
+def build_findbuch_synthetic_manifest(page_url: str) -> dict | None:
+    """
+    Costruisce un manifest IIIF sintetico per un registro findbuch.net.
+    Scarica l'HTML del viewer e ne estrae l'array paths[] JavaScript che
+    contiene i percorsi di tutte le immagini JPEG del registro.
+
+    Le immagini usano service['@context'] = 'findbuch_direct' per essere
+    riconosciute da elaborazione.py e scaricate con il Referer corretto.
+    """
+    try:
+        _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        r = requests.get(page_url, headers=_h, timeout=20)
+        r.raise_for_status()
+        r.encoding = 'utf-8'  # il server serve UTF-8 ma non dichiara charset
+        html = r.text
+    except Exception as e:
+        logger.error(f"[Findbuch] Errore fetch pagina {page_url}: {e}")
+        return None
+
+    # Estrai paths[i] = 'www.findbuch.net/a_pics/...' dall'HTML del viewer JS
+    paths = re.findall(r"paths\[\d+\]\s*=\s*'([^']+)'", html)
+    if not paths:
+        logger.error(f"[Findbuch] Nessun paths[] trovato in {page_url}")
+        return None
+
+    # Estrai titolo: <b>Bestand:</b></div><div class="st"...>VALORE</div>
+    bestand_m = re.search(r'<b>Bestand:</b></div>\s*<div[^>]*>([^<]+)</div>', html)
+    titel_m   = re.search(r'<b>Titel:</b></div>\s*<div[^>]*>([^<]+)</div>', html)
+    if titel_m and bestand_m:
+        title = f"{bestand_m.group(1).strip()} – {titel_m.group(1).strip()}"
+    elif bestand_m:
+        title = bestand_m.group(1).strip()
+    elif titel_m:
+        title = titel_m.group(1).strip()
+    else:
+        title = "Registro findbuch"
+
+    link_m = re.search(r'[?&]link=([A-Za-z0-9]+)', page_url)
+    link_id = link_m.group(1) if link_m else "unknown"
+
+    def _make_canvas(idx: int, path: str) -> dict:
+        img_url = f"https://{path}"
+        return {
+            '@id': f"synthetic://findbuch/{link_id}/canvas/{idx}",
+            '@type': 'sc:Canvas',
+            'label': f"Pagina {idx + 1}",
+            'width': 1000,
+            'height': 1400,
+            'images': [{
+                '@type': 'oa:Annotation',
+                'motivation': 'sc:painting',
+                'resource': {
+                    '@type': 'dctypes:Image',
+                    '@id': img_url,
+                    'format': 'image/jpeg',
+                    'service': {
+                        '@context': 'findbuch_direct',
+                        '@id': img_url,
+                        'profile': 'findbuch_direct'
+                    }
+                }
+            }]
+        }
+
+    canvases = [_make_canvas(i, p) for i, p in enumerate(paths)]
+    logger.info(f"[Findbuch] Manifest sintetico: '{title}', {len(paths)} immagini")
+
+    return {
+        '@context': 'http://iiif.io/api/presentation/2/context.json',
+        '@id': f"synthetic://findbuch/{link_id}",
+        '@type': 'sc:Manifest',
+        'label': title,
+        'sequences': [{
+            '@id': f"synthetic://findbuch/{link_id}/sequence/1",
+            '@type': 'sc:Sequence',
+            'canvases': canvases
+        }]
+    }
+
+
 # Mappa portale → funzione builder
 _PORTAL_BUILDERS = {
     "gallica":          _build_gallica_manifest,
@@ -269,6 +359,7 @@ _PORTAL_BUILDERS = {
     "heidelberg":       _build_heidelberg_manifest,
     "brixiana":         _build_memooria_manifest,
     "memooria":         _build_memooria_manifest,
+    "findbuch":         _build_findbuch_manifest,
 }
 
 
