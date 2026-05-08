@@ -825,7 +825,7 @@ class MainWindow(QMainWindow):
             dlg.exec()
 
     def cambia_portale(self):
-        """Dialog per selezionare il portale IIIF attivo (impostazione persistente)."""
+        """Dialog per selezionare il portale attivo (impostazione persistente)."""
         from PySide6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QComboBox
         gm = lambda k: get_msg(self.glossario_data, k, self.lingua) or k
 
@@ -862,7 +862,7 @@ class MainWindow(QMainWindow):
         ]
 
         dlg = QDialog(self)
-        dlg.setWindowTitle("Portale IIIF attivo")
+        dlg.setWindowTitle("Portale attivo")
         _setup_dialog_pergamena(dlg, 520, 220)
         layout = QVBoxLayout(dlg)
 
@@ -1188,7 +1188,7 @@ class MainWindow(QMainWindow):
 
         # --- Impostazioni ---
         impostazioni_menu = QMenu(gm("Impostazioni"), self)
-        impostazioni_menu.addAction(gm("Portale IIIF attivo"), self.cambia_portale)
+        impostazioni_menu.addAction(gm("Portale attivo"), self.cambia_portale)
         impostazioni_menu.addAction(gm("Cambia lingua"), self.cambia_lingua)
         impostazioni_menu.addAction(gm("Seleziona formati immagine"), self.seleziona_formati_immagine)
         impostazioni_menu.addAction(gm("Seleziona cartella output"), self.seleziona_cartella_output)

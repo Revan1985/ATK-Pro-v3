@@ -328,7 +328,8 @@ class Elaborazione:
             # --- Matricula Online: manifest sintetico da HTML scraping ---
             if portale_key == "matricula":
                 from manifest_utils import build_matricula_synthetic_manifest
-                manifest = build_matricula_synthetic_manifest(self.ark_url)
+                _scraped_html = getattr(self, '_scraped_html', None)
+                manifest = build_matricula_synthetic_manifest(self.ark_url, html=_scraped_html)
                 if manifest:
                     os.makedirs(working_folder, exist_ok=True)
                     manifest_filename = f"manifest_{container_id}_{titolo_pulito}.json"
@@ -442,6 +443,7 @@ class Elaborazione:
                 time.sleep(3)
                 html = driver.page_source
                 driver.quit()
+                self._scraped_html = html  # conserva per Matricula e altri portali
                 manifest_url = robust_find_manifest(self.ark_url, html)
                 if manifest_url:
                     logger.info(f"Manifest trovato (Selenium): {manifest_url}")
@@ -453,6 +455,7 @@ class Elaborazione:
         try:
             html = setup_playwright(self.ark_url)
             if html:
+                self._scraped_html = html  # conserva per Matricula e altri portali
                 manifest_url = robust_find_manifest(self.ark_url, html)
                 if manifest_url:
                     logger.info(f"Manifest trovato (Playwright): {manifest_url}")
@@ -597,20 +600,28 @@ class Elaborazione:
                     create_pdf_from_images(_tmp_dir, _pdf_out)
                     shutil.rmtree(_tmp_dir, ignore_errors=True)
                 return True
-            # --- Findbuch: download diretto JPEG con Referer ---
-            if service_id and 'findbuch.net/a_pics' in service_id:
+            # --- Findbuch: download via gtpc.php con sessione PHP ---
+            svc = canvas.get('images', [{}])[0].get('resource', {}).get('service', {})
+            if isinstance(svc, dict) and svc.get('@context') == 'findbuch_gtpc':
                 from io import BytesIO as _BytesIO
                 import requests as _req
-                _h_fb = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
-                    'Referer': 'https://www.findbuch.net/',
-                }
-                _r_fb = _req.get(service_id, headers=_h_fb, timeout=45)
-                if not _r_fb.ok:
-                    logger.error(f"[Findbuch] HTTP {_r_fb.status_code} per documento: {service_id[:80]}")
+                _be  = svc['be_id']
+                _ve  = svc['ve_id']
+                _cnt = svc['count']
+                _base = svc['base_url']
+                _view = svc['view_url']
+                _ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0'
+                _hdr = {'User-Agent': _ua, 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'}
+                _sess = _req.Session()
+                _sess.get(_base + 'main.php', headers=_hdr, timeout=15)
+                _sess.get(_view, headers={**_hdr, 'Referer': _base + 'main.php'}, timeout=15)
+                _r_fb = _sess.get(_base + 'gtpc.php', headers={**_hdr, 'Accept': 'image/jpeg,*/*', 'Referer': _view},
+                                  params={'be_id': _be, 've_id': _ve, 'count': _cnt}, timeout=45)
+                if not _r_fb.ok or len(_r_fb.content) == 0:
+                    logger.error(f"[Findbuch] Errore download documento gtpc be={_be} ve={_ve} count={_cnt}: HTTP {_r_fb.status_code} size={len(_r_fb.content)}")
                     return False
                 final_img = Image.open(_BytesIO(_r_fb.content)).copy()
-                logger.info(f"[Findbuch] Documento scaricato: {_r_fb.headers.get('content-length','?')} byte")
+                logger.info(f"[Findbuch] Documento scaricato: {len(_r_fb.content)} byte")
                 ua = _parse_ua_from_url(self.ark_url)
                 ark = _parse_ark_from_url(self.ark_url)
                 page_label = canvas.get('label', None)
@@ -873,27 +884,38 @@ class Elaborazione:
                             except Exception as _e:
                                 logger.error(f"[PDF] Errore PNG Matricula canvas {idx}: {_e}")
                         return  # nessuna cartella tile da pulire
-                    # --- Findbuch: download diretto JPEG con Referer ---
-                    if service_id and 'findbuch.net/a_pics' in service_id:
+                    # --- Findbuch: download via gtpc.php con sessione PHP ---
+                    _svc = canvas.get('images', [{}])[0].get('resource', {}).get('service', {})
+                    if isinstance(_svc, dict) and _svc.get('@context') == 'findbuch_gtpc':
                         from io import BytesIO as _BytesIO
                         import requests as _req
-                        _h_fb = {
-                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
-                            'Referer': 'https://www.findbuch.net/',
-                        }
-                        _r_fb = _req.get(service_id, headers=_h_fb, timeout=45)
-                        if _r_fb.ok:
+                        _be   = _svc['be_id']
+                        _ve   = _svc['ve_id']
+                        _cnt  = _svc['count']
+                        _base = _svc['base_url']
+                        _view = _svc['view_url']
+                        # Crea sempre una sessione locale per questo canvas (thread-safe)
+                        _ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0'
+                        _hdr = {'User-Agent': _ua, 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'}
+                        _sess_fb = _req.Session()
+                        _sess_fb.get(_base + 'main.php', headers=_hdr, timeout=15)
+                        _sess_fb.get(_view, headers={**_hdr, 'Referer': _base + 'main.php'}, timeout=15)
+                        _r_fb = _sess_fb.get(
+                            _base + 'gtpc.php',
+                            headers={**_hdr, 'Accept': 'image/jpeg,*/*', 'Referer': _view},
+                            params={'be_id': _be, 've_id': _ve, 'count': _cnt}, timeout=45)
+                        if _r_fb.ok and len(_r_fb.content) > 0:
                             final_img = Image.open(_BytesIO(_r_fb.content)).copy()
-                            logger.info(f"[Findbuch] Pagina {idx} scaricata: {_r_fb.headers.get('content-length','?')} byte")
+                            logger.info(f"[Findbuch] Pagina {idx} scaricata: {len(_r_fb.content)} byte")
                         else:
-                            logger.error(f"[Findbuch] HTTP {_r_fb.status_code} per canvas {idx}")
+                            logger.error(f"[Findbuch] Errore gtpc be={_be} ve={_ve} count={_cnt}: HTTP {_r_fb.status_code} size={len(_r_fb.content)}")
                             final_img = None
                         ua = _parse_ua_from_url(self.ark_url)
                         ark = _parse_ark_from_url(self.ark_url)
                         page_label = canvas.get('label', None)
                         meta = build_image_metadata(ua=ua, ark=ark, canvas_id=f"page_{idx}", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
                         _use_img = final_img if final_img is not None else _make_placeholder_image(
-                            service_id, glossario_data=self.glossario_data, lingua=self.lingua,
+                            str(_svc.get('@id', '')), glossario_data=self.glossario_data, lingua=self.lingua,
                             canvas_url=canvas.get('@id') or canvas.get('id'))
                         if image_formats:
                             save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)

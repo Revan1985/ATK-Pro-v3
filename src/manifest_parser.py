@@ -229,7 +229,12 @@ def estrai_metadati_da_manifest(
             elif "items" in manifest_data:
                 tecnico["numero_canvas"] = len(manifest_data["items"])
                 tecnico["canvas_id_list"] = [c.get("id") for c in manifest_data["items"]]
-                logger.info(f"[Info] Registro con {tecnico['numero_canvas']} canvas")
+                logger.info(f"[Info] Registro con {tecnico['numero_canvas']} canvas (IIIF v3)")
+            elif "sequences" in manifest_data and manifest_data["sequences"]:
+                canvases = manifest_data["sequences"][0].get("canvases", [])
+                tecnico["numero_canvas"] = len(canvases)
+                tecnico["canvas_id_list"] = [c.get("@id") for c in canvases]
+                logger.info(f"[Info] Registro con {tecnico['numero_canvas']} canvas (IIIF v2)")
             else:
                 logger.error(f"[Error] Nessun canvas selezionabile per Registro in {manifest_path}")
 
@@ -240,7 +245,12 @@ def estrai_metadati_da_manifest(
             if "items" in manifest_data:
                 tecnico["numero_canvas"] = len(manifest_data["items"])
                 tecnico["canvas_id_list"] = [c.get("id") for c in manifest_data["items"]]
-                logger.info(f"[Info] Registro (inferred) con {tecnico['numero_canvas']} canvas")
+                logger.info(f"[Info] Registro (inferred) con {tecnico['numero_canvas']} canvas (IIIF v3)")
+            elif "sequences" in manifest_data and manifest_data["sequences"]:
+                canvases = manifest_data["sequences"][0].get("canvases", [])
+                tecnico["numero_canvas"] = len(canvases)
+                tecnico["canvas_id_list"] = [c.get("@id") for c in canvases]
+                logger.info(f"[Info] Registro (inferred) con {tecnico['numero_canvas']} canvas (IIIF v2)")
 
         # Diritti
         if "rights" in manifest_data:

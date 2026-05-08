@@ -274,29 +274,50 @@ def _build_findbuch_manifest(page_url: str) -> str | None:
 def build_findbuch_synthetic_manifest(page_url: str) -> dict | None:
     """
     Costruisce un manifest IIIF sintetico per un registro findbuch.net.
-    Scarica l'HTML del viewer e ne estrae l'array paths[] JavaScript che
-    contiene i percorsi di tutte le immagini JPEG del registro.
-
-    Le immagini usano service['@context'] = 'findbuch_direct' per essere
-    riconosciute da elaborazione.py e scaricate con il Referer corretto.
+    Scarica l'HTML del viewer e ne estrae be_id, ve_id e il numero di immagini.
+    Il download avviene via gtpc.php con una sessione PHP attivata da main.php+view.php.
     """
+    # Ricava base URL (es. https://www.kirchenbücher-südtirol.findbuch.net/php/)
+    from urllib.parse import urlparse
+    parsed = urlparse(page_url)
+    base_url = f"{parsed.scheme}://{parsed.netloc}/php/"
+
     try:
-        _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        r = requests.get(page_url, headers=_h, timeout=20)
+        _h = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        }
+        # Attiva la sessione PHP visitando main.php prima di view.php
+        _sess = requests.Session()
+        _sess.get(base_url + 'main.php', headers=_h, timeout=15)
+        r = _sess.get(page_url, headers={**_h, 'Referer': base_url + 'main.php'}, timeout=20)
         r.raise_for_status()
-        r.encoding = 'utf-8'  # il server serve UTF-8 ma non dichiara charset
+        r.encoding = 'utf-8'
         html = r.text
     except Exception as e:
         logger.error(f"[Findbuch] Errore fetch pagina {page_url}: {e}")
         return None
 
-    # Estrai paths[i] = 'www.findbuch.net/a_pics/...' dall'HTML del viewer JS
-    paths = re.findall(r"paths\[\d+\]\s*=\s*'([^']+)'", html)
-    if not paths:
-        logger.error(f"[Findbuch] Nessun paths[] trovato in {page_url}")
+    # Estrai be_id e ve_id dal JS inline della pagina viewer
+    be_id_m  = re.search(r'var\s+be_id\s*=\s*(\d+)', html)
+    ve_id_m  = re.search(r"var\s+ve_id\s*=\s*['\"]?(\d+)['\"]?", html)
+    max_m    = re.search(r'var\s+max\s*=\s*(\d+)', html)
+    if not be_id_m or not ve_id_m:
+        logger.error(f"[Findbuch] be_id/ve_id non trovati in {page_url}")
         return None
 
-    # Estrai titolo: <b>Bestand:</b></div><div class="st"...>VALORE</div>
+    be_id  = int(be_id_m.group(1))
+    ve_id  = int(ve_id_m.group(1))
+    n_imgs = int(max_m.group(1)) if max_m else 0
+
+    # Estrai pic_names per le label (opzionale, fallback a "Pagina N")
+    pic_names = re.findall(r"pic_names\[\d+\]\s*=\s*'([^']+)'", html)
+
+    if n_imgs == 0:
+        logger.error(f"[Findbuch] max=0 immagini in {page_url}")
+        return None
+
+    # Estrai titolo dall'HTML
     bestand_m = re.search(r'<b>Bestand:</b></div>\s*<div[^>]*>([^<]+)</div>', html)
     titel_m   = re.search(r'<b>Titel:</b></div>\s*<div[^>]*>([^<]+)</div>', html)
     if titel_m and bestand_m:
@@ -311,12 +332,12 @@ def build_findbuch_synthetic_manifest(page_url: str) -> dict | None:
     link_m = re.search(r'[?&]link=([A-Za-z0-9]+)', page_url)
     link_id = link_m.group(1) if link_m else "unknown"
 
-    def _make_canvas(idx: int, path: str) -> dict:
-        img_url = f"https://{path}"
+    def _make_canvas(idx: int) -> dict:
+        label = pic_names[idx] if idx < len(pic_names) else f"Pagina {idx + 1}"
         return {
             '@id': f"synthetic://findbuch/{link_id}/canvas/{idx}",
             '@type': 'sc:Canvas',
-            'label': f"Pagina {idx + 1}",
+            'label': label,
             'width': 1000,
             'height': 1400,
             'images': [{
@@ -324,19 +345,23 @@ def build_findbuch_synthetic_manifest(page_url: str) -> dict | None:
                 'motivation': 'sc:painting',
                 'resource': {
                     '@type': 'dctypes:Image',
-                    '@id': img_url,
+                    '@id': f"gtpc://findbuch/{be_id}/{ve_id}/{idx}",
                     'format': 'image/jpeg',
                     'service': {
-                        '@context': 'findbuch_direct',
-                        '@id': img_url,
-                        'profile': 'findbuch_direct'
+                        '@context': 'findbuch_gtpc',
+                        '@id': f"gtpc://findbuch/{be_id}/{ve_id}/{idx}",
+                        'be_id': be_id,
+                        've_id': ve_id,
+                        'count': idx,
+                        'view_url': page_url,
+                        'base_url': base_url,
                     }
                 }
             }]
         }
 
-    canvases = [_make_canvas(i, p) for i, p in enumerate(paths)]
-    logger.info(f"[Findbuch] Manifest sintetico: '{title}', {len(paths)} immagini")
+    canvases = [_make_canvas(i) for i in range(n_imgs)]
+    logger.info(f"[Findbuch] Manifest sintetico: '{title}', {n_imgs} immagini (be_id={be_id}, ve_id={ve_id})")
 
     return {
         '@context': 'http://iiif.io/api/presentation/2/context.json',
@@ -360,25 +385,28 @@ def _build_matricula_manifest(page_url: str) -> str | None:
     return None
 
 
-def build_matricula_synthetic_manifest(page_url: str) -> dict | None:
+def build_matricula_synthetic_manifest(page_url: str, html: str | None = None) -> dict | None:
     """
     Costruisce un manifest IIIF sintetico per un registro Matricula Online.
-    Scarica l'HTML del libro, estrae i /image/base64url dal viewer JS
-    MatriculaDocView, decodifica ogni URL JPEG e costruisce il manifest.
+    Estrae i /image/base64url dal viewer JS MatriculaDocView, decodifica ogni
+    URL JPEG e costruisce il manifest.
 
+    Se html è fornito (es. già ottenuto via Selenium), viene usato direttamente
+    senza un secondo fetch HTTP (che fallirebbe con 503 bot-blocker).
     Le immagini usano service['@context'] = 'matricula_direct' per essere
     riconosciute da elaborazione.py (nessun header speciale richiesto).
     """
     import base64 as _b64
-    try:
-        _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        r = requests.get(page_url, headers=_h, timeout=20)
-        r.raise_for_status()
-        r.encoding = 'utf-8'
-        html = r.text
-    except Exception as e:
-        logger.error(f"[Matricula] Errore fetch pagina {page_url}: {e}")
-        return None
+    if html is None:
+        try:
+            _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            r = requests.get(page_url, headers=_h, timeout=20)
+            r.raise_for_status()
+            r.encoding = 'utf-8'
+            html = r.text
+        except Exception as e:
+            logger.error(f"[Matricula] Errore fetch pagina {page_url}: {e}")
+            return None
 
     # Estrai URL immagini codificate base64 dal viewer MatriculaDocView
     encoded_imgs = re.findall(r'"/image/([A-Za-z0-9+/=]{20,})"', html)
@@ -391,7 +419,7 @@ def build_matricula_synthetic_manifest(page_url: str) -> dict | None:
     for enc in encoded_imgs:
         try:
             padded = enc + '=' * (-len(enc) % 4)
-            decoded = _b64.b64decode(padded).decode('utf-8').rstrip('/?')
+            decoded = re.sub(r'[\x00-\x1f\x7f]', '', _b64.b64decode(padded).decode('utf-8')).rstrip('/?')
             decoded = decoded.replace('http://', 'https://', 1)  # forza HTTPS
             img_urls.append(decoded)
         except Exception:
