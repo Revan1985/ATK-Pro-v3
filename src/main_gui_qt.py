@@ -861,6 +861,7 @@ class MainWindow(QMainWindow):
             ]),
             ("── Internazionale ──", [
                 ("internet_archive", "Internet Archive"),
+                ("europeana",        "Europeana IIIF"),
             ]),
             ("── Avanzato ──", [
                 ("manifest_diretto", "Manifest diretto (URL già noto)"),

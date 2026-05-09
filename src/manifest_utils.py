@@ -115,6 +115,29 @@ def _build_vatlib_manifest(page_url: str) -> str | None:
     return None
 
 
+def _build_bodleian_manifest(page_url: str) -> str | None:
+    """Bodleian Libraries Oxford:
+    /objects/{uuid}/ → https://iiif.bodleian.ox.ac.uk/iiif/manifest/{uuid}.json
+    """
+    m = re.search(r'digital\.bodleian\.ox\.ac\.uk/objects/([^/?#\s]+)', page_url)
+    if m:
+        uuid = m.group(1)
+        return f"https://iiif.bodleian.ox.ac.uk/iiif/manifest/{uuid}.json"
+    return None
+
+
+def _build_europeana_manifest(page_url: str) -> str | None:
+    """Europeana IIIF:
+    /en/item/{provider_id}/{record_id} → /presentation/{provider_id}/{record_id}/manifest
+    """
+    m = re.search(r'europeana\.eu/(?:[a-z]{2}/)?item/([^/]+)/([^/?#\s]+)', page_url)
+    if m:
+        provider_id = m.group(1)
+        record_id = m.group(2)
+        return f"https://iiif.europeana.eu/presentation/{provider_id}/{record_id}/manifest"
+    return None
+
+
 def _build_ia_manifest(page_url: str) -> str | None:
     """Internet Archive: restituisce un placeholder URL riconoscibile; il manifest
     sintetico viene costruito da build_ia_synthetic_manifest() in elaborazione."""
@@ -924,6 +947,8 @@ def build_matricula_synthetic_manifest(page_url: str, html: str | None = None) -
 _PORTAL_BUILDERS = {
     "gallica":          _build_gallica_manifest,
     "vatlib":           _build_vatlib_manifest,
+    "bodleian":         _build_bodleian_manifest,
+    "europeana":        _build_europeana_manifest,
     "internet_archive": _build_ia_manifest,
     "e_rara":           _build_e_rara_manifest,
     "e_codices":        _build_ecodices_manifest,
