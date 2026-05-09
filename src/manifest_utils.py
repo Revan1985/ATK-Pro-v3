@@ -5,6 +5,7 @@ import os
 import json
 from logging.handlers import RotatingFileHandler
 import time
+from urllib.parse import parse_qs, quote_plus, unquote_plus, urlparse
 ATKPRO_ENV = os.environ.get("ATKPRO_ENV", "development").lower()
 logger = logging.getLogger(__name__)
 if not logger.hasHandlers():
@@ -88,6 +89,29 @@ def _build_gallica_manifest(page_url: str) -> str | None:
     m = re.search(r'gallica\.bnf\.fr(.*/ark:/12148/[A-Za-z0-9]+)', page_url)
     if m:
         return f"https://gallica.bnf.fr/iiif{m.group(1)}/manifest.json"
+    return None
+
+
+def _build_vatlib_manifest(page_url: str) -> str | None:
+    """DigiVatLib (Biblioteca Apostolica Vaticana):
+    /view/{MSS_ID} o /mss/edition/{MSS_ID} → /iiif/{MSS_ID}/manifest.json
+    Accetta anche URL manifest già completo (/iiif/{MSS_ID}/manifest.json).
+    """
+    # Già un manifest IIIF VAT
+    if '/iiif/' in page_url and 'manifest.json' in page_url:
+        m = re.search(r'digi\.vatlib\.it/iiif/([^/]+)/manifest\.json', page_url)
+        if m:
+            return page_url
+    # URL viewer /view/{ID} o /mss/edition/{ID}
+    m = re.search(r'digi\.vatlib\.it/(?:view|mss/edition)/([^/?#\s]+)', page_url)
+    if m:
+        mss_id = m.group(1)
+        return f"https://digi.vatlib.it/iiif/{mss_id}/manifest.json"
+    # URL IIIF senza manifest.json (e.g. /iiif/{ID})
+    m = re.search(r'digi\.vatlib\.it/iiif/([^/?#\s]+)', page_url)
+    if m:
+        mss_id = m.group(1)
+        return f"https://digi.vatlib.it/iiif/{mss_id}/manifest.json"
     return None
 
 
@@ -230,6 +254,38 @@ def _build_heidelberg_manifest(page_url: str) -> str | None:
     if m:
         doc_id = m.group(1)
         return f"https://digi.ub.uni-heidelberg.de/diglit/iiif/{doc_id}/manifest.json"
+    return None
+
+
+def _build_e_manuscripta_manifest(page_url: str) -> str | None:
+    """e-manuscripta: .../content/titleinfo/{id} (o URL breve .../{id}) → /i3f/v20/{id}/manifest"""
+    m = re.search(r'e-manuscripta\.ch/(?:[^?#]*/)?content/titleinfo/(\d+)', page_url, re.IGNORECASE)
+    if not m:
+        m = re.search(r'e-manuscripta\.ch/[^?#]*/(\d+)(?:[/?#]|$)', page_url, re.IGNORECASE)
+    if m:
+        doc_id = m.group(1)
+        return f"https://www.e-manuscripta.ch/i3f/v20/{doc_id}/manifest"
+    return None
+
+
+def _build_e_rara_manifest(page_url: str) -> str | None:
+    """e-rara: /content/titleinfo/{id} → /i3f/v20/{id}/manifest.
+    Supporta anche URL brevi /{id}, risolvendo l'ID publication dalla pagina.
+    """
+    m = re.search(r'e-rara\.ch/(?:[^?#]*/)?content/titleinfo/(\d+)', page_url, re.IGNORECASE)
+    if not m:
+        short_m = re.search(r'e-rara\.ch/(\d+)(?:[/?#]|$)', page_url, re.IGNORECASE)
+        if short_m:
+            short_url = f"https://www.e-rara.ch/{short_m.group(1)}"
+            r = _http_get(short_url, timeout=20)
+            if r and r.ok:
+                html = r.text or ""
+                m = re.search(r'publicationID"\s+value="(\d+)"', html)
+                if not m:
+                    m = re.search(r'/content/titleinfo/(\d+)', html)
+    if m:
+        doc_id = m.group(1)
+        return f"https://www.e-rara.ch/i3f/v20/{doc_id}/manifest"
     return None
 
 
@@ -385,6 +441,383 @@ def _build_matricula_manifest(page_url: str) -> str | None:
     return None
 
 
+def _build_bnc_roma_manifest(page_url: str) -> str | None:
+    """BNC Roma (digitale.bnc.roma.sbn.it): URL item-level gestito via manifest sintetico."""
+    if re.search(
+        r'digitale\.bnc\.roma\.sbn\.it/(printedbooks|publicisticmaterial|maps|picturematerial)/',
+        page_url,
+        re.IGNORECASE,
+    ):
+        return page_url
+    return None
+
+
+def _build_museogalileo_manifest(page_url: str) -> str | None:
+    """Museogalileo Digiteca: URL viewer/opera gestito via manifest sintetico."""
+    if re.search(r'bibdig\.museogalileo\.it/(?:Teca/Viewer\?an=|tecanew/opera\?bid=|TecaService/Teca/Opera\?bid=)', page_url, re.IGNORECASE):
+        return page_url
+    return None
+
+
+def _extract_internetculturale_params(page_url: str) -> tuple[str | None, str | None]:
+    """Estrae oai-id e teca da URL Internet Culturale (viewresource/iccu.jsp/magparser)."""
+    try:
+        p = urlparse(page_url)
+        q = parse_qs(p.query or "")
+    except Exception:
+        return None, None
+
+    raw_id = (q.get('id') or [None])[0]
+    raw_teca = (q.get('teca') or q.get('descSourceLevel2') or [None])[0]
+
+    oai_id = unquote_plus(raw_id).strip() if raw_id else None
+    teca = unquote_plus(raw_teca).strip() if raw_teca else None
+
+    if oai_id and not oai_id.lower().startswith('oai:'):
+        oai_id = None
+
+    if not teca:
+        teca = 'MagTeca - ICCU'
+
+    return oai_id, teca
+
+
+def _build_internetculturale_estense_manifest(page_url: str) -> str | None:
+    """Internet Culturale (Estense): URL item-level gestito via manifest sintetico."""
+    if not re.search(r'internetculturale\.it', page_url, re.IGNORECASE):
+        return None
+
+    # Supporta i percorsi tipici: viewresource, iccu.jsp e magparser.
+    if not re.search(r'/(?:it/16/search/viewresource|jmms/iccuviewer/iccu\.jsp|jmms/magparser)', page_url, re.IGNORECASE):
+        return None
+
+    oai_id, _teca = _extract_internetculturale_params(page_url)
+    if oai_id:
+        return page_url
+    return None
+
+
+def _fetch_internetculturale_mag(oai_id: str, teca_candidates: list[str], timeout: int = 35) -> tuple[str | None, str | None, str | None]:
+    """Fetch robusto MAG parser con retry su errori transitori e fallback teca."""
+    _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    transient = {408, 429, 500, 502, 503, 504}
+    last_err = None
+
+    for teca in teca_candidates:
+        mag_url = (
+            "https://www.internetculturale.it/jmms/magparser"
+            f"?id={quote_plus(oai_id)}&teca={quote_plus(teca)}&mode=all&fulltext=0"
+        )
+        for attempt in range(1, 4):
+            try:
+                r = requests.get(mag_url, headers=_h, timeout=timeout)
+                if r.ok:
+                    txt = r.text
+                    # Considera valido solo se contiene pagine o src immagini cacheman.
+                    if '<page' in txt.lower() or 'cacheman/normal/' in txt.lower():
+                        return txt, teca, mag_url
+                    last_err = f"payload senza pagine per teca='{teca}'"
+                    break
+                last_err = f"HTTP {r.status_code} su teca='{teca}'"
+                if r.status_code in transient and attempt < 3:
+                    time.sleep(0.7 * attempt)
+                    continue
+                break
+            except Exception as e:
+                last_err = f"errore rete teca='{teca}': {e}"
+                if attempt < 3:
+                    time.sleep(0.7 * attempt)
+                    continue
+                break
+
+    return None, None, last_err
+
+
+def build_internetculturale_estense_synthetic_manifest(page_url: str) -> dict | None:
+    """
+    Costruisce un manifest IIIF sintetico da Internet Culturale / MagTeca.
+    Flusso:
+    - estrae id OAI e teca da URL item-level
+    - chiama /jmms/magparser?id=<oai>&teca=<teca>&mode=all&fulltext=0
+    - converte i tag <page ... src="cacheman/normal/..."> in canvases diretti JPEG
+    """
+    oai_id, teca = _extract_internetculturale_params(page_url)
+    if not oai_id:
+        logger.error(f"[InternetCulturale] Impossibile estrarre OAI id da {page_url}")
+        return None
+
+    teca_candidates = []
+    if teca:
+        teca_candidates.append(teca)
+    if 'MagTeca - ICCU' not in teca_candidates:
+        teca_candidates.append('MagTeca - ICCU')
+
+    txt, teca_used, mag_url = _fetch_internetculturale_mag(oai_id, teca_candidates, timeout=35)
+    if not txt:
+        logger.error(f"[InternetCulturale] Errore fetch magparser per {oai_id}: {mag_url or 'n/a'}")
+        return None
+
+    teca = teca_used or teca or 'MagTeca - ICCU'
+
+    title_m = re.search(r'<title>([^<]+)</title>', txt, re.IGNORECASE)
+    title = title_m.group(1).strip() if title_m else oai_id
+
+    page_matches = list(re.finditer(r'<page\b([^>]+)>', txt, flags=re.IGNORECASE))
+    if not page_matches:
+        logger.error(f"[InternetCulturale] Nessun <page> trovato per {oai_id}")
+        return None
+
+    def _attr(attrs: str, name: str) -> str | None:
+        m = re.search(rf'{name}="([^"]+)"', attrs, re.IGNORECASE)
+        return m.group(1) if m else None
+
+    canvases = []
+    for idx, pm in enumerate(page_matches, start=1):
+        attrs = pm.group(1)
+        src = _attr(attrs, 'src')
+        if not src:
+            continue
+        if src.startswith('http://') or src.startswith('https://'):
+            img_url = src
+        else:
+            img_url = f"https://www.internetculturale.it/jmms/{src.lstrip('/')}"
+
+        label = _attr(attrs, 'name') or f"Pagina {idx}"
+        w = int(_attr(attrs, 'w') or 1000)
+        h = int(_attr(attrs, 'h') or 1400)
+
+        canvases.append({
+            '@id': f"synthetic://internetculturale_estense/{oai_id}/canvas/{idx}",
+            '@type': 'sc:Canvas',
+            'label': label,
+            'width': w,
+            'height': h,
+            'images': [{
+                '@type': 'oa:Annotation',
+                'motivation': 'sc:painting',
+                'resource': {
+                    '@type': 'dctypes:Image',
+                    '@id': img_url,
+                    'format': 'image/jpeg',
+                    'service': {
+                        '@context': 'internetculturale_cacheman_direct',
+                        '@id': img_url,
+                        'profile': 'internetculturale_cacheman_direct',
+                        'oai_id': oai_id,
+                        'teca': teca,
+                    }
+                }
+            }]
+        })
+
+    if not canvases:
+        logger.error(f"[InternetCulturale] Nessun canvas valido da magparser per {oai_id}")
+        return None
+
+    safe_id = re.sub(r'[^A-Za-z0-9._-]+', '_', oai_id)
+    logger.info(f"[InternetCulturale] Manifest sintetico: '{title}', {len(canvases)} immagini (teca={teca})")
+    return {
+        '@context': 'http://iiif.io/api/presentation/2/context.json',
+        '@id': f"synthetic://internetculturale_estense/{safe_id}",
+        '@type': 'sc:Manifest',
+        'label': title,
+        'sequences': [{
+            '@id': f"synthetic://internetculturale_estense/{safe_id}/sequence/1",
+            '@type': 'sc:Sequence',
+            'canvases': canvases,
+        }],
+    }
+
+
+def build_museogalileo_synthetic_manifest(page_url: str) -> dict | None:
+    """
+    Costruisce un manifest IIIF sintetico da endpoint Museogalileo TecaService.
+    Flusso:
+    - estrae bid/an dall'URL
+    - chiama TecaService/Teca/Opera?bid=...
+    - per ogni unit crea un canvas usando GetObject?id=<formato>&token=<token>
+    """
+    bid = None
+    m = re.search(r'[?&]bid=(\d+)', page_url, re.IGNORECASE)
+    if m:
+        bid = m.group(1)
+    if not bid:
+        m = re.search(r'[?&]an=(\d+)', page_url, re.IGNORECASE)
+        if m:
+            bid = m.group(1)
+    if not bid:
+        logger.error(f"[Museogalileo] Impossibile estrarre BID/AN da {page_url}")
+        return None
+
+    opera_url = f"https://bibdig.museogalileo.it/TecaService/Teca/Opera?bid={bid}"
+    try:
+        _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        r = requests.get(opera_url, headers=_h, timeout=25)
+        r.raise_for_status()
+        data = r.json()
+    except Exception as e:
+        logger.error(f"[Museogalileo] Errore fetch Opera {opera_url}: {e}")
+        return None
+
+    richiesta = data.get('richiesta', {}) if isinstance(data, dict) else {}
+    opera = data.get('opera', {}) if isinstance(data, dict) else {}
+    token = richiesta.get('token')
+    bid_eff = richiesta.get('bidEffettivo') or opera.get('bid') or str(bid)
+    title = (opera.get('titolo') or f"Opera Museogalileo {bid_eff}").strip()
+    units = opera.get('units') or []
+
+    if not token or not isinstance(units, list) or len(units) == 0:
+        logger.error(f"[Museogalileo] Dati Opera incompleti per bid={bid}: token={bool(token)} units={len(units) if isinstance(units, list) else 0}")
+        return None
+
+    canvases = []
+    for idx, u in enumerate(units, start=1):
+        formati = u.get('formati') or []
+        if not formati:
+            continue
+        preferred_high = next((f for f in formati if str(f.get('tipoFormato', '')).upper() == 'IMAGE_HIGH'), None)
+        preferred_low = next((f for f in formati if str(f.get('tipoFormato', '')).upper() == 'IMAGE_LOW'), None)
+        fmt = preferred_high or preferred_low or formati[0]
+        fmt_id = fmt.get('id')
+        if not fmt_id:
+            continue
+
+        img_url = f"https://bibdig.museogalileo.it/TecaService/Teca/GetObject?id={fmt_id}&token={token}"
+        label = (u.get('titolo') or u.get('numerazione') or f"Pagina {idx}").strip()
+        canvases.append({
+            '@id': f"synthetic://museogalileo/{bid_eff}/canvas/{idx}",
+            '@type': 'sc:Canvas',
+            'label': label,
+            'width': 1000,
+            'height': 1400,
+            'images': [{
+                '@type': 'oa:Annotation',
+                'motivation': 'sc:painting',
+                'resource': {
+                    '@type': 'dctypes:Image',
+                    '@id': img_url,
+                    'format': 'image/jpeg',
+                    'service': {
+                        '@context': 'museogalileo_teca_direct',
+                        '@id': img_url,
+                        'profile': 'museogalileo_teca_direct',
+                        'bid': str(bid_eff),
+                        'fmt_id': str(fmt_id),
+                    }
+                }
+            }]
+        })
+
+    if not canvases:
+        logger.error(f"[Museogalileo] Nessun canvas generato per bid={bid_eff}")
+        return None
+
+    logger.info(f"[Museogalileo] Manifest sintetico: '{title}', {len(canvases)} immagini")
+    return {
+        '@context': 'http://iiif.io/api/presentation/2/context.json',
+        '@id': f"synthetic://museogalileo/{bid_eff}",
+        '@type': 'sc:Manifest',
+        'label': title,
+        'sequences': [{
+            '@id': f"synthetic://museogalileo/{bid_eff}/sequence/1",
+            '@type': 'sc:Sequence',
+            'canvases': canvases,
+        }],
+    }
+
+
+def build_bnc_roma_synthetic_manifest(page_url: str, html: str | None = None) -> dict | None:
+    """
+    Costruisce un manifest IIIF sintetico per BNC Roma a partire dalla pagina item-level.
+    Estrae i path immagine /img/.../(thumbCrop|med), normalizza a /med e crea i canvas.
+    """
+    if html is None:
+        try:
+            _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+            r = requests.get(page_url, headers=_h, timeout=20)
+            r.raise_for_status()
+            r.encoding = 'utf-8'
+            html = r.text
+        except Exception as e:
+            logger.error(f"[BNC] Errore fetch pagina {page_url}: {e}")
+            return None
+
+    img_matches = re.findall(
+        r'(?:https?://digitale\.bnc\.roma\.sbn\.it)?(/img/(?:printedbooks|publicisticmaterial|maps|picturematerial)/[^"\'\s<>]+/(?:thumbCrop|med))',
+        html,
+        flags=re.IGNORECASE,
+    )
+    if not img_matches:
+        logger.error(f"[BNC] Nessun path immagine trovato in {page_url}")
+        return None
+
+    # Normalizza tutti i path a immagini medie (/med), poi deduplica preservando ordine
+    normalized = []
+    seen = set()
+    for p in img_matches:
+        p_med = re.sub(r'/(thumbCrop|med)$', '/med', p, flags=re.IGNORECASE)
+        abs_url = f"http://digitale.bnc.roma.sbn.it{p_med}"
+        if abs_url not in seen:
+            seen.add(abs_url)
+            normalized.append(abs_url)
+
+    if not normalized:
+        logger.error(f"[BNC] Nessuna URL immagine normalizzata in {page_url}")
+        return None
+
+    # Prova ordinamento per numero pagina finale (_NNN/med), fallback ordine di estrazione
+    def _page_num(u: str):
+        m = re.search(r'_(\d{1,4})/med$', u)
+        return int(m.group(1)) if m else None
+
+    if all(_page_num(u) is not None for u in normalized):
+        normalized.sort(key=lambda u: _page_num(u))
+
+    title_m = re.search(r'<title>([^<]+)</title>', html, re.IGNORECASE)
+    title = title_m.group(1).strip() if title_m else "Documento BNC Roma"
+
+    bnc_id = re.sub(r'^https?://digitale\.bnc\.roma\.sbn\.it/', '', page_url.strip('/'), flags=re.IGNORECASE)
+    bnc_id = re.sub(r'[^A-Za-z0-9_\-/]', '_', bnc_id)
+
+    def _make_canvas(idx: int, img_url: str) -> dict:
+        return {
+            '@id': f"synthetic://bnc_roma/{bnc_id}/canvas/{idx+1}",
+            '@type': 'sc:Canvas',
+            'label': f"Pagina {idx+1}",
+            'width': 1000,
+            'height': 1400,
+            'images': [{
+                '@type': 'oa:Annotation',
+                'motivation': 'sc:painting',
+                'resource': {
+                    '@type': 'dctypes:Image',
+                    '@id': img_url,
+                    'format': 'image/jpeg',
+                    'service': {
+                        '@context': 'bnc_direct',
+                        '@id': img_url,
+                        'profile': 'bnc_direct',
+                    },
+                },
+            }],
+        }
+
+    canvases = [_make_canvas(i, u) for i, u in enumerate(normalized)]
+    logger.info(f"[BNC] Manifest sintetico: '{title}', {len(canvases)} immagini")
+
+    return {
+        '@context': 'http://iiif.io/api/presentation/2/context.json',
+        '@id': f"synthetic://bnc_roma/{bnc_id}",
+        '@type': 'sc:Manifest',
+        'label': title,
+        'sequences': [{
+            '@id': f"synthetic://bnc_roma/{bnc_id}/sequence/1",
+            '@type': 'sc:Sequence',
+            'canvases': canvases,
+        }],
+    }
+
+
 def build_matricula_synthetic_manifest(page_url: str, html: str | None = None) -> dict | None:
     """
     Costruisce un manifest IIIF sintetico per un registro Matricula Online.
@@ -490,13 +923,19 @@ def build_matricula_synthetic_manifest(page_url: str, html: str | None = None) -
 # Mappa portale → funzione builder
 _PORTAL_BUILDERS = {
     "gallica":          _build_gallica_manifest,
+    "vatlib":           _build_vatlib_manifest,
     "internet_archive": _build_ia_manifest,
+    "e_rara":           _build_e_rara_manifest,
     "e_codices":        _build_ecodices_manifest,
+    "e_manuscripta":    _build_e_manuscripta_manifest,
+    "museogalileo":     _build_museogalileo_manifest,
+    "internetculturale_estense": _build_internetculturale_estense_manifest,
     "heidelberg":       _build_heidelberg_manifest,
     "brixiana":         _build_memooria_manifest,
     "memooria":         _build_memooria_manifest,
     "findbuch":         _build_findbuch_manifest,
     "matricula":        _build_matricula_manifest,
+    "bnc_roma":         _build_bnc_roma_manifest,
 }
 
 
@@ -506,7 +945,7 @@ def resolve_manifest_url(page_url: str, portale: str) -> str | None:
     usando la logica specifica del portale.
 
     - "manifest_diretto": l'URL è già il manifest, restituisce page_url invariato.
-    - "gallica", "internet_archive", "e_codices", "heidelberg": costruisce URL manifest.
+    - "gallica", "internet_archive", "e_rara", "e_codices", "e_manuscripta", "heidelberg": costruisce URL manifest.
     - "antenati", "bodleian" (e altri): restituisce None → il chiamante usa
       Selenium/Playwright + scraping HTML (percorso legacy).
     """

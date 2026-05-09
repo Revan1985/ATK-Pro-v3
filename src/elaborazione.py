@@ -5,6 +5,7 @@ import json
 import time
 import logging
 import concurrent.futures
+import requests
 from logging.handlers import RotatingFileHandler
 import shutil
 from PIL import Image
@@ -91,6 +92,92 @@ def _last_segment(s: str):
         return None
     s = s.rstrip('/').split('/')[-1]
     return s or None
+
+
+def _museogalileo_extract_bid(url: str):
+    """Estrae BID/AN da URL viewer/opera Museogalileo."""
+    if not url:
+        return None
+    m = re.search(r'[?&]bid=(\d+)', url, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    m = re.search(r'[?&]an=(\d+)', url, re.IGNORECASE)
+    if m:
+        return m.group(1)
+    return None
+
+
+def _museogalileo_refresh_token(bid: str, timeout: int = 25):
+    """Recupera token aggiornato da TecaService Opera."""
+    if not bid:
+        return None
+    opera_url = f"https://bibdig.museogalileo.it/TecaService/Teca/Opera?bid={bid}"
+    try:
+        _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        r = requests.get(opera_url, headers=_h, timeout=timeout)
+        r.raise_for_status()
+        data = r.json() if r.content else {}
+        richiesta = data.get('richiesta', {}) if isinstance(data, dict) else {}
+        token = richiesta.get('token')
+        return token if token else None
+    except Exception as e:
+        logger.warning(f"[Museogalileo] Refresh token fallito bid={bid}: {e}")
+        return None
+
+
+def _museogalileo_parse_getobject_url(img_url: str):
+    """Estrae id/token da URL GetObject Museogalileo."""
+    if not img_url:
+        return None, None
+    m_id = re.search(r'[?&]id=([^&]+)', img_url, re.IGNORECASE)
+    m_tk = re.search(r'[?&]token=([^&]+)', img_url, re.IGNORECASE)
+    fmt_id = m_id.group(1) if m_id else None
+    token = m_tk.group(1) if m_tk else None
+    return fmt_id, token
+
+
+def _download_museogalileo_image(img_url: str, bid_hint: str = None, timeout: int = 45):
+    """Download robusto immagine Museogalileo con retry e refresh token."""
+    _h = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+    current_url = img_url
+    last_status = None
+    retried_with_new_token = False
+
+    for attempt in range(1, 4):
+        try:
+            r = requests.get(current_url, headers=_h, timeout=timeout)
+            last_status = r.status_code
+            if r.ok and len(r.content) > 0:
+                return r.content, r.status_code, current_url
+
+            # Token scaduto/non valido: prova refresh una sola volta.
+            if r.status_code in (401, 403) and not retried_with_new_token:
+                fmt_id, _old_token = _museogalileo_parse_getobject_url(current_url)
+                bid = bid_hint
+                if not bid:
+                    bid = _museogalileo_extract_bid(current_url)
+                new_token = _museogalileo_refresh_token(bid) if bid else None
+                if new_token and fmt_id:
+                    current_url = f"https://bibdig.museogalileo.it/TecaService/Teca/GetObject?id={fmt_id}&token={new_token}"
+                    retried_with_new_token = True
+                    logger.info(f"[Museogalileo] Token aggiornato per bid={bid}, nuovo tentativo download")
+                    continue
+
+            # Retry su errori transitori lato rete/server.
+            if r.status_code in (408, 429, 500, 502, 503, 504) and attempt < 3:
+                time.sleep(0.7 * attempt)
+                continue
+
+            return None, r.status_code, current_url
+        except Exception as e:
+            if attempt < 3:
+                logger.warning(f"[Museogalileo] Tentativo {attempt}/3 fallito: {e}")
+                time.sleep(0.7 * attempt)
+                continue
+            logger.error(f"[Museogalileo] Errore download definitivo: {e}")
+            return None, last_status, current_url
+
+    return None, last_status, current_url
 
 
 def _normalize_format(fmt):
@@ -315,12 +402,18 @@ class Elaborazione:
             # Determina referer in base al portale (per header HTTP corretti)
             _portale_referers = {
                 "gallica":          "https://gallica.bnf.fr",
+                "vatlib":           "https://digi.vatlib.it",
                 "internet_archive": "https://archive.org",
+                "e_rara":           "https://www.e-rara.ch",
                 "e_codices":        "https://www.e-codices.unifr.ch",
+                "e_manuscripta":    "https://www.e-manuscripta.ch",
+                "museogalileo":     "https://opac.museogalileo.it",
+                "internetculturale_estense": "https://www.internetculturale.it",
                 "heidelberg":       "https://digi.ub.uni-heidelberg.de",
                 "bodleian":         "https://digital.bodleian.ox.ac.uk",
                 "findbuch":         "https://www.findbuch.net",
                 "matricula":        "https://data.matricula-online.eu",
+                "bnc_roma":         "http://digitale.bnc.roma.sbn.it",
             }
             portale_key = self.portale.lower().replace("-", "_").replace(" ", "_")
             referer = _portale_referers.get(portale_key)
@@ -381,6 +474,64 @@ class Elaborazione:
                     return manifest
                 else:
                     logger.error("[IA] Impossibile costruire manifest sintetico per Internet Archive")
+                    return None
+
+            # --- BNC Roma: manifest sintetico da HTML item-level ---
+            if portale_key == "bnc_roma":
+                from manifest_utils import build_bnc_roma_synthetic_manifest
+                _scraped_html = getattr(self, '_scraped_html', None)
+                manifest = build_bnc_roma_synthetic_manifest(self.ark_url, html=_scraped_html)
+                if manifest:
+                    os.makedirs(working_folder, exist_ok=True)
+                    manifest_filename = f"manifest_{container_id}_{titolo_pulito}.json"
+                    manifest_path = os.path.join(working_folder, manifest_filename)
+                    with open(manifest_path, 'w', encoding='utf-8') as _f:
+                        json.dump(manifest, _f, ensure_ascii=False, indent=2)
+                    self.manifest_path = manifest_path
+                    self.output_dir = working_folder
+                    n_canvas = len(manifest['sequences'][0]['canvases'])
+                    logger.info(f"[BNC] Manifest sintetico salvato: {manifest_path} ({n_canvas} canvas)")
+                    return manifest
+                else:
+                    logger.error("[BNC] Impossibile costruire manifest sintetico per BNC Roma")
+                    return None
+
+            # --- Museogalileo Digiteca: manifest sintetico da TecaService ---
+            if portale_key == "museogalileo":
+                from manifest_utils import build_museogalileo_synthetic_manifest
+                manifest = build_museogalileo_synthetic_manifest(self.ark_url)
+                if manifest:
+                    os.makedirs(working_folder, exist_ok=True)
+                    manifest_filename = f"manifest_{container_id}_{titolo_pulito}.json"
+                    manifest_path = os.path.join(working_folder, manifest_filename)
+                    with open(manifest_path, 'w', encoding='utf-8') as _f:
+                        json.dump(manifest, _f, ensure_ascii=False, indent=2)
+                    self.manifest_path = manifest_path
+                    self.output_dir = working_folder
+                    n_canvas = len(manifest['sequences'][0]['canvases'])
+                    logger.info(f"[Museogalileo] Manifest sintetico salvato: {manifest_path} ({n_canvas} canvas)")
+                    return manifest
+                else:
+                    logger.error("[Museogalileo] Impossibile costruire manifest sintetico")
+                    return None
+
+            # --- Internet Culturale / Estense: manifest sintetico da magparser ---
+            if portale_key == "internetculturale_estense":
+                from manifest_utils import build_internetculturale_estense_synthetic_manifest
+                manifest = build_internetculturale_estense_synthetic_manifest(self.ark_url)
+                if manifest:
+                    os.makedirs(working_folder, exist_ok=True)
+                    manifest_filename = f"manifest_{container_id}_{titolo_pulito}.json"
+                    manifest_path = os.path.join(working_folder, manifest_filename)
+                    with open(manifest_path, 'w', encoding='utf-8') as _f:
+                        json.dump(manifest, _f, ensure_ascii=False, indent=2)
+                    self.manifest_path = manifest_path
+                    self.output_dir = working_folder
+                    n_canvas = len(manifest['sequences'][0]['canvases'])
+                    logger.info(f"[InternetCulturale] Manifest sintetico salvato: {manifest_path} ({n_canvas} canvas)")
+                    return manifest
+                else:
+                    logger.error("[InternetCulturale] Impossibile costruire manifest sintetico")
                     return None
 
             # Scarica manifest (requests, con referer del portale)
@@ -600,8 +751,108 @@ class Elaborazione:
                     create_pdf_from_images(_tmp_dir, _pdf_out)
                     shutil.rmtree(_tmp_dir, ignore_errors=True)
                 return True
-            # --- Findbuch: download via gtpc.php con sessione PHP ---
             svc = canvas.get('images', [{}])[0].get('resource', {}).get('service', {})
+            # --- BNC Roma: download diretto JPEG ---
+            if isinstance(svc, dict) and svc.get('@context') == 'bnc_direct':
+                from io import BytesIO as _BytesIO
+                import requests as _req
+                _img_url = svc.get('@id') or service_id
+                _h_bnc = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+                _r_bnc = _req.get(_img_url, headers=_h_bnc, timeout=45)
+                if not _r_bnc.ok:
+                    logger.error(f"[BNC] HTTP {_r_bnc.status_code} per documento: {_img_url[:80]}")
+                    return False
+                final_img = Image.open(_BytesIO(_r_bnc.content)).copy()
+                logger.info(f"[BNC] Documento scaricato: {_r_bnc.headers.get('content-length','?')} byte")
+                ua = _parse_ua_from_url(self.ark_url)
+                ark = _parse_ark_from_url(self.ark_url)
+                page_label = canvas.get('label', None)
+                meta = build_image_metadata(ua=ua, ark=ark, canvas_id="page_1", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                formats = self.formats if hasattr(self, 'formats') and self.formats else state.get('formats', [])
+                if not formats:
+                    formats = ['PNG', 'JPEG', 'TIFF']
+                _norm_fmts = [_normalize_format(f) for f in formats]
+                _img_fmts = [f for f in formats if _normalize_format(f) != 'PDF']
+                _pdf_in_fmts = 'PDF' in _norm_fmts
+                if _img_fmts:
+                    save_image_variants(final_img, self.output_dir, self.nome_file, _img_fmts, meta=meta)
+                if _pdf_in_fmts:
+                    _tmp_dir = os.path.join(self.output_dir, "_tmp_pdf_images")
+                    os.makedirs(_tmp_dir, exist_ok=True)
+                    _tmp_png = os.path.join(_tmp_dir, f"{self.nome_file}_pdftmp.png")
+                    final_img.save(_tmp_png, format='PNG')
+                    _pdf_out = os.path.join(self.output_dir, f"{self.nome_file}.pdf")
+                    create_pdf_from_images(_tmp_dir, _pdf_out)
+                    shutil.rmtree(_tmp_dir, ignore_errors=True)
+                return True
+            # --- Internet Culturale: download diretto JPEG cacheman ---
+            if isinstance(svc, dict) and svc.get('@context') == 'internetculturale_cacheman_direct':
+                from io import BytesIO as _BytesIO
+                import requests as _req
+                _img_url = svc.get('@id') or service_id
+                _h_ic = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+                _r_ic = _req.get(_img_url, headers=_h_ic, timeout=45)
+                if not _r_ic.ok:
+                    logger.error(f"[InternetCulturale] HTTP {_r_ic.status_code} per documento: {_img_url[:80]}")
+                    return False
+                final_img = Image.open(_BytesIO(_r_ic.content)).copy()
+                logger.info(f"[InternetCulturale] Documento scaricato: {_r_ic.headers.get('content-length','?')} byte")
+                ua = _parse_ua_from_url(self.ark_url)
+                ark = _parse_ark_from_url(self.ark_url)
+                page_label = canvas.get('label', None)
+                meta = build_image_metadata(ua=ua, ark=ark, canvas_id="page_1", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                formats = self.formats if hasattr(self, 'formats') and self.formats else state.get('formats', [])
+                if not formats:
+                    formats = ['PNG', 'JPEG', 'TIFF']
+                _norm_fmts = [_normalize_format(f) for f in formats]
+                _img_fmts = [f for f in formats if _normalize_format(f) != 'PDF']
+                _pdf_in_fmts = 'PDF' in _norm_fmts
+                if _img_fmts:
+                    save_image_variants(final_img, self.output_dir, self.nome_file, _img_fmts, meta=meta)
+                if _pdf_in_fmts:
+                    _tmp_dir = os.path.join(self.output_dir, "_tmp_pdf_images")
+                    os.makedirs(_tmp_dir, exist_ok=True)
+                    _tmp_png = os.path.join(_tmp_dir, f"{self.nome_file}_pdftmp.png")
+                    final_img.save(_tmp_png, format='PNG')
+                    _pdf_out = os.path.join(self.output_dir, f"{self.nome_file}.pdf")
+                    create_pdf_from_images(_tmp_dir, _pdf_out)
+                    shutil.rmtree(_tmp_dir, ignore_errors=True)
+                return True
+            # --- Museogalileo: download diretto JPEG da TecaService ---
+            if isinstance(svc, dict) and svc.get('@context') == 'museogalileo_teca_direct':
+                from io import BytesIO as _BytesIO
+                _img_url = svc.get('@id') or service_id
+                _bid_hint = svc.get('bid') if isinstance(svc, dict) else None
+                if not _bid_hint:
+                    _bid_hint = _museogalileo_extract_bid(self.ark_url)
+                _content, _status, _resolved_url = _download_museogalileo_image(_img_url, bid_hint=_bid_hint, timeout=45)
+                if not _content:
+                    logger.error(f"[Museogalileo] HTTP {_status} per documento: {_resolved_url[:80] if _resolved_url else _img_url[:80]}")
+                    return False
+                final_img = Image.open(_BytesIO(_content)).copy()
+                logger.info(f"[Museogalileo] Documento scaricato: {len(_content)} byte")
+                ua = _parse_ua_from_url(self.ark_url)
+                ark = _parse_ark_from_url(self.ark_url)
+                page_label = canvas.get('label', None)
+                meta = build_image_metadata(ua=ua, ark=ark, canvas_id="page_1", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                formats = self.formats if hasattr(self, 'formats') and self.formats else state.get('formats', [])
+                if not formats:
+                    formats = ['PNG', 'JPEG', 'TIFF']
+                _norm_fmts = [_normalize_format(f) for f in formats]
+                _img_fmts = [f for f in formats if _normalize_format(f) != 'PDF']
+                _pdf_in_fmts = 'PDF' in _norm_fmts
+                if _img_fmts:
+                    save_image_variants(final_img, self.output_dir, self.nome_file, _img_fmts, meta=meta)
+                if _pdf_in_fmts:
+                    _tmp_dir = os.path.join(self.output_dir, "_tmp_pdf_images")
+                    os.makedirs(_tmp_dir, exist_ok=True)
+                    _tmp_png = os.path.join(_tmp_dir, f"{self.nome_file}_pdftmp.png")
+                    final_img.save(_tmp_png, format='PNG')
+                    _pdf_out = os.path.join(self.output_dir, f"{self.nome_file}.pdf")
+                    create_pdf_from_images(_tmp_dir, _pdf_out)
+                    shutil.rmtree(_tmp_dir, ignore_errors=True)
+                return True
+            # --- Findbuch: download via gtpc.php con sessione PHP ---
             if isinstance(svc, dict) and svc.get('@context') == 'findbuch_gtpc':
                 from io import BytesIO as _BytesIO
                 import requests as _req
@@ -884,8 +1135,96 @@ class Elaborazione:
                             except Exception as _e:
                                 logger.error(f"[PDF] Errore PNG Matricula canvas {idx}: {_e}")
                         return  # nessuna cartella tile da pulire
-                    # --- Findbuch: download via gtpc.php con sessione PHP ---
                     _svc = canvas.get('images', [{}])[0].get('resource', {}).get('service', {})
+                    # --- BNC Roma: download diretto JPEG ---
+                    if isinstance(_svc, dict) and _svc.get('@context') == 'bnc_direct':
+                        from io import BytesIO as _BytesIO
+                        import requests as _req
+                        _img_url = _svc.get('@id') or service_id
+                        _h_bnc = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+                        _r_bnc = _req.get(_img_url, headers=_h_bnc, timeout=45)
+                        if _r_bnc.ok and len(_r_bnc.content) > 0:
+                            final_img = Image.open(_BytesIO(_r_bnc.content)).copy()
+                            logger.info(f"[BNC] Pagina {idx} scaricata: {len(_r_bnc.content)} byte")
+                        else:
+                            logger.error(f"[BNC] Errore download pagina {idx}: HTTP {_r_bnc.status_code} size={len(_r_bnc.content)}")
+                            final_img = None
+                        ua = _parse_ua_from_url(self.ark_url)
+                        ark = _parse_ark_from_url(self.ark_url)
+                        page_label = canvas.get('label', None)
+                        meta = build_image_metadata(ua=ua, ark=ark, canvas_id=f"page_{idx}", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                        _use_img = final_img if final_img is not None else _make_placeholder_image(
+                            str(_svc.get('@id', '')), glossario_data=self.glossario_data, lingua=self.lingua,
+                            canvas_url=canvas.get('@id') or canvas.get('id'))
+                        if image_formats:
+                            save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)
+                        if pdf_in_formats:
+                            _pdf_png_path = os.path.join(temp_pdf_dir, f"{nome_base}_pdftmp.png")
+                            try:
+                                _use_img.save(_pdf_png_path, format='PNG')
+                            except Exception as _e:
+                                logger.error(f"[PDF] Errore PNG BNC canvas {idx}: {_e}")
+                        return  # nessuna cartella tile da pulire
+                    # --- Internet Culturale: download diretto JPEG cacheman ---
+                    if isinstance(_svc, dict) and _svc.get('@context') == 'internetculturale_cacheman_direct':
+                        from io import BytesIO as _BytesIO
+                        import requests as _req
+                        _img_url = _svc.get('@id') or service_id
+                        _h_ic = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+                        _r_ic = _req.get(_img_url, headers=_h_ic, timeout=45)
+                        if _r_ic.ok and len(_r_ic.content) > 0:
+                            final_img = Image.open(_BytesIO(_r_ic.content)).copy()
+                            logger.info(f"[InternetCulturale] Pagina {idx} scaricata: {len(_r_ic.content)} byte")
+                        else:
+                            logger.error(f"[InternetCulturale] Errore download pagina {idx}: HTTP {_r_ic.status_code} size={len(_r_ic.content)}")
+                            final_img = None
+                        ua = _parse_ua_from_url(self.ark_url)
+                        ark = _parse_ark_from_url(self.ark_url)
+                        page_label = canvas.get('label', None)
+                        meta = build_image_metadata(ua=ua, ark=ark, canvas_id=f"page_{idx}", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                        _use_img = final_img if final_img is not None else _make_placeholder_image(
+                            str(_svc.get('@id', '')), glossario_data=self.glossario_data, lingua=self.lingua,
+                            canvas_url=canvas.get('@id') or canvas.get('id'))
+                        if image_formats:
+                            save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)
+                        if pdf_in_formats:
+                            _pdf_png_path = os.path.join(temp_pdf_dir, f"{nome_base}_pdftmp.png")
+                            try:
+                                _use_img.save(_pdf_png_path, format='PNG')
+                            except Exception as _e:
+                                logger.error(f"[PDF] Errore PNG InternetCulturale canvas {idx}: {_e}")
+                        return  # nessuna cartella tile da pulire
+                    # --- Museogalileo: download diretto JPEG da TecaService ---
+                    if isinstance(_svc, dict) and _svc.get('@context') == 'museogalileo_teca_direct':
+                        from io import BytesIO as _BytesIO
+                        _img_url = _svc.get('@id') or service_id
+                        _bid_hint = _svc.get('bid') if isinstance(_svc, dict) else None
+                        if not _bid_hint:
+                            _bid_hint = _museogalileo_extract_bid(self.ark_url)
+                        _content, _status, _resolved_url = _download_museogalileo_image(_img_url, bid_hint=_bid_hint, timeout=45)
+                        if _content and len(_content) > 0:
+                            final_img = Image.open(_BytesIO(_content)).copy()
+                            logger.info(f"[Museogalileo] Pagina {idx} scaricata: {len(_content)} byte")
+                        else:
+                            logger.error(f"[Museogalileo] Errore download pagina {idx}: HTTP {_status} url={_resolved_url or _img_url}")
+                            final_img = None
+                        ua = _parse_ua_from_url(self.ark_url)
+                        ark = _parse_ark_from_url(self.ark_url)
+                        page_label = canvas.get('label', None)
+                        meta = build_image_metadata(ua=ua, ark=ark, canvas_id=f"page_{idx}", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                        _use_img = final_img if final_img is not None else _make_placeholder_image(
+                            str(_svc.get('@id', '')), glossario_data=self.glossario_data, lingua=self.lingua,
+                            canvas_url=canvas.get('@id') or canvas.get('id'))
+                        if image_formats:
+                            save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)
+                        if pdf_in_formats:
+                            _pdf_png_path = os.path.join(temp_pdf_dir, f"{nome_base}_pdftmp.png")
+                            try:
+                                _use_img.save(_pdf_png_path, format='PNG')
+                            except Exception as _e:
+                                logger.error(f"[PDF] Errore PNG Museogalileo canvas {idx}: {_e}")
+                        return  # nessuna cartella tile da pulire
+                    # --- Findbuch: download via gtpc.php con sessione PHP ---
                     if isinstance(_svc, dict) and _svc.get('@context') == 'findbuch_gtpc':
                         from io import BytesIO as _BytesIO
                         import requests as _req

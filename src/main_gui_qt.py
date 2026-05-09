@@ -832,8 +832,12 @@ class MainWindow(QMainWindow):
         PORTALI_GROUPED = [
             ("── Italia ──", [
                 ("antenati",         "Antenati (Cultura.gov.it)"),
+                ("bnc_roma",         "BNC Roma digitale"),
+                ("museogalileo",     "Museo Galileo Digiteca"),
+                ("internetculturale_estense", "Internet Culturale (Estense/ICCU)"),
                 ("brixiana",         "Brixiana (Biblioteca Queriniana Brescia)"),
                 ("memooria",         "Memooria/Jarvis (qualsiasi biblioteca)"),
+                ("vatlib",           "DigiVatLib (Biblioteca Apostolica Vaticana)"),
             ]),
             ("── Alto Adige / Südtirol ──", [
                 ("findbuch",         "Kirchenbücher Südtirol (findbuch.net)"),
@@ -851,7 +855,9 @@ class MainWindow(QMainWindow):
                 ("bodleian",         "Bodleian Libraries Oxford"),
             ]),
             ("── Svizzera ──", [
+                ("e_rara",           "e-rara"),
                 ("e_codices",        "e-codices (Unifr)"),
+                ("e_manuscripta",    "e-manuscripta"),
             ]),
             ("── Internazionale ──", [
                 ("internet_archive", "Internet Archive"),
