@@ -6,7 +6,7 @@ class KeyManager:
     def __init__(self, app_name="ATK-Pro"):
         self.app_name = app_name
         self.file_path = self._get_keys_file_path()
-        self.keys = {"Gemini": [], "OpenAI": [], "Claude": []}
+        self.keys = {"Gemini": [], "OpenAI": [], "Claude": [], "DeepSeek": []}
         self.current_indices = {}
         self.load_keys()
 
@@ -20,7 +20,7 @@ class KeyManager:
 
     def load_keys(self):
         # Reset
-        self.keys = {"Gemini": [], "OpenAI": [], "Claude": []}
+        self.keys = {"Gemini": [], "OpenAI": [], "Claude": [], "DeepSeek": []}
         if not os.path.exists(self.file_path):
             self._create_default_file()
             return
@@ -43,6 +43,7 @@ class KeyManager:
                     if "GEMINI" in prov.upper(): prov = "Gemini"
                     elif "OPENAI" in prov.upper(): prov = "OpenAI"
                     elif "CLAUDE" in prov.upper() or "ANTHROPIC" in prov.upper(): prov = "Claude"
+                    elif "DEEPSEEK" in prov.upper(): prov = "DeepSeek"
                     
                     if prov in self.keys and key:
                         self.keys[prov].append(key)
@@ -58,6 +59,7 @@ class KeyManager:
                 writer.writerow(['Gemini', '', 'Inserisci qui la tua chiave Gemini (Censimento/Genealogia)'])
                 writer.writerow(['OpenAI', '', 'Inserisci qui la tua chiave OpenAI (GPT-4o)'])
                 writer.writerow(['Claude', '', 'Inserisci qui la tua chiave Claude (Anthropic)'])
+                writer.writerow(['DeepSeek', '', 'Inserisci qui la tua chiave DeepSeek'])
         except: pass
 
     def get_all_keys(self, provider):
