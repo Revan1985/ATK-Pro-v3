@@ -430,11 +430,13 @@ class RicercaAssistitaAIDialog(QDialog):
         default_name = "risultato_ai.md"
         file_path, _ = QFileDialog.getSaveFileName(
             self,
-            "Salva risultato AI",
+            self.gm("Salva risultato AI"),
             os.path.join(default_dir, default_name),
-            "File Markdown (*.md);;File di testo (*.txt);;Tutti i file (*)"
+            f"{self.gm('File Markdown')} (*.md);;{self.gm('File di testo')} (*.txt);;{self.gm('Tutti i file')} (*)"
         )
         if file_path:
+            if not file_path.lower().endswith((".md", ".txt")):
+                file_path += ".md"
             try:
                 # Usa il markdown raggruppato come in anteprima
                 md = self._get_grouped_markdown()
@@ -447,9 +449,13 @@ class RicercaAssistitaAIDialog(QDialog):
                     txt = re.sub(r'<[^>]+>', '', md.replace('<br>', '\n'))
                     with open(file_path, "w", encoding="utf-8") as f:
                         f.write(txt)
-                QMessageBox.information(self, "Salvataggio riuscito", f"Risultato AI salvato in:\n{file_path}")
+                QMessageBox.information(
+                    self,
+                    self.gm("Salvataggio riuscito"),
+                    self.gm("Risultato AI salvato in:\n{file_path}").format(file_path=file_path),
+                )
             except Exception as e:
-                QMessageBox.critical(self, "Errore salvataggio", str(e))
+                QMessageBox.critical(self, self.gm("Errore salvataggio"), str(e))
 
     def _on_save_result_html(self):
         from PySide6.QtWidgets import QFileDialog
@@ -564,7 +570,7 @@ h1, h2, h3, h4 {{
         th_html = ""
         for col in columns:
             w = width_map.get(col, "15%")
-            col_safe = html.escape(str(col), quote=True)
+            col_safe = html.escape(self.gm(str(col)), quote=True)
             th_html += f'<th style="width: {w}; border: 1px solid #a67c52; background-color: #2b2b2b; color: #e6c891; padding: 8px; text-align: left; font-size: 13px;">{col_safe}</th>'
             
         tr_html = ""
@@ -642,12 +648,12 @@ h1, h2, h3, h4 {{
                     mapped_row = self._map_raw_row_to_headers(row)
                     key = mapped_row.get(field, None)
                     if not key:
-                        key = mapped_row.get("Portale", "Sconosciuto")
+                        key = mapped_row.get("Portale", self.gm("Sconosciuto"))
                     
                     import re
                     clean_key = re.sub(r'\*+', '', str(key)).strip()
                     if not clean_key:
-                        clean_key = "Sconosciuto"
+                        clean_key = self.gm("Sconosciuto")
                         
                     if clean_key not in grouped:
                         grouped[clean_key] = []
@@ -664,7 +670,7 @@ h1, h2, h3, h4 {{
             
             md = ""
             for clean_key, rows_in_group in grouped.items():
-                field_safe = html.escape(str(field), quote=True)
+                field_safe = html.escape(self.gm(str(field)), quote=True)
                 key_safe = html.escape(str(clean_key), quote=True)
                 md += f'<h3 style="font-family: \'Segoe UI\', Arial, sans-serif; color: #a67c52; margin-top: 16px; margin-bottom: 8px;">{field_safe}: {key_safe}</h3>\n'
                 
@@ -690,7 +696,8 @@ h1, h2, h3, h4 {{
         except Exception as e:
             err = html.escape(str(e), quote=True)
             raw = html.escape(str(self._last_result_data), quote=True)
-            return f"<p>Errore nel raggruppamento dati: {err}</p><pre>{raw}</pre>"
+            error_label = html.escape(self.gm("Errore nel raggruppamento dati"), quote=True)
+            return f"<p>{error_label}: {err}</p><pre>{raw}</pre>"
 
     def open_key_manager(self):
         try:
@@ -702,7 +709,11 @@ h1, h2, h3, h4 {{
                     pass
             os.startfile(km.file_path)
         except Exception as e:
-            QMessageBox.critical(self, "Errore", f"Impossibile aprire il file delle chiavi: {e}")
+            QMessageBox.critical(
+                self,
+                self.gm("Errore"),
+                self.gm("Impossibile aprire il file delle chiavi: {err}").format(err=e),
+            )
 
     def _load_notes(self):
         try:
@@ -722,7 +733,7 @@ h1, h2, h3, h4 {{
         elif idx == 0 and note_text:
             # Se la nota è nuova, chiedi un nome
             from PySide6.QtWidgets import QInputDialog
-            new_key, ok = QInputDialog.getText(self, "Nuova nota", "Nome per la nota:")
+            new_key, ok = QInputDialog.getText(self, self.gm("Nuova nota"), self.gm("Nome per la nota:"))
             if ok and new_key:
                 self.notes[new_key] = note_text
                 self._refresh_notes_combo()
@@ -765,27 +776,45 @@ h1, h2, h3, h4 {{
 
     def _update_grouped_preview(self):
         try:
+            legend_title = html.escape(self.gm("Legenda risultati AI:"), quote=True)
+            legend_items = [
+                ("Provider", self.gm("Il servizio AI che ha generato la risposta (es. Claude, Gemini, ecc.)")),
+                ("Slot", self.gm("La posizione della chiave usata nel caveau per quel provider")),
+                ("Tabella", self.gm("Ogni colonna corrisponde a un'informazione richiesta dal prompt (es. Portale, Motivazione, Query di esempio, Periodo, Tipo atti)")),
+            ]
+            legend_items_html = "".join(
+                "<li><b style='color: #e6c891;'>{label}</b>: {description}</li>".format(
+                    label=html.escape(self.gm(label), quote=True),
+                    description=html.escape(description, quote=True),
+                )
+                for label, description in legend_items
+            )
             legenda = (
                 "<div style=\"font-family: 'Segoe UI', Arial, sans-serif; color: #ffffff; margin-bottom: 12px;\">"
-                "<b style='color: #e6c891; font-size: 15px;'>Legenda risultati AI:</b><br>"
+                f"<b style='color: #e6c891; font-size: 15px;'>{legend_title}</b><br>"
                 "<ul style='margin-top: 4px; margin-bottom: 8px; padding-left: 20px; font-size: 13px; line-height: 1.4; color: #e0e0e0;'>"
-                "<li><b style='color: #e6c891;'>Provider</b>: il servizio AI che ha generato la risposta (es. Claude, Gemini, ecc.)</li>"
-                "<li><b style='color: #e6c891;'>Slot</b>: la posizione della chiave usata nel caveau per quel provider</li>"
-                "<li><b style='color: #e6c891;'>Tabella</b>: ogni colonna corrisponde a un'informazione richiesta dal prompt (es. Portale, Motivazione, Query di esempio, Periodo, Tipo atti)</li>"
+                f"{legend_items_html}"
                 "</ul>"
                 "</div>"
             )
             md = self._get_grouped_markdown()
             self.txt_result.setHtml(legenda + md)
         except Exception as e:
-            self.txt_result.setHtml(f"<div style='color: #ff6b6b; font-family: \"Segoe UI\", sans-serif; font-size: 14px;'>Errore caricamento anteprima: {e}<br><br>Dati:<br>{self._last_result_data}</div>")
+            error_title = html.escape(self.gm("Errore caricamento anteprima"), quote=True)
+            data_label = html.escape(self.gm("Dati"), quote=True)
+            err = html.escape(str(e), quote=True)
+            raw = html.escape(str(self._last_result_data), quote=True)
+            self.txt_result.setHtml(f"<div style='color: #ff6b6b; font-family: \"Segoe UI\", sans-serif; font-size: 14px;'>{error_title}: {err}<br><br>{data_label}:<br>{raw}</div>")
 
     def show_error(self, e):
         self.btn_run.setEnabled(True)
         self.progress_bar.setVisible(False)
-        self.txt_result.setHtml(f"<div style='color: #ff6b6b; font-family: \"Segoe UI\", sans-serif; font-size: 14px; font-weight: bold;'>Errore AI: {str(e)}</div>")
+        title = self.gm("Errore AI")
+        title_safe = html.escape(title, quote=True)
+        err = html.escape(str(e), quote=True)
+        self.txt_result.setHtml(f"<div style='color: #ff6b6b; font-family: \"Segoe UI\", sans-serif; font-size: 14px; font-weight: bold;'>{title_safe}: {err}</div>")
         self.txt_result.setFocus()
-        QMessageBox.critical(self, "Errore AI", str(e))
+        QMessageBox.critical(self, title, str(e))
 
     def _on_note_selected(self, idx):
         # Seleziona la nota corrispondente e aggiorna il campo di testo
@@ -798,7 +827,7 @@ h1, h2, h3, h4 {{
     def _on_new_note(self):
         # Crea una nuova nota vuota e chiede il nome
         from PySide6.QtWidgets import QInputDialog
-        new_key, ok = QInputDialog.getText(self, "Nuova nota", "Nome per la nuova nota:")
+        new_key, ok = QInputDialog.getText(self, self.gm("Nuova nota"), self.gm("Nome per la nuova nota:"))
         if ok and new_key:
             self.notes[new_key] = ""
             self._refresh_notes_combo()
@@ -817,7 +846,7 @@ h1, h2, h3, h4 {{
         idx_prompt = self.combo_prompt.currentIndex()
         note_text = self.inp_note.toPlainText().strip() if self.combo_note.currentIndex() > 0 else ""
         if not query:
-            QMessageBox.warning(self, "Attenzione", "Inserisci una query di ricerca.")
+            QMessageBox.warning(self, self.gm("Attenzione"), self.gm("Inserisci una query di ricerca."))
             return
         # Estrai luogo, periodo, tipo se presenti nella query (regex semplice)
         import re
