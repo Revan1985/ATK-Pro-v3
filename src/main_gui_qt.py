@@ -1315,6 +1315,12 @@ class MainWindow(QMainWindow):
             window_geometry.moveCenter(screen_geometry.center())
             self.move(window_geometry.topLeft())
 
+    def _show_module_open_error(self, message_key, error):
+        from PySide6.QtWidgets import QMessageBox
+        title = get_msg(self.glossario_data, "Errore", self.lingua) or "Errore"
+        message_template = get_msg(self.glossario_data, message_key, self.lingua) or message_key
+        QMessageBox.critical(self, title, message_template.format(err=error))
+
     def apri_ricerca_assistita_ai(self):
         import logging
         logging.debug("[GUI] Avvio Ricerca Assistita AI...")
@@ -1329,8 +1335,7 @@ class MainWindow(QMainWindow):
             logging.debug("[GUI] RicercaAssistitaAIDialog chiuso.")
         except Exception as e:
             logging.error(f"[GUI] Errore apertura Ricerca Assistita AI: {e}")
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.critical(self, "Errore", f"Impossibile aprire Ricerca Assistita AI: {e}")
+            self._show_module_open_error("Impossibile aprire Ricerca Assistita AI: {err}", e)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -1644,8 +1649,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             import logging
             logging.error(f"Errore caricamento OCR Avanzato: {e}")
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.critical(self, "Errore", f"Impossibile aprire l'OCR Avanzato: {e}")
+            self._show_module_open_error("Impossibile aprire l'OCR Avanzato: {err}", e)
 
     def apri_traduzione_ocr(self):
         try:
@@ -1661,8 +1665,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             import logging
             logging.error(f"Errore caricamento Traduzione OCR: {e}")
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.critical(self, "Errore", f"Impossibile aprire la Traduzione OCR: {e}")
+            self._show_module_open_error("Impossibile aprire la Traduzione OCR: {err}", e)
 
     def avvia_analisi_genealogica(self):
         try:
@@ -1678,8 +1681,7 @@ class MainWindow(QMainWindow):
         except Exception as e:
             import logging
             logging.error(f"Errore caricamento Analisi Genealogica: {e}")
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.critical(self, "Errore", f"Impossibile aprire l'Analisi Genealogica: {e}")
+            self._show_module_open_error("Impossibile aprire l'Analisi Genealogica: {err}", e)
 
     def funzione_in_sviluppo(self):
         # Messaggio placeholder localizzato per tutte le voci Servizi
