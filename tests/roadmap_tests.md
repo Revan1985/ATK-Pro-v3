@@ -63,7 +63,7 @@ python -m pytest tests\test_manifest_utils.py tests\test_manifest_parser.py test
 
 - [x] Confermare localizzazione e glossario.
 - [x] Confermare documenti consultabili dal menu Documenti e guida articolata.
-- [ ] Riallineare contenutisticamente la guida italiana alla v3 reale.
+- [x] Riallineare contenutisticamente la guida italiana alla v3 reale.
 - [x] Confermare compilazione dei moduli centrali.
 - [x] Confermare subset portali/manifest/tile/worker.
 - [ ] Eseguire una suite piu ampia in ambiente controllato.
@@ -95,6 +95,9 @@ python -m pytest tests\test_manifest_utils.py tests\test_manifest_parser.py test
 
 - Non aggiornare questa roadmap con numeri stimati.
 - Ogni baseline deve riportare il comando effettivo e il risultato osservato.
+- La guida italiana e' la fonte contenutistica v3 primaria; le altre lingue
+  restano da riallineare o dichiarare esplicitamente come traduzioni successive
+  prima di una release pubblica multilingue completa.
 - I test che toccano portali esterni devono preferire fixture offline, salvo
   quando si sta eseguendo una verifica manuale esplicitamente autorizzata.
 - Le integrazioni con portali chiusi, commerciali, login, abbonamenti o paywall

@@ -8,7 +8,7 @@ Nota successiva 2026-05-26: la sotto-guida italiana `assets/it/testuali/guida_09
 
 La verifica strutturale dei documenti del menu Documenti e dei link locali e' verde. Dopo gli interventi successivi all'audit iniziale, la guida italiana copre ora i tre blocchi che erano release blocker immediati: Ricerca assistita AI, Traduzione OCR e analisi genealogica/GEDCOM.
 
-La scansione dei marker critici sulla guida italiana non trova piu' riferimenti obsoleti nei file trattati. Restano da valutare prima della RC una revisione editoriale di OCR Avanzato e FAQ, e soprattutto la propagazione o dichiarazione di stato per le altre lingue.
+La scansione dei marker critici sulla guida italiana non trova piu' riferimenti obsoleti nei file trattati. Per una RC tecnica la guida italiana puo' essere trattata come fonte v3 primaria; restano da valutare una revisione editoriale di OCR Avanzato e FAQ, e soprattutto la propagazione o dichiarazione di stato per le altre lingue prima di una release pubblica multilingue completa.
 
 ## Fonti di confronto
 
