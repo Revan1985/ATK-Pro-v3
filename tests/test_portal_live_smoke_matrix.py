@@ -38,3 +38,5 @@ def test_live_smoke_matrix_repeats_registry_metadata():
         assert row["label"] == portal.label
         assert row["roadmap_priority"] == portal.roadmap_priority
         assert row["technical_family"] == portal.technical_family
+        assert row["record_mode_policy"] == portal.record_mode_policy
+        assert row["policy_checked_at"] == (portal.policy_checked_at or "per-request")
