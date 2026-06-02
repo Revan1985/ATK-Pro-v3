@@ -13,8 +13,26 @@
 
 # Librerie esterne
 import requests
+from urllib.parse import urlparse
 
 # Moduli interni
+
+
+def _origin_from_url(url):
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}"
+    except Exception:
+        return None
+    return None
+
+
+def _referer_for_info_url(url):
+    if "dam-antenati.cultura.gov.it" in url:
+        return "https://antenati.cultura.gov.it/"
+    origin = _origin_from_url(url)
+    return origin + "/" if origin else "https://antenati.cultura.gov.it/"
 
 
 def download_info_json(url):
@@ -24,7 +42,8 @@ def download_info_json(url):
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/115.0.0.0 Safari/537.36"
         ),
-        "Referer": "https://antenati.cultura.gov.it/"
+        "Accept": "application/ld+json, application/json, text/plain, */*",
+        "Referer": _referer_for_info_url(url),
     }
     response = requests.get(url, headers=headers, timeout=30)
     response.raise_for_status()

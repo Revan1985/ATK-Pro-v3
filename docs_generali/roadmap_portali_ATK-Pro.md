@@ -52,7 +52,8 @@ Portali da trattare per primi per rapporto favorevole tra valore, metodo
 tecnico e verificabilita delle fonti:
 
 - `manifest_diretto`: mantenere come percorso avanzato, con avviso che termini
-  e diritti dipendono dal sito di origine.
+  e diritti dipendono dal sito di origine. Dal 2026-06-02 supporta anche
+  manifest IIIF Presentation v3 image-only tramite normalizzazione interna.
 - `bodleian`, `heidelberg`, `e_rara`, `e_codices`, `e_manuscripta`: IIIF
   diretto/builder dedicati, ma sempre con controllo licenza per item o volume.
 - `europeana`: utile come aggregatore IIIF, solo record con rights statement
@@ -145,7 +146,10 @@ Matrice iniziale di scouting:
    centralizzati.
 2. Spostare progressivamente nella registry le altre capability tecniche
    ancora implicite in `elaborazione`, `manifest_utils` e `tile_downloader`.
-3. Aggiungere fixture offline per i portali in priorita 1.
-4. Spostare progressivamente i builder verso adapter testabili.
-5. Usare la shortlist operativa nella matrice candidati per scegliere i
+3. Estendere gli adapter IIIF diretti senza creare scraping: link Mirador con
+   `manifestId`, manifest v2 e manifest v3 image-only devono restare coperti
+   da fixture offline.
+4. Aggiungere fixture offline per i portali in priorita 1.
+5. Spostare progressivamente i builder verso adapter testabili.
+6. Usare la shortlist operativa nella matrice candidati per scegliere i
    prossimi portali da verificare.

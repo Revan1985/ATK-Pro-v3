@@ -107,6 +107,211 @@ HEADERS_UX = {
     "Connection": "keep-alive",
 }
 
+
+def _origin_from_url(url: str) -> str | None:
+    """Restituisce scheme://host per URL assoluti."""
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}"
+    except Exception:
+        return None
+    return None
+
+
+def _manifest_headers(manifest_url: str, referer: str | None = None) -> dict:
+    """Header HTTP per manifest IIIF.
+
+    Per Antenati manteniamo gli header storici; per manifest diretti esterni
+    evitiamo di presentarci con Origin/Referer Antenati e usiamo il dominio
+    del manifest come contesto di consultazione.
+    """
+    headers = dict(HEADERS_UX)
+    headers["Accept"] = "application/ld+json, application/json, text/plain, */*"
+    if referer:
+        origin = referer.rstrip("/")
+        headers["Referer"] = origin + "/"
+        headers["Origin"] = origin
+        return headers
+
+    origin = _origin_from_url(manifest_url)
+    if origin and "antenati.cultura.gov.it" not in origin and "dam-antenati.cultura.gov.it" not in origin:
+        headers["Referer"] = origin + "/"
+        headers.pop("Origin", None)
+    return headers
+
+
+def _first_text(value, default: str = "") -> str:
+    """Estrae una stringa leggibile da label/value IIIF v2/v3."""
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        parts = [_first_text(item, "") for item in value]
+        return " ".join(part for part in parts if part) or default
+    if isinstance(value, dict):
+        for key in ("it", "en", "de", "fr", "none", "@value", "value"):
+            if key in value:
+                text = _first_text(value.get(key), "")
+                if text:
+                    return text
+        for item in value.values():
+            text = _first_text(item, "")
+            if text:
+                return text
+    return default
+
+
+def extract_manifest_url_from_viewer_url(page_url: str) -> str | None:
+    """Estrae un manifest IIIF da URL viewer che lo contengono in query.
+
+    Copre Mirador e viewer simili che usano parametri come manifestId o manifest.
+    """
+    try:
+        parsed = urlparse(page_url)
+        query = parse_qs(parsed.query or "")
+    except Exception:
+        return None
+
+    for key in ("manifestId", "manifest", "iiif-content", "iiif_manifest"):
+        values = query.get(key)
+        if values:
+            candidate = unquote_plus(values[0]).strip()
+            if candidate.startswith(("http://", "https://")):
+                return candidate
+    return None
+
+
+def _normalize_v3_service(service):
+    if isinstance(service, list):
+        return [_normalize_v3_service(item) for item in service if isinstance(item, dict)]
+    if not isinstance(service, dict):
+        return service
+
+    service_id = service.get("@id") or service.get("id")
+    service_type = service.get("@type") or service.get("type")
+    normalized = {
+        "@id": service_id,
+        "@type": service_type or "ImageService3",
+    }
+    for key in ("profile", "width", "height", "tiles", "sizes"):
+        if key in service:
+            normalized[key] = service[key]
+    if service.get("@context"):
+        normalized["@context"] = service["@context"]
+    elif service_type == "ImageService3" or str(service.get("profile", "")).find("/image/3/") >= 0:
+        normalized["@context"] = "http://iiif.io/api/image/3/context.json"
+    return {key: value for key, value in normalized.items() if value is not None}
+
+
+def _find_v3_image_body(canvas: dict) -> dict | None:
+    for page in canvas.get("items", []) or []:
+        for annotation in page.get("items", []) or []:
+            motivation = annotation.get("motivation")
+            if motivation and motivation != "painting":
+                continue
+            body = annotation.get("body")
+            bodies = body if isinstance(body, list) else [body]
+            for candidate in bodies:
+                if isinstance(candidate, dict) and candidate.get("type") in (None, "Image", "dctypes:Image"):
+                    return candidate
+    return None
+
+
+def _normalize_metadata_entries(metadata):
+    if not isinstance(metadata, list):
+        return metadata or []
+    normalized = []
+    for entry in metadata:
+        if not isinstance(entry, dict):
+            continue
+        normalized.append(
+            {
+                "label": _first_text(entry.get("label"), ""),
+                "value": _first_text(entry.get("value"), ""),
+            }
+        )
+    return normalized
+
+
+def normalize_iiif_manifest_for_processing(manifest: dict) -> dict:
+    """Converte manifest IIIF Presentation v3 image-only in layout v2 interno.
+
+    La pipeline di ATK-Pro lavora ancora su sequences/canvases; questa funzione
+    permette di supportare i manifest v3 senza riscrivere il motore di download.
+    I manifest v2 o sintetici esistenti vengono restituiti invariati.
+    """
+    if not isinstance(manifest, dict):
+        return manifest
+    if manifest.get("sequences"):
+        return manifest
+    if manifest.get("type") != "Manifest" or not isinstance(manifest.get("items"), list):
+        return manifest
+
+    canvases = []
+    for index, canvas in enumerate(manifest.get("items", []), 1):
+        if not isinstance(canvas, dict) or canvas.get("type") != "Canvas":
+            continue
+        body = _find_v3_image_body(canvas)
+        if not body:
+            continue
+
+        canvas_id = canvas.get("id") or f"canvas-{index}"
+        image_id = body.get("id") or body.get("@id")
+        service = _normalize_v3_service(body.get("service"))
+        width = body.get("width") or canvas.get("width")
+        height = body.get("height") or canvas.get("height")
+
+        resource = {
+            "@id": image_id,
+            "@type": "dctypes:Image",
+            "format": body.get("format"),
+            "width": width,
+            "height": height,
+            "service": service,
+        }
+        resource = {key: value for key, value in resource.items() if value is not None}
+
+        canvases.append(
+            {
+                "@id": canvas_id,
+                "@type": "sc:Canvas",
+                "label": _first_text(canvas.get("label"), f"Canvas {index}"),
+                "width": width,
+                "height": height,
+                "images": [
+                    {
+                        "@type": "oa:Annotation",
+                        "motivation": "sc:painting",
+                        "resource": resource,
+                        "on": canvas_id,
+                    }
+                ],
+            }
+        )
+
+    if not canvases:
+        return manifest
+
+    normalized = {
+        "@context": "http://iiif.io/api/presentation/2/context.json",
+        "@id": manifest.get("id") or manifest.get("@id"),
+        "@type": "sc:Manifest",
+        "label": _first_text(manifest.get("label"), "Manifest IIIF v3"),
+        "metadata": _normalize_metadata_entries(manifest.get("metadata")),
+        "sequences": [
+            {
+                "@type": "sc:Sequence",
+                "canvases": canvases,
+            }
+        ],
+        "_atk_normalized_from_iiif_v3": True,
+    }
+    if manifest.get("rights"):
+        normalized["rights"] = manifest["rights"]
+    return {key: value for key, value in normalized.items() if value is not None}
+
 # Regex permissive v1.4.1 per intercettare il manifest nel DOM/HTML
 _RE_MANIFEST_ANY = re.compile(
     r"https://dam-antenati\.cultura\.gov\.it/antenati/containers/[A-Za-z0-9]+/manifest"
@@ -1216,6 +1421,11 @@ def robust_find_manifest(page_url: str, html: str | None = None) -> str | None:
     - Prova anche varianti con slash finale.
     - Come ultimo tentativo, parse di script JSON/Mirador che contengono 'manifest'.
     """
+    manifest_from_query = extract_manifest_url_from_viewer_url(page_url)
+    if manifest_from_query:
+        print(f"[Manifest] Trovato da query viewer: {manifest_from_query}")
+        return manifest_from_query
+
     # 1) Se abbiamo già HTML, prova subito
     if html:
         print("[Manifest] Cerco nell'HTML...")
@@ -1276,10 +1486,12 @@ def download_manifest(manifest_url: str, output_folder: str, titolo_doc: str = "
     """
     print(f"[Manifest] Download da: {manifest_url}")
     # Adatta gli header al portale: usa referer specificato o default Antenati
-    headers = dict(HEADERS_UX)
-    if referer:
-        headers["Referer"] = referer.rstrip("/") + "/"
-        headers["Origin"] = referer.rstrip("/")
+    viewer_manifest_url = extract_manifest_url_from_viewer_url(manifest_url)
+    if viewer_manifest_url:
+        print(f"[Manifest] URL viewer ricevuto, uso manifestId: {viewer_manifest_url}")
+        manifest_url = viewer_manifest_url
+
+    headers = _manifest_headers(manifest_url, referer=referer)
     max_retries = 3
     delay = 1.0
     for attempt in range(1, max_retries + 1):
@@ -1313,9 +1525,17 @@ def download_manifest(manifest_url: str, output_folder: str, titolo_doc: str = "
             try:
                 manifest = response.json()
             except Exception as e:
-                # Manifest non decodificabile (corrotto): log e fallback
-                print(f"[Manifest] Contenuto manifest non decodificabile: {e}")
-                return None
+                try:
+                    content = getattr(response, "content", b"")
+                    manifest = json.loads(content.decode("utf-8-sig"))
+                except Exception:
+                    preview = (getattr(response, "text", "") or "")[:180].replace("\r", " ").replace("\n", " ")
+                    print(f"[Manifest] Contenuto manifest non decodificabile: {e}")
+                    if preview:
+                        print(f"[Manifest] Anteprima risposta non JSON: {preview}")
+                    return None
+
+            manifest = normalize_iiif_manifest_for_processing(manifest)
 
             os.makedirs(output_folder, exist_ok=True)
 

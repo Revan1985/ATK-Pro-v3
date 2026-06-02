@@ -86,6 +86,31 @@ def test_download_tiles_invokes_download_tile(monkeypatch):
     assert set(called) == {(0, 0), (1, 0), (0, 1), (1, 1)}
 
 
+def test_download_tiles_uses_image_api_v3_size_keyword(tmp_path, monkeypatch):
+    info = {
+        "id": "https://example.org/iiif/image",
+        "type": "ImageService3",
+        "width": 256,
+        "height": 256,
+        "tiles": [{"width": 256}],
+    }
+
+    calls = []
+
+    def fake_download_tile(base_url, x, y, tile_size, output_dir, quality, width, height, inter_delay, referer, size_keyword):
+        calls.append((base_url, size_keyword))
+        filename = os.path.join(output_dir, f"tile_{x}_{y}.jpg")
+        with open(filename, "wb") as fh:
+            fh.write(b"x" * 2048)
+        return filename
+
+    monkeypatch.setattr(td, "download_tile", fake_download_tile)
+
+    td.download_tiles(info, tmp_path)
+
+    assert calls == [("https://example.org/iiif/image", "max")]
+
+
 def test_download_tiles_applies_registry_delay_for_heidelberg(tmp_path, monkeypatch):
     info = {
         "@id": "http://fake",
