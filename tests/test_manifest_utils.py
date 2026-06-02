@@ -32,6 +32,99 @@ def test_find_manifest_url_from_page_object():
     url = mu.find_manifest_url(FakePage())
     assert "manifest.json" in url
 
+
+def test_extract_manifest_url_from_mirador_query():
+    viewer_url = (
+        "https://pm20.zbw.eu/mirador/"
+        "?manifestId=https%3A%2F%2Fpm20.zbw.eu%2Fiiif%2Ffolder%2Fco%2F043177%2Fpublic.manifest.json"
+        "&canvasId=https%3A%2F%2Fpm20.zbw.eu%2Fiiif%2Ffolder%2Fco%2F043177%2F00001%2F0001%2Fcanvas"
+    )
+
+    assert (
+        mu.extract_manifest_url_from_viewer_url(viewer_url)
+        == "https://pm20.zbw.eu/iiif/folder/co/043177/public.manifest.json"
+    )
+
+
+def test_robust_find_manifest_uses_viewer_query_without_fetch(monkeypatch):
+    def fail_fetch(*_args, **_kwargs):
+        raise AssertionError("robust_find_manifest should not fetch viewer URLs with manifestId")
+
+    monkeypatch.setattr(mu, "_http_get", fail_fetch)
+    url = mu.robust_find_manifest(
+        "https://pm20.zbw.eu/mirador/?manifestId=https://pm20.zbw.eu/iiif/folder/co/043177/public.manifest.json"
+    )
+
+    assert url == "https://pm20.zbw.eu/iiif/folder/co/043177/public.manifest.json"
+
+
+def _sample_v3_manifest():
+    return {
+        "@context": "http://iiif.io/api/presentation/3/context.json",
+        "id": "https://example.org/manifest",
+        "type": "Manifest",
+        "label": {"en": ["Sample folder"]},
+        "metadata": [
+            {"label": {"en": ["Archive"]}, "value": {"en": ["ZBW"]}},
+        ],
+        "rights": "https://creativecommons.org/publicdomain/mark/1.0/",
+        "items": [
+            {
+                "id": "https://example.org/canvas/1",
+                "type": "Canvas",
+                "label": {"none": ["Page 1"]},
+                "width": 1200,
+                "height": 1800,
+                "items": [
+                    {
+                        "id": "https://example.org/canvas/1/page",
+                        "type": "AnnotationPage",
+                        "items": [
+                            {
+                                "id": "https://example.org/anno/1",
+                                "type": "Annotation",
+                                "motivation": "painting",
+                                "target": "https://example.org/canvas/1",
+                                "body": {
+                                    "id": "https://example.org/iiif/image/full/full/0/default.jpg",
+                                    "type": "Image",
+                                    "format": "image/jpeg",
+                                    "width": 1200,
+                                    "height": 1800,
+                                    "service": [
+                                        {
+                                            "id": "https://example.org/iiif/image",
+                                            "type": "ImageService3",
+                                            "profile": "level2",
+                                        }
+                                    ],
+                                },
+                            }
+                        ],
+                    }
+                ],
+            }
+        ],
+    }
+
+
+def test_normalize_iiif_v3_manifest_for_processing():
+    normalized = mu.normalize_iiif_manifest_for_processing(_sample_v3_manifest())
+
+    assert normalized["@type"] == "sc:Manifest"
+    assert normalized["label"] == "Sample folder"
+    assert normalized["metadata"] == [{"label": "Archive", "value": "ZBW"}]
+    assert normalized["rights"] == "https://creativecommons.org/publicdomain/mark/1.0/"
+    assert normalized["_atk_normalized_from_iiif_v3"] is True
+
+    canvas = normalized["sequences"][0]["canvases"][0]
+    assert canvas["@id"] == "https://example.org/canvas/1"
+    assert canvas["label"] == "Page 1"
+    resource = canvas["images"][0]["resource"]
+    assert resource["@id"] == "https://example.org/iiif/image/full/full/0/default.jpg"
+    assert resource["service"][0]["@id"] == "https://example.org/iiif/image"
+    assert resource["service"][0]["@type"] == "ImageService3"
+
 def test_download_manifest_url_non_valido(tmp_path):
     result = download_manifest(
         "https://dam-antenati.cultura.gov.it/antenati/containers/INVALID/manifest",
@@ -56,6 +149,34 @@ def test_download_manifest_url_valido(mock_get, tmp_path):
     assert result["@context"] == "http://iiif.io/api/presentation/2/context.json"
     files = list(Path(tmp_path).glob("*.json"))
     assert files and files[0].exists()
+
+
+@patch("src.manifest_utils.requests.get")
+def test_download_manifest_external_uses_neutral_headers_and_normalizes_v3(mock_get, tmp_path):
+    class MockResponse:
+        status_code = 200
+        text = "{}"
+        content = b"{}"
+
+        def json(self):
+            return _sample_v3_manifest()
+
+        def raise_for_status(self):
+            pass
+
+    mock_get.return_value = MockResponse()
+
+    result = download_manifest(
+        "https://pm20.zbw.eu/iiif/folder/co/043177/public.manifest.json",
+        str(tmp_path),
+        titolo_doc="zbw_test",
+    )
+
+    headers = mock_get.call_args.kwargs["headers"]
+    assert headers["Referer"] == "https://pm20.zbw.eu/"
+    assert "Origin" not in headers
+    assert result["_atk_normalized_from_iiif_v3"] is True
+    assert result["sequences"][0]["canvases"][0]["images"][0]["resource"]["service"][0]["@id"] == "https://example.org/iiif/image"
 
 @patch("src.manifest_utils.requests.get", side_effect=requests.exceptions.RequestException("Errore di rete"))
 def test_download_manifest_eccezione(mock_get, tmp_path):

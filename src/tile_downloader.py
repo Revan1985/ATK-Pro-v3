@@ -8,6 +8,7 @@ import os
 import time
 import logging
 import requests
+from urllib.parse import urlparse
 
 try:
     from portal_registry import get_portal_tile_download_policy
@@ -31,7 +32,33 @@ HEADERS_UX = {
     "Connection": "keep-alive",
 }
 
-def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width=None, img_height=None, inter_delay=0.0):
+
+def _origin_from_url(url):
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}"
+    except Exception:
+        return None
+    return None
+
+
+def _headers_for_tile_url(url, referer=None):
+    headers = dict(HEADERS_UX)
+    if referer:
+        origin = referer.rstrip("/")
+        headers["Referer"] = origin + "/"
+        headers["Origin"] = origin
+        return headers
+    if "dam-antenati.cultura.gov.it" in url:
+        return headers
+    origin = _origin_from_url(url)
+    if origin:
+        headers["Referer"] = origin + "/"
+        headers.pop("Origin", None)
+    return headers
+
+def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width=None, img_height=None, inter_delay=0.0, referer=None, size_keyword="full"):
     """Scarica un singolo tile IIIF e lo salva nella cartella di output."""
     # x,y possono arrivare come offset in pixel oppure come indici di col/row.
     # Se sono indici (es. 0,1) li moltiplichiamo per ottenere gli offset in pixel.
@@ -56,7 +83,7 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width
     min_file_size = max(16, (region_w * region_h) // 128)
 
     filename = os.path.join(output_dir, f"tile_{col}_{row}.jpg")
-    url_tile = f"{url}/{pixel_x},{pixel_y},{region_w},{region_h}/full/0/{quality}.jpg"
+    url_tile = f"{url}/{pixel_x},{pixel_y},{region_w},{region_h}/{size_keyword}/0/{quality}.jpg"
 
     # Tile già presente e valido
     if os.path.exists(filename) and os.path.getsize(filename) >= min_file_size:
@@ -71,7 +98,7 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width
             time.sleep(5 * (attempt - 1) if inter_delay > 0 else 2 * (attempt - 1))  # backoff: 5s/10s Heidelberg, 2s/4s altri
         logger.info("[Tile] Scarico tile (tentativo %d/%d) da URL: %s", attempt, MAX_RETRIES, url_tile)
         try:
-            response = requests.get(url_tile, headers=HEADERS_UX, stream=True, timeout=30)
+            response = requests.get(url_tile, headers=_headers_for_tile_url(url_tile, referer=referer), stream=True, timeout=30)
         except Exception as e:
             logger.warning("Tentativo %d fallito per %s: %s", attempt, url_tile, e)
             continue
@@ -92,10 +119,10 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width
         elif response.status_code == 404:
             # Fallback .png: alcuni portali IIIF servono PNG invece di JPEG.
             # Salviamo nel filename .jpg standard: Pillow legge dal contenuto, non dall'estensione.
-            url_tile_png = f"{url}/{pixel_x},{pixel_y},{region_w},{region_h}/full/0/{quality}.png"
+            url_tile_png = f"{url}/{pixel_x},{pixel_y},{region_w},{region_h}/{size_keyword}/0/{quality}.png"
             logger.debug("Tile .jpg non trovato (404), provo .png: %s", url_tile_png)
             try:
-                resp_png = requests.get(url_tile_png, headers=HEADERS_UX, stream=True, timeout=30)
+                resp_png = requests.get(url_tile_png, headers=_headers_for_tile_url(url_tile_png, referer=referer), stream=True, timeout=30)
                 if resp_png.status_code == 200:
                     with open(filename, "wb") as f:
                         for chunk in resp_png.iter_content(8192):
@@ -116,7 +143,7 @@ def download_tile(url, x, y, tile_size, output_dir, quality="default", img_width
     logger.error("[Error] Tutti i tentativi di download falliti per %s", url_tile)
     return None
 
-def download_tiles(infojson, output_dir, update_progress=None, portale=None):
+def download_tiles(infojson, output_dir, update_progress=None, portale=None, referer=None):
     """Scarica tutti i tile definiti in un info.json IIIF e restituisce la lista completa."""
     import concurrent.futures
     base_url = infojson.get("@id") or infojson.get("id") or infojson.get("@context", "")
@@ -133,6 +160,15 @@ def download_tiles(infojson, output_dir, update_progress=None, portale=None):
         profile = infojson.get("profile", "")
         quality = "native" if (isinstance(profile, str) and "1.1" in profile) else "default"
     tile_size = tile_w  # mantenuto per compatibilità con download_tile()
+    context = infojson.get("@context") or infojson.get("context") or ""
+    image_type = infojson.get("type") or infojson.get("@type") or ""
+    profile_text = str(infojson.get("profile", ""))
+    is_image_api_v3 = (
+        image_type == "ImageService3"
+        or "image/3" in str(context)
+        or "image/3" in profile_text
+    )
+    size_keyword = "max" if is_image_api_v3 else "full"
 
     cols = (width + tile_w - 1) // tile_w
     rows = (height + tile_h - 1) // tile_h
@@ -157,7 +193,13 @@ def download_tiles(infojson, output_dir, update_progress=None, portale=None):
         default_max_workers = 4
     portal_max_workers, inter_delay = get_portal_tile_download_policy(portale)
     max_workers = portal_max_workers or default_max_workers
-    tile_args = [(base_url, x, y, tile_size, output_dir, quality, width, height, inter_delay) for y in range(rows) for x in range(cols)]
+    def _tile_call_args(x, y):
+        base_args = (base_url, x, y, tile_size, output_dir, quality, width, height, inter_delay)
+        if referer is not None or size_keyword != "full":
+            return base_args + (referer, size_keyword)
+        return base_args
+
+    tile_args = [_tile_call_args(x, y) for y in range(rows) for x in range(cols)]
     attempt = 0
     tiles_downloaded = set()
     missing_files = set(expected_files)
@@ -169,7 +211,7 @@ def download_tiles(infojson, output_dir, update_progress=None, portale=None):
         for idx, (x, y) in enumerate([(x, y) for y in range(rows) for x in range(cols)]):
             fname = expected_tile_filename(x, y)
             if fname in missing_files:
-                args_to_download.append((base_url, x, y, tile_size, output_dir, quality, width, height, inter_delay))
+                args_to_download.append(_tile_call_args(x, y))
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_tile = {executor.submit(download_tile, *args): args for args in args_to_download}

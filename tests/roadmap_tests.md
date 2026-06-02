@@ -30,7 +30,11 @@ Subset portali/manifest/tile/worker:
 - comando:
   `python -m pytest tests\test_manifest_utils.py tests\test_manifest_parser.py tests\test_tile_downloader.py tests\test_qt_worker_coverage.py tests\test_portal_registry.py -q`
 - risultato verificato:
-  `54 passed`
+  `59 passed`
+
+Aggiornamento 2026-06-02: il subset include fixture offline per manifest IIIF
+v3 image-only e link viewer Mirador con parametro `manifestId`, normalizzati
+verso la pipeline interna `sequences/canvases`.
 
 Nota: durante l'audit post-localizzazione e stato riallineato il mock di
 `tests/test_tile_downloader.py` alla firma attuale di `download_tile`.
@@ -160,7 +164,7 @@ python -m pytest tests\test_manifest_utils.py tests\test_manifest_parser.py test
 ### Fase 3 - Portali
 
 - [ ] Estendere i test su `manifest_utils` per i portali gia presenti.
-- [ ] Aggiungere fixture offline per manifest IIIF v2/v3 rappresentativi.
+- [x] Aggiungere fixture offline per manifest IIIF v2/v3 rappresentativi.
 - [ ] Aggiungere test per fallback sintetici solo dove legalmente e
   tecnicamente giustificati.
 - [ ] Collegare ogni nuovo portale alla matrice di valutazione tecnica/legale.

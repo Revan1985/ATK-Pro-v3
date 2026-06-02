@@ -10,7 +10,12 @@ from logging.handlers import RotatingFileHandler
 import shutil
 from PIL import Image
 
-from manifest_utils import download_manifest, robust_find_manifest
+from manifest_utils import (
+    download_manifest,
+    extract_manifest_url_from_viewer_url,
+    normalize_iiif_manifest_for_processing,
+    robust_find_manifest,
+)
 try:
     from portal_registry import get_portal_referer, normalize_portal_key
 except ImportError:
@@ -656,6 +661,7 @@ class Elaborazione:
                     from browser_setup import fetch_manifest_json_via_playwright
                     manifest = fetch_manifest_json_via_playwright(manifest_url)
                     if manifest:
+                        manifest = normalize_iiif_manifest_for_processing(manifest)
                         # Salva su disco (stessa logica di download_manifest)
                         os.makedirs(working_folder, exist_ok=True)
                         manifest_filename_pw = f"manifest_{container_id}_{titolo_pulito}.json"
@@ -687,6 +693,11 @@ class Elaborazione:
 
         # Shortcut: portale manifest_diretto → l'URL fornito è già il manifest
         portale_key = self.portale.lower().replace("-", "_").replace(" ", "_")
+        manifest_from_viewer = extract_manifest_url_from_viewer_url(self.ark_url)
+        if manifest_from_viewer:
+            logger.info(f"[Manifest] manifestId estratto dal viewer: {manifest_from_viewer}")
+            return manifest_from_viewer
+
         if portale_key == "manifest_diretto":
             logger.info(f"[Manifest] manifest_diretto: uso URL diretto {self.ark_url}")
             return self.ark_url
