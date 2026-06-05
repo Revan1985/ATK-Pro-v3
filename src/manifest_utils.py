@@ -592,6 +592,23 @@ def _build_e_rara_manifest(page_url: str) -> str | None:
     return None
 
 
+def _build_biblioteca_digitale_siena_manifest(page_url: str) -> str | None:
+    """Biblioteca Digitale Siena:
+    /it/vieweriiif/?id={id}&type={type} -> /metadata/{id}/manifest.json?type={type}
+    """
+    parsed = urlparse(page_url)
+    if not parsed.netloc.lower().endswith("bds.comune.siena.it"):
+        return None
+
+    query = parse_qs(parsed.query or "")
+    doc_id = (query.get("id") or [""])[0].strip()
+    doc_type = (query.get("type") or ["sbn"])[0].strip() or "sbn"
+    if not doc_id:
+        return None
+
+    return f"https://bds.comune.siena.it/metadata/{doc_id}/manifest.json?type={quote_plus(doc_type)}"
+
+
 def _build_memooria_manifest(page_url: str) -> str | None:
     """Memooria/Jarvis (qualsiasi biblioteca):
     - URL legacy:  .../schedadl.aspx?id={guid}
@@ -1354,6 +1371,7 @@ _PORTAL_BUILDERS = {
     "e_rara":           _build_e_rara_manifest,
     "e_codices":        _build_ecodices_manifest,
     "e_manuscripta":    _build_e_manuscripta_manifest,
+    "biblioteca_digitale_siena": _build_biblioteca_digitale_siena_manifest,
     "museogalileo":     _build_museogalileo_manifest,
     "internetculturale_estense": _build_internetculturale_estense_manifest,
     "heidelberg":       _build_heidelberg_manifest,
