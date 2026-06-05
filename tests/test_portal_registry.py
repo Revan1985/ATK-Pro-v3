@@ -25,7 +25,7 @@ from src.portal_registry import (
 
 def test_registry_has_expected_portal_count_and_unique_keys():
     keys = portal_keys()
-    assert len(keys) == 19
+    assert len(keys) == 20
     assert len(set(keys)) == len(keys)
     assert set(keys) == set(PORTAL_REGISTRY)
 
@@ -67,6 +67,7 @@ def test_each_priority_has_a_warning_message_key():
 def test_portal_referer_capability_matches_existing_special_cases():
     assert get_portal_referer("gallica") == "https://gallica.bnf.fr"
     assert get_portal_referer("BNC ROMA") == "http://digitale.bnc.roma.sbn.it"
+    assert get_portal_referer("biblioteca_digitale_siena") == "https://bds.comune.siena.it"
     assert get_portal_referer("manifest_diretto") is None
     assert get_portal_referer("antenati") is None
     assert get_portal_referer("bncf_teca", "https://teca.bncf.firenze.sbn.it/viewer") == "https://teca.bncf.firenze.sbn.it"
@@ -108,6 +109,7 @@ def test_record_mode_policy_values_are_known_and_classified():
     assert get_portal_record_mode_policy("bncf_teca") == "d_only"
     assert get_portal_record_mode_policy("museogalileo") == "d_only"
     assert get_portal_record_mode_policy("matricula") == "r_limited"
+    assert get_portal_record_mode_policy("biblioteca_digitale_siena") == "r_limited"
     assert get_portal_record_mode_policy("manifest_diretto") == "variable"
 
 

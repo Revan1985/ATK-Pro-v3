@@ -64,6 +64,24 @@ def test_resolve_bnc_roma_returns_synthetic_placeholder_without_empty_html_fetch
     assert mu.resolve_manifest_url(url, "bnc_roma") == url
 
 
+def test_resolve_biblioteca_digitale_siena_viewer_url():
+    url = "https://bds.comune.siena.it/it/vieweriiif/?id=9917468302803300&type=sbn"
+
+    assert (
+        mu.resolve_manifest_url(url, "biblioteca_digitale_siena")
+        == "https://bds.comune.siena.it/metadata/9917468302803300/manifest.json?type=sbn"
+    )
+
+
+def test_resolve_biblioteca_digitale_siena_defaults_to_sbn_type():
+    url = "https://bds.comune.siena.it/it/vieweriiif/?id=9917468302803300"
+
+    assert (
+        mu.resolve_manifest_url(url, "biblioteca_digitale_siena")
+        == "https://bds.comune.siena.it/metadata/9917468302803300/manifest.json?type=sbn"
+    )
+
+
 @patch("src.manifest_utils.requests.get")
 def test_bncf_synthetic_manifest_does_not_write_debug_xml_by_default(mock_get, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
