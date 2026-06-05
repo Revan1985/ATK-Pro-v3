@@ -148,6 +148,12 @@ capability tecnica esplicita per PDF/immagini dirette pubbliche, separata dagli
 adapter IIIF, con blocco prudente dei registri completi quando la policy non
 consente un download ampio.
 
+Per candidati ad alto valore ma con accesso registrato o login, come APESP nel
+primo controllo 2026-06-05, mantenere solo schede di orientamento e link
+assistiti. La presenza di una base pubblica consultabile non basta per
+abilitare download diretto se la consultazione effettiva passa da autenticazione
+o da regole di riproduzione non compatibili con automazione.
+
 Matrice iniziale di scouting:
 
 - `docs_generali/matrice_portali_candidati_ATK-Pro.md`.
