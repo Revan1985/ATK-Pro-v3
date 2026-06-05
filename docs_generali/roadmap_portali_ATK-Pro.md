@@ -108,6 +108,23 @@ Esito primo controllo BeWeB/archivi ecclesiastici italiani (2026-06-05):
   da diocesi, parrocchia, privacy e consultazione locale. ATK-Pro puo aiutare a
   orientarsi, non automatizzare.
 
+Esito primo controllo Svizzera italiana / Grigioni / Coira (2026-06-05):
+
+- `archivio_stato_ticino` e `servizio_archivi_locali_ticino` sono molto
+  rilevanti per archivi comunali, patriziali e parrocchiali ticinesi. Le
+  disposizioni genealogiche ASTi prevedono ricerche puntuali, formulari, costi,
+  limiti su ruoli di popolazione e divieto di riproduzione sistematica di alcune
+  serie: niente downloader.
+- `archivio_diocesano_lugano` e fonte ecclesiastica di riferimento per
+  microfilm e consultazione dei registri parrocchiali ticinesi, ma su
+  appuntamento e senza portale immagini pubblico.
+- `archivio_stato_grigioni` e molto forte per valli italofone e mobilita alpina:
+  microfilm dei registri parrocchiali, registri di stato civile fino al 1929,
+  strumenti online/PDF e sistema informativo. La consultazione resta pero in gran
+  parte in sala lettura o soggetta ad autorizzazione.
+- `diocesi_chur_coira` offre orientamento ecclesiastico e Findbuch; va trattata
+  come link/discovery, non come downloader generico.
+
 ## Priorita 1 - Consolidare
 
 Portali da trattare per primi per rapporto favorevole tra valore, metodo
