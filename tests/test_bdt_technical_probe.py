@@ -18,12 +18,13 @@ def test_extract_candidates_finds_public_bdt_asset_links():
     """
 
     candidates = probe.extract_candidates(html, "https://bdt.bibcom.trento.it/Iconografia/4052")
-    by_kind = {candidate.kind: candidate.url for candidate in candidates}
+    by_kind = {candidate.kind: candidate for candidate in candidates}
 
-    assert by_kind["manifest"] == "https://bdt.bibcom.trento.it/iiif/123/manifest.json"
-    assert by_kind["image"] == "https://bdt.bibcom.trento.it/storage/image/page-0001.jpg"
-    assert by_kind["pdf"] == "https://bdt.bibcom.trento.it/download/documento.pdf"
-    assert by_kind["iiif_info"] == "https://bdt.bibcom.trento.it/iiif/123/page-1/info.json"
+    assert by_kind["manifest"].url == "https://bdt.bibcom.trento.it/iiif/123/manifest.json"
+    assert by_kind["image"].url == "https://bdt.bibcom.trento.it/storage/image/page-0001.jpg"
+    assert by_kind["pdf"].url == "https://bdt.bibcom.trento.it/download/documento.pdf"
+    assert by_kind["pdf"].role == "document_pdf"
+    assert by_kind["iiif_info"].url == "https://bdt.bibcom.trento.it/iiif/123/page-1/info.json"
 
 
 def test_extract_candidates_ignores_duplicates_and_non_download_links():
@@ -58,6 +59,31 @@ def test_extract_candidates_marks_bdt_content_images_and_site_assets():
 
     assert roles["Biblioteca-Digitale-Trentina-Biblioteca-comunale-di-Trento_header_logo.png"] == "site_asset"
     assert roles["GG1atc30TAV11.jpg_large.jpg"] == "content_image"
+
+
+def test_extract_candidates_sorts_pdf_and_pages_naturally():
+    html = """
+    <a href="/content/download/78214/1625910/file/BDT-113-TIf37.pdf">PDF</a>
+    <img src="/storage/images/media/immagini-testi-a-stampa/page-10.jpg110/340925-1-ita-IT/page-10.jpg.jpg">
+    <img src="/storage/images/media/immagini-testi-a-stampa/page-2.jpg110/340925-1-ita-IT/page-2.jpg.jpg">
+    <img src="/storage/images/media/immagini-testi-a-stampa/page-1.jpg165/340889-1-ita-IT/page-1.jpg_large.jpg">
+    <img src="/storage/images/media/immagini-testi-a-stampa/page-1.jpg165/340889-1-ita-IT/page-1.jpg.jpg">
+    """
+
+    candidates = probe.extract_candidates(html, "https://bdt.bibcom.trento.it/Testi-a-stampa/113")
+
+    assert [candidate.role for candidate in candidates] == [
+        "document_pdf",
+        "content_image",
+        "content_image",
+        "content_image",
+        "content_image",
+    ]
+    assert candidates[0].url.endswith("BDT-113-TIf37.pdf")
+    assert candidates[1].url.endswith("page-1.jpg.jpg")
+    assert candidates[2].url.endswith("page-1.jpg_large.jpg")
+    assert candidates[3].url.endswith("page-2.jpg.jpg")
+    assert candidates[4].url.endswith("page-10.jpg.jpg")
 
 
 def test_write_report_creates_csv(tmp_path: Path):
