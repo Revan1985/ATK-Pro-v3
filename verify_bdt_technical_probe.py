@@ -86,6 +86,8 @@ def _classify_url(url: str) -> str | None:
 
 
 def _classify_role(kind: str, url: str) -> str:
+    if kind == "pdf":
+        return "document_pdf"
     if kind != "image":
         return "candidate"
 
@@ -95,6 +97,20 @@ def _classify_role(kind: str, url: str) -> str:
     if any(token in lowered for token in ("/media/immagini-", "_large.", "/storage/images/media/")):
         return "content_image"
     return "image_candidate"
+
+
+def _candidate_sort_key(candidate: ProbeCandidate) -> tuple[int, int, str, str]:
+    role_rank = {
+        "document_pdf": 0,
+        "content_image": 1,
+        "image_candidate": 2,
+        "candidate": 3,
+        "site_asset": 4,
+    }.get(candidate.role, 9)
+    page_match = re.search(r"(?:^|/)page-(\d+)\.jpe?g", candidate.url, re.IGNORECASE)
+    page_number = int(page_match.group(1)) if page_match else 0
+    variant_rank = 1 if "_large." in candidate.url.lower() else 0
+    return (role_rank, page_number, variant_rank, candidate.url)
 
 
 def extract_candidates(html: str, base_url: str) -> list[ProbeCandidate]:
@@ -125,7 +141,7 @@ def extract_candidates(html: str, base_url: str) -> list[ProbeCandidate]:
             )
         )
 
-    return sorted(candidates, key=lambda item: (item.kind, item.url))
+    return sorted(candidates, key=_candidate_sort_key)
 
 
 def write_report(path: Path, candidates: list[ProbeCandidate]) -> None:
