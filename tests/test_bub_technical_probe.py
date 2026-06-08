@@ -54,6 +54,20 @@ def test_extract_candidates_ignores_duplicates_and_marks_site_assets():
     assert by_role["bub_record_or_collection"].identifier == "bollettini-parrocchiali"
 
 
+def test_extract_candidates_marks_plone_page_images_separately():
+    html = """
+    <img src="/it/immagini/canale-bub-digitale-1/bollettini-parrocchiali/@@images/cb9014fc-19f2-4eb9-a8a1-00b449fba39b.png">
+    <img src="https://bub.unibo.it/logo.png">
+    """
+
+    candidates = probe.extract_candidates(html, "https://bub.unibo.it/it/bub-digitale")
+    by_role = {candidate.role: candidate for candidate in candidates}
+
+    assert by_role["plone_page_image"].kind == "image"
+    assert by_role["plone_page_image"].identifier == "cb9014fc-19f2-4eb9-a8a1-00b449fba39b.png"
+    assert by_role["site_asset"].kind == "image"
+
+
 def test_write_report_creates_csv(tmp_path: Path):
     report = tmp_path / "bub_probe.csv"
     probe.write_report(

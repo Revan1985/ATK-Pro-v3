@@ -205,6 +205,12 @@ Secondo mini-scouting biblioteche digitali italiane IIIF (2026-06-08):
   pronta per cercare pagine/record BUB, viewer Mirador, manifest IIIF,
   info.json e immagini candidate. Prossimo passo: eseguirla su item reali e
   verificare licenze item-level prima di qualsiasi supporto nel menu.
+  Primo test live sulla landing `https://bub.unibo.it/it/bub-digitale`: utile
+  come discovery, ma non come prova di download, perche espone soprattutto
+  pagine del portale e immagini Plone `@@images`. La sonda classifica ora tali
+  immagini come `plone_page_image`. Il test successivo va fatto su una pagina
+  di bollettino/anno con parametro `manifest=`, ad esempio il campione
+  Bondanello 1934 emerso dalla ricerca pubblica.
 - `dl_ficlit` entra come candidato Omeka S/IIIF. La pagina ufficiale FICLIT
   indica uso di tecnologia IIIF e Mirador Viewer; puo servire anche a capire se
   esiste un pattern riusabile per altri portali Omeka italiani. La sonda
