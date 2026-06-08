@@ -108,6 +108,8 @@ def _classify_url(url: str) -> tuple[str, str, str] | None:
         return "image", "iiif_content_image", _identifier_from_path(path)
 
     if path_lower.endswith((".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff")):
+        if "/@@images/" in path_lower:
+            return "image", "plone_page_image", _identifier_from_path(path)
         if any(token in path_lower for token in ("/assets/", "/logo", "/icons/", "favicon", "/theme")):
             return "image", "site_asset", ""
         return "image", "candidate", _identifier_from_path(path)
