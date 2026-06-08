@@ -22,6 +22,7 @@ from src.manifest_utils import (
     build_internetculturale_estense_synthetic_manifest,
     build_matricula_synthetic_manifest,
     build_museogalileo_synthetic_manifest,
+    build_rovereto_synthetic_manifest,
     download_manifest,
     resolve_manifest_url,
     robust_find_manifest,
@@ -41,6 +42,7 @@ LIVE_SYNTHETIC_BUILDERS = {
     "internetculturale_estense": build_internetculturale_estense_synthetic_manifest,
     "matricula": build_matricula_synthetic_manifest,
     "museogalileo": build_museogalileo_synthetic_manifest,
+    "rovereto_digital_library": build_rovereto_synthetic_manifest,
 }
 
 

@@ -646,6 +646,30 @@ class Elaborazione:
                     logger.error("[BDT] Impossibile costruire manifest sintetico")
                     return None
 
+            # --- Rovereto Digital Library: manifest sintetico da API DSpace-GLAM ---
+            if portale_key == "rovereto_digital_library":
+                from manifest_utils import build_rovereto_synthetic_manifest
+                manifest = build_rovereto_synthetic_manifest(self.ark_url)
+                if manifest:
+                    os.makedirs(working_folder, exist_ok=True)
+                    rovereto_id_match = re.search(
+                        r"/(?:entities/[a-z-]+|server/api/core/items)/([0-9a-f-]{36})",
+                        self.ark_url,
+                        re.IGNORECASE,
+                    )
+                    rovereto_id = rovereto_id_match.group(1) if rovereto_id_match else container_id
+                    manifest_filename = f"manifest_rovereto_{rovereto_id}_{titolo_pulito}.json"
+                    manifest_path = os.path.join(working_folder, manifest_filename)
+                    with open(manifest_path, 'w', encoding='utf-8') as _f:
+                        json.dump(manifest, _f, ensure_ascii=False, indent=2)
+                    self.manifest_path = manifest_path
+                    self.output_dir = working_folder
+                    n_canvas = len(manifest['sequences'][0]['canvases'])
+                    logger.info(f"[Rovereto] Manifest sintetico salvato: {manifest_path} ({n_canvas} canvas)")
+                    return manifest
+                logger.error("[Rovereto] Impossibile costruire manifest sintetico")
+                return None
+
             # --- Museogalileo Digiteca: manifest sintetico da TecaService ---
             if portale_key == "museogalileo":
                 from manifest_utils import build_museogalileo_synthetic_manifest
@@ -1076,6 +1100,42 @@ class Elaborazione:
                     return False
                 final_img = Image.open(_BytesIO(_r_bdt.content)).copy()
                 logger.info(f"[BDT] Documento scaricato: {_r_bdt.headers.get('content-length','?')} byte")
+                ua = _parse_ua_from_url(self.ark_url)
+                ark = _parse_ark_from_url(self.ark_url)
+                page_label = canvas.get('label', None)
+                meta = build_image_metadata(ua=ua, ark=ark, canvas_id="page_1", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                formats = self.formats if hasattr(self, 'formats') and self.formats else state.get('formats', [])
+                if not formats:
+                    formats = ['PNG', 'JPEG', 'TIFF']
+                _norm_fmts = [_normalize_format(f) for f in formats]
+                _img_fmts = [f for f in formats if _normalize_format(f) != 'PDF']
+                _pdf_in_fmts = 'PDF' in _norm_fmts
+                if _img_fmts:
+                    save_image_variants(final_img, self.output_dir, self.nome_file, _img_fmts, meta=meta)
+                if _pdf_in_fmts:
+                    _tmp_dir = os.path.join(self.output_dir, "_tmp_pdf_images")
+                    os.makedirs(_tmp_dir, exist_ok=True)
+                    _tmp_png = os.path.join(_tmp_dir, f"{self.nome_file}_pdftmp.png")
+                    final_img.save(_tmp_png, format='PNG')
+                    _pdf_out = os.path.join(self.output_dir, f"{self.nome_file}.pdf")
+                    create_pdf_from_images(_tmp_dir, _pdf_out)
+                    shutil.rmtree(_tmp_dir, ignore_errors=True)
+                return True
+            # --- Rovereto Digital Library: download diretto PNG pubblico da DSpace bitstream ---
+            if isinstance(svc, dict) and svc.get('@context') == 'rovereto_direct':
+                from io import BytesIO as _BytesIO
+                import requests as _req
+                _img_url = svc.get('@id') or service_id
+                _h_rovereto = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                    'Referer': 'https://digitallibrary.bibliotecacivica.rovereto.tn.it/',
+                }
+                _r_rovereto = _req.get(_img_url, headers=_h_rovereto, timeout=45)
+                if not _r_rovereto.ok:
+                    logger.error(f"[Rovereto] HTTP {_r_rovereto.status_code} per documento: {_img_url[:80]}")
+                    return False
+                final_img = Image.open(_BytesIO(_r_rovereto.content)).copy()
+                logger.info(f"[Rovereto] Documento scaricato: {_r_rovereto.headers.get('content-length','?')} byte")
                 ua = _parse_ua_from_url(self.ark_url)
                 ark = _parse_ark_from_url(self.ark_url)
                 page_label = canvas.get('label', None)
@@ -1554,6 +1614,38 @@ class Elaborazione:
                                 _use_img.save(_pdf_png_path, format='PNG')
                             except Exception as _e:
                                 logger.error(f"[PDF] Errore PNG BDT canvas {idx}: {_e}")
+                        return  # nessuna cartella tile da pulire
+                    # --- Rovereto Digital Library: download diretto PNG pubblico da DSpace bitstream ---
+                    if isinstance(_svc, dict) and _svc.get('@context') == 'rovereto_direct':
+                        from io import BytesIO as _BytesIO
+                        import requests as _req
+                        _img_url = _svc.get('@id') or service_id
+                        _h_rovereto = {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                            'Referer': 'https://digitallibrary.bibliotecacivica.rovereto.tn.it/',
+                        }
+                        _r_rovereto = _req.get(_img_url, headers=_h_rovereto, timeout=45)
+                        if _r_rovereto.ok and len(_r_rovereto.content) > 0:
+                            final_img = Image.open(_BytesIO(_r_rovereto.content)).copy()
+                            logger.info(f"[Rovereto] Pagina {idx} scaricata: {len(_r_rovereto.content)} byte")
+                        else:
+                            logger.error(f"[Rovereto] Errore download pagina {idx}: HTTP {_r_rovereto.status_code} size={len(_r_rovereto.content)}")
+                            final_img = None
+                        ua = _parse_ua_from_url(self.ark_url)
+                        ark = _parse_ark_from_url(self.ark_url)
+                        page_label = canvas.get('label', None)
+                        meta = build_image_metadata(ua=ua, ark=ark, canvas_id=f"page_{idx}", page_label=page_label, description=self.nome_file, source_url=self.ark_url, atk_version="2.0")
+                        _use_img = final_img if final_img is not None else _make_placeholder_image(
+                            str(_svc.get('@id', '')), glossario_data=self.glossario_data, lingua=self.lingua,
+                            canvas_url=canvas.get('@id') or canvas.get('id'))
+                        if image_formats:
+                            save_image_variants(_use_img, self.output_dir, nome_base, image_formats, meta=meta)
+                        if pdf_in_formats:
+                            _pdf_png_path = os.path.join(temp_pdf_dir, f"{nome_base}_pdftmp.png")
+                            try:
+                                _use_img.save(_pdf_png_path, format='PNG')
+                            except Exception as _e:
+                                logger.error(f"[PDF] Errore PNG Rovereto canvas {idx}: {_e}")
                         return  # nessuna cartella tile da pulire
                     # --- Museogalileo: download diretto JPEG da TecaService ---
                     if isinstance(_svc, dict) and _svc.get('@context') == 'museogalileo_teca_direct':

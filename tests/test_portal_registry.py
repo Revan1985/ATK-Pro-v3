@@ -25,7 +25,7 @@ from src.portal_registry import (
 
 def test_registry_has_expected_portal_count_and_unique_keys():
     keys = portal_keys()
-    assert len(keys) == 21
+    assert len(keys) == 22
     assert len(set(keys)) == len(keys)
     assert set(keys) == set(PORTAL_REGISTRY)
 
@@ -69,6 +69,7 @@ def test_portal_referer_capability_matches_existing_special_cases():
     assert get_portal_referer("BNC ROMA") == "http://digitale.bnc.roma.sbn.it"
     assert get_portal_referer("biblioteca_digitale_siena") == "https://bds.comune.siena.it"
     assert get_portal_referer("biblioteca_digitale_trentina") == "https://bdt.bibcom.trento.it"
+    assert get_portal_referer("rovereto_digital_library") == "https://digitallibrary.bibliotecacivica.rovereto.tn.it"
     assert get_portal_referer("manifest_diretto") is None
     assert get_portal_referer("antenati") is None
     assert get_portal_referer("bncf_teca", "https://teca.bncf.firenze.sbn.it/viewer") == "https://teca.bncf.firenze.sbn.it"
@@ -92,11 +93,13 @@ def test_technical_family_lookup_and_grouping():
     assert "memooria" in iiif_direct
     assert "matricula" in synthetic
     assert "internet_archive" in synthetic
+    assert "rovereto_digital_library" in synthetic
 
 
 def test_tile_download_policy_marks_heidelberg_rate_limit():
     assert get_portal_tile_download_policy("heidelberg") == (1, 0.3)
     assert get_portal_tile_download_policy("biblioteca_digitale_siena") == (1, 0.3)
+    assert get_portal_tile_download_policy("rovereto_digital_library") == (1, 0.3)
     assert get_portal_tile_download_policy("gallica") == (None, 0.0)
     assert get_portal_tile_download_policy("non_esiste") == (None, 0.0)
 
@@ -113,6 +116,7 @@ def test_record_mode_policy_values_are_known_and_classified():
     assert get_portal_record_mode_policy("matricula") == "r_limited"
     assert get_portal_record_mode_policy("biblioteca_digitale_siena") == "r_limited"
     assert get_portal_record_mode_policy("biblioteca_digitale_trentina") == "r_limited"
+    assert get_portal_record_mode_policy("rovereto_digital_library") == "r_limited"
     assert get_portal_record_mode_policy("manifest_diretto") == "variable"
 
 
