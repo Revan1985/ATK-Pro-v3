@@ -785,6 +785,269 @@ def build_biblioteca_digitale_trentina_synthetic_manifest(
     }
 
 
+def _rovereto_is_supported_url(page_url: str) -> bool:
+    parsed = urlparse(page_url)
+    return parsed.netloc.lower().endswith("digitallibrary.bibliotecacivica.rovereto.tn.it")
+
+
+def _rovereto_extract_item_uuid(page_url: str) -> str | None:
+    parsed = urlparse(page_url)
+    match = re.search(
+        r"/(?:entities/[a-z-]+|server/api/core/items)/"
+        r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\b",
+        parsed.path,
+        re.IGNORECASE,
+    )
+    return match.group(1) if match else None
+
+
+def _rovereto_item_api_url(page_url: str) -> str | None:
+    if not _rovereto_is_supported_url(page_url):
+        return None
+    item_uuid = _rovereto_extract_item_uuid(page_url)
+    if not item_uuid:
+        return None
+    parsed = urlparse(page_url)
+    return f"{parsed.scheme}://{parsed.netloc}/server/api/core/items/{item_uuid}"
+
+
+def _build_rovereto_manifest(page_url: str) -> str | None:
+    """Rovereto Digital Library: item DSpace-GLAM gestito via manifest sintetico."""
+    return page_url if _rovereto_item_api_url(page_url) else None
+
+
+def _rovereto_headers() -> dict:
+    return {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "it-IT,it;q=0.9,en;q=0.7",
+        "Referer": "https://digitallibrary.bibliotecacivica.rovereto.tn.it/",
+    }
+
+
+def _rovereto_get_json(url: str, timeout: int = 25) -> dict | None:
+    try:
+        response = requests.get(url, headers=_rovereto_headers(), timeout=timeout)
+        logger.debug(f"[Rovereto] GET {url} -> {response.status_code}")
+        if not response.ok:
+            return None
+        data = response.json()
+        return data if isinstance(data, dict) else None
+    except Exception as exc:
+        logger.warning(f"[Rovereto] Errore JSON {url}: {exc}")
+        return None
+
+
+def _rovereto_link(data: dict, name: str) -> str | None:
+    links = data.get("_links")
+    if not isinstance(links, dict):
+        return None
+    entry = links.get(name)
+    if not isinstance(entry, dict):
+        return None
+    href = entry.get("href")
+    return str(href) if href else None
+
+
+def _rovereto_embedded_items(data: dict, key: str) -> list[dict]:
+    embedded = data.get("_embedded")
+    if not isinstance(embedded, dict):
+        return []
+    values = embedded.get(key)
+    if not isinstance(values, list):
+        return []
+    return [item for item in values if isinstance(item, dict)]
+
+
+def _rovereto_collect_paginated_items(first_url: str, key: str, max_pages: int = 50) -> list[dict]:
+    items: list[dict] = []
+    seen: set[str] = set()
+    next_url: str | None = first_url
+    while next_url and next_url not in seen and len(seen) < max_pages:
+        seen.add(next_url)
+        data = _rovereto_get_json(next_url)
+        if not data:
+            break
+        items.extend(_rovereto_embedded_items(data, key))
+        next_url = _rovereto_link(data, "next")
+    if next_url and next_url not in seen:
+        logger.warning(f"[Rovereto] Paginazione interrotta dopo {max_pages} pagine: {first_url}")
+    return items
+
+
+def _rovereto_first_metadata_value(data: dict, key: str) -> str | None:
+    metadata = data.get("metadata")
+    if not isinstance(metadata, dict):
+        return None
+    values = metadata.get(key)
+    if not isinstance(values, list):
+        return None
+    for entry in values:
+        if not isinstance(entry, dict):
+            continue
+        value = entry.get("value")
+        if value:
+            return str(value)
+    return None
+
+
+def _rovereto_page_number(name: str) -> int | None:
+    match = re.fullmatch(r"iiifpdf-(\d+)\.png", name.lower())
+    return int(match.group(1)) + 1 if match else None
+
+
+def _rovereto_bitstream_category(name: str, mimetype: str) -> tuple[str, str, int | None]:
+    name_lower = name.lower()
+    mimetype_lower = mimetype.lower()
+    page_number = _rovereto_page_number(name)
+    if page_number is not None and mimetype_lower == "image/png":
+        return "page_image", "yes", page_number
+    if mimetype_lower == "application/pdf" or name_lower.endswith(".pdf"):
+        return "source_pdf", "yes", None
+    if name_lower == "license.txt":
+        return "license", "no", None
+    if name_lower.endswith(".txt") or mimetype_lower.startswith("text/plain"):
+        return "text_derivative", "no", None
+    if name_lower.endswith((".jpg", ".jpeg")) and mimetype_lower == "image/jpeg":
+        return "thumbnail_or_cover", "no", None
+    if mimetype_lower.startswith("image/"):
+        return "image_other", "review", None
+    return "other", "review", None
+
+
+def _rovereto_format_mimetype(bitstream: dict) -> str:
+    embedded_format = bitstream.get("format")
+    if isinstance(embedded_format, dict):
+        return str(embedded_format.get("mimetype") or "")
+    format_url = _rovereto_link(bitstream, "format")
+    if not format_url:
+        return ""
+    format_data = _rovereto_get_json(format_url)
+    if not format_data:
+        return ""
+    return str(format_data.get("mimetype") or "")
+
+
+def _rovereto_collect_bitstreams(item_data: dict) -> list[dict]:
+    bundles_url = _rovereto_link(item_data, "bundles")
+    if not bundles_url:
+        return []
+
+    bitstreams: list[dict] = []
+    for bundle in _rovereto_collect_paginated_items(bundles_url, "bundles"):
+        bitstreams_url = _rovereto_link(bundle, "bitstreams")
+        if not bitstreams_url:
+            continue
+        bitstreams.extend(_rovereto_collect_paginated_items(bitstreams_url, "bitstreams"))
+    return bitstreams
+
+
+def build_rovereto_synthetic_manifest(page_url: str) -> dict | None:
+    """Costruisce un manifest sintetico Rovereto da bitstream DSpace pubblici."""
+    item_api_url = _rovereto_item_api_url(page_url)
+    if not item_api_url:
+        return None
+
+    item_data = _rovereto_get_json(item_api_url)
+    if not item_data:
+        logger.error(f"[Rovereto] Impossibile leggere item API: {item_api_url}")
+        return None
+
+    title = (
+        str(item_data.get("name") or "")
+        or _rovereto_first_metadata_value(item_data, "dc.title")
+        or page_url
+    )
+    item_uuid = str(item_data.get("uuid") or _rovereto_extract_item_uuid(page_url) or "item")
+
+    page_entries: list[dict] = []
+    source_pdf_url = None
+    for bitstream in _rovereto_collect_bitstreams(item_data):
+        name = str(bitstream.get("name") or "")
+        mimetype = _rovereto_format_mimetype(bitstream)
+        category, download_candidate, page_number = _rovereto_bitstream_category(name, mimetype)
+        content_url = _rovereto_link(bitstream, "content")
+        if not content_url:
+            continue
+        if category == "source_pdf" and not source_pdf_url:
+            source_pdf_url = content_url
+        if category != "page_image" or download_candidate != "yes" or page_number is None:
+            continue
+        page_entries.append(
+            {
+                "page_number": page_number,
+                "name": name,
+                "content_url": content_url,
+                "uuid": str(bitstream.get("uuid") or ""),
+                "size_bytes": bitstream.get("sizeBytes"),
+            }
+        )
+
+    page_entries = sorted(page_entries, key=lambda entry: (entry["page_number"], entry["name"]))
+    if not page_entries:
+        logger.error(f"[Rovereto] Nessuna pagina immagine pubblica trovata: {page_url}")
+        return None
+
+    expected_pages = set(range(page_entries[0]["page_number"], page_entries[-1]["page_number"] + 1))
+    actual_pages = {entry["page_number"] for entry in page_entries}
+    if expected_pages != actual_pages:
+        missing = sorted(expected_pages - actual_pages)
+        logger.warning(f"[Rovereto] Sequenza pagine non continua; mancanti: {missing}")
+
+    canvases = []
+    for idx, entry in enumerate(page_entries, start=1):
+        page_number = entry["page_number"]
+        img_url = entry["content_url"]
+        canvases.append(
+            {
+                "@id": f"synthetic://rovereto_digital_library/{item_uuid}/canvas/{page_number}",
+                "@type": "sc:Canvas",
+                "label": f"Pagina {page_number}",
+                "images": [
+                    {
+                        "@type": "oa:Annotation",
+                        "motivation": "sc:painting",
+                        "resource": {
+                            "@type": "dctypes:Image",
+                            "@id": img_url,
+                            "format": "image/png",
+                            "service": {
+                                "@context": "rovereto_direct",
+                                "@id": img_url,
+                                "profile": "rovereto_direct",
+                                "source_page": page_url,
+                                "item_api_url": item_api_url,
+                                "bitstream_uuid": entry["uuid"],
+                                "page_number": page_number,
+                                "size_bytes": entry.get("size_bytes"),
+                            },
+                        },
+                    }
+                ],
+            }
+        )
+
+    logger.info(f"[Rovereto] Manifest sintetico: '{title}', {len(canvases)} pagine")
+    return {
+        "@context": "http://iiif.io/api/presentation/2/context.json",
+        "@id": f"synthetic://rovereto_digital_library/{item_uuid}",
+        "@type": "sc:Manifest",
+        "label": title,
+        "metadata": [
+            {"label": "Portale", "value": "Rovereto Digital Library"},
+            {"label": "Item API", "value": item_api_url},
+        ],
+        "seeAlso": [{"@id": source_pdf_url, "format": "application/pdf"}] if source_pdf_url else [],
+        "sequences": [
+            {
+                "@id": f"synthetic://rovereto_digital_library/{item_uuid}/sequence/1",
+                "@type": "sc:Sequence",
+                "canvases": canvases,
+            }
+        ],
+    }
+
+
 def _build_memooria_manifest(page_url: str) -> str | None:
     """Memooria/Jarvis (qualsiasi biblioteca):
     - URL legacy:  .../schedadl.aspx?id={guid}
@@ -1549,6 +1812,7 @@ _PORTAL_BUILDERS = {
     "e_manuscripta":    _build_e_manuscripta_manifest,
     "biblioteca_digitale_siena": _build_biblioteca_digitale_siena_manifest,
     "biblioteca_digitale_trentina": _build_biblioteca_digitale_trentina_manifest,
+    "rovereto_digital_library": _build_rovereto_manifest,
     "museogalileo":     _build_museogalileo_manifest,
     "internetculturale_estense": _build_internetculturale_estense_manifest,
     "heidelberg":       _build_heidelberg_manifest,

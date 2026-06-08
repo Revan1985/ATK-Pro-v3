@@ -118,6 +118,89 @@ def test_build_biblioteca_digitale_trentina_synthetic_manifest_from_html():
     assert canvases[1]["label"] == "Pagina 2"
 
 
+def test_resolve_rovereto_item_url():
+    url = "https://digitallibrary.bibliotecacivica.rovereto.tn.it/entities/publication/e4199e9b-c79b-4c3d-b157-be2dcfc0407f"
+
+    assert mu.resolve_manifest_url(url, "rovereto_digital_library") == url
+
+
+def test_build_rovereto_synthetic_manifest_from_dspace_api(monkeypatch):
+    item_uuid = "e4199e9b-c79b-4c3d-b157-be2dcfc0407f"
+    bundle_uuid = "6c76babc-df6f-41a7-9084-40279e01b800"
+    page_1_uuid = "01882cb0-c7ad-4313-bede-363686111ffd"
+    page_2_uuid = "04c14975-96bb-4751-ae01-3fb9ae2b9715"
+    pdf_uuid = "14cb1a01-c300-4807-9c3d-a4531b1cb77b"
+    license_uuid = "4ccfd300-65d8-419b-b1a4-0784d33a85be"
+    cover_uuid = "ebd6b368-7fc7-4a54-933f-8874fd52adf0"
+    text_uuid = "caeb8053-a73b-4c9d-b8e3-fd1bbca9cf39"
+    base = "https://digitallibrary.bibliotecacivica.rovereto.tn.it"
+    item_url = f"{base}/server/api/core/items/{item_uuid}"
+    bundles_url = f"{item_url}/bundles"
+    bundle_url = f"{base}/server/api/core/bundles/{bundle_uuid}"
+    bitstreams_url = f"{bundle_url}/bitstreams"
+    bitstreams_next_url = f"{bitstreams_url}?page=1"
+
+    def bitstream(uuid, name, mimetype):
+        return {
+            "uuid": uuid,
+            "name": name,
+            "sizeBytes": 123,
+            "format": {"mimetype": mimetype},
+            "_links": {
+                "content": {"href": f"{base}/server/api/core/bitstreams/{uuid}/content"},
+            },
+        }
+
+    responses = {
+        item_url: {
+            "uuid": item_uuid,
+            "name": "Rovereto sample",
+            "_links": {"bundles": {"href": bundles_url}},
+        },
+        bundles_url: {
+            "_embedded": {
+                "bundles": [
+                    {"uuid": bundle_uuid, "_links": {"bitstreams": {"href": bitstreams_url}}},
+                ]
+            }
+        },
+        bitstreams_url: {
+            "_links": {"next": {"href": bitstreams_next_url}},
+            "_embedded": {
+                "bitstreams": [
+                    bitstream(pdf_uuid, "book.pdf", "application/pdf"),
+                    bitstream(license_uuid, "license.txt", "text/plain"),
+                    bitstream(cover_uuid, "book.pdf.jpg", "image/jpeg"),
+                    bitstream(text_uuid, "book.pdf.txt", "text/plain"),
+                    bitstream(page_1_uuid, "iiifpdf-0.png", "image/png"),
+                ]
+            }
+        },
+        bitstreams_next_url: {
+            "_embedded": {
+                "bitstreams": [
+                    bitstream(page_2_uuid, "iiifpdf-1.png", "image/png"),
+                ]
+            }
+        },
+    }
+
+    monkeypatch.setattr(mu, "_rovereto_get_json", lambda url, timeout=25: responses.get(url))
+
+    manifest = mu.build_rovereto_synthetic_manifest(
+        f"{base}/entities/publication/{item_uuid}"
+    )
+
+    assert manifest["@id"] == f"synthetic://rovereto_digital_library/{item_uuid}"
+    assert manifest["label"] == "Rovereto sample"
+    assert manifest["seeAlso"][0]["@id"] == f"{base}/server/api/core/bitstreams/{pdf_uuid}/content"
+    canvases = manifest["sequences"][0]["canvases"]
+    assert [canvas["label"] for canvas in canvases] == ["Pagina 1", "Pagina 2"]
+    assert canvases[0]["images"][0]["resource"]["service"]["@context"] == "rovereto_direct"
+    assert canvases[0]["images"][0]["resource"]["service"]["page_number"] == 1
+    assert canvases[0]["images"][0]["resource"]["@id"] == f"{base}/server/api/core/bitstreams/{page_1_uuid}/content"
+
+
 @patch("src.manifest_utils.requests.get")
 def test_bncf_synthetic_manifest_does_not_write_debug_xml_by_default(mock_get, tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)

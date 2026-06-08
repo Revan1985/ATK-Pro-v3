@@ -174,9 +174,8 @@ Esito primo scouting biblioteche digitali italiane (2026-06-05):
   manuali su BDS hanno mostrato possibili interruzioni dello stream tile:
   ATK-Pro usa quindi download sequenziale con breve pausa e ritenta gli stream
   incompleti senza conservare file parziali.
-- `ambrosiana_digitale` e `rovereto_digital_library` restano sonde importanti:
-  la prima dichiara IIIF, la seconda e descritta come DSpace GLAM/IIIF, ma
-  servono termini e campioni prima di qualsiasi integrazione. Per Ambrosiana,
+- `ambrosiana_digitale` resta una sonda importante: dichiara IIIF, ma servono
+  campioni diretti e termini item-level prima di qualsiasi integrazione. Per Ambrosiana,
   il controllo 2026-06-07 conferma il valore della pista IIIF: la pagina
   ufficiale parla di accesso libero e standard IIIF, e la letteratura tecnica
   cita Mirador e Cantaloupe. Tuttavia i campioni facilmente reperibili possono
@@ -185,27 +184,15 @@ Esito primo scouting biblioteche digitali italiane (2026-06-05):
   supporto nel menu. Il primo test live su `ambro:catalog:24203` non ha trovato
   manifest, info.json, immagini Cantaloupe o viewer utili: per ora Ambrosiana
   resta in scouting, senza integrazione downloader.
-- Per Rovereto, il controllo 2026-06-07 ha trovato il portale operativo
-  `digitallibrary.bibliotecacivica.rovereto.tn.it`: item pubblici DSpace-GLAM
-  con Open in Mirador, IIIF/Open Manifest, file PDF/JPEG e licenza item-level.
-  I termini ufficiali consentono accesso libero e gratuito ai file digitali in
-  risoluzione web secondo le licenze specifiche, con alta definizione su
-  richiesta. I campioni osservati sono CC BY-NC-ND: prima del codice servono
-  smoke live su manifest/API e decisione prudente tra PDF/JPEG puntuali e
-  eventuale `R_LIMITED`. La sonda Rovereto riconosce ora anche i link HAL/JSON
-  delle sotto-risorse DSpace (`bundles`, `thumbnail`, bundle e bitstream), cosi
-  i test manuali possono procedere oltre la sola pagina entity. Con
-  `--follow-json` puo seguire in modo limitato la catena API DSpace, fermandosi
-  prima dei link di contenuto binario: utile per capire se esistono file
-  pubblici stabili senza anticipare una capability ATK-Pro. Test live
-  successivi sullo stesso giorno hanno trovato 133 link `bitstream_content` per
-  il campione publication e 4 per il campione picture: la pista tecnica e
-  concreta, ma vanno ancora verificati ordine pagina, formato effettivo,
-  duplicati/thumbnail e licenza item-level prima di una capability. La sonda
-  puo produrre anche un CSV qualitativo dei bitstream con
-  `--summarize-bitstreams`, leggendo solo metadati/formato e non i contenuti;
-  il report classifica pagine `iiifpdf-*.png`, PDF originale, licenza, derivati
-  testuali/OCR e miniature/cover per valutare un eventuale percorso `R_LIMITED`.
+- `rovereto_digital_library` e promosso a supporto tecnico prudente. Il
+  controllo 2026-06-08 usa l'API pubblica DSpace-GLAM:
+  ATK-Pro deriva l'endpoint REST item da URL entity/API, segue la paginazione
+  HAL/JSON di bundle e bitstream e costruisce un manifest sintetico solo dai
+  bitstream pubblici classificati come pagine `iiifpdf-*.png`. PDF originale,
+  licenza, derivati testuali/OCR e miniature/cover non vengono scaricati come
+  pagine; il PDF puo restare come riferimento `seeAlso`. La policy e
+  `R_LIMITED`: record completi solo con range esplicito e sempre con verifica
+  della licenza item-level.
 - Su `biblioteca_digitale_trentina` la capability tecnica resta specifica del
   portale: immagini dirette pubbliche e PDF diretto per testi a stampa, senza
   trasformarla in un adapter generico per tutte le biblioteche digitali.
