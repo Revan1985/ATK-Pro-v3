@@ -225,7 +225,15 @@ Secondo mini-scouting biblioteche digitali italiane IIIF (2026-06-08):
   esiste un pattern riusabile per altri portali Omeka italiani. La sonda
   `verify_ficlit_technical_probe.py` e pronta per cercare pagine Omeka,
   item/media/API, viewer Mirador, manifest IIIF, info.json e immagini
-  candidate, ma resta da verificare con campioni e termini di riuso.
+  candidate. Primo test live 2026-06-09 su item Corbiere `199245`: la sonda
+  trova immagine originale e manifest IIIF v2
+  `https://dl.ficlit.unibo.it/iiif/2/199245/manifest`; `verify_manifest_url.py`
+  lo scarica con codice 200 e rileva 1 canvas. Secondo test live su item
+  Camporesi `28429`: stesso pattern immagine originale + manifest
+  `https://dl.ficlit.unibo.it/iiif/2/28429/manifest`, codice 200 e 239 canvas.
+  Il candidato e tecnicamente forte; prima della promozione servono verifica
+  dei termini di riuso item-level, adapter ristretto a host FICLIT e policy
+  `R_LIMITED` con range esplicito.
 - `orientales_unior` entra come candidato IIIF/Mirador con download condizionato
   alla licenza dell'oggetto. La fonte ufficiale cita licenze Creative Commons,
   framework IIIF, Mirador, OCR e scarico metadati. La sonda
