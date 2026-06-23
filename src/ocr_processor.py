@@ -382,7 +382,10 @@ class AdvancedOCRWorker:
         except Exception as _de:
             logging.warning(f"[OCR] Impossibile salvare diagnostica split: {_de}")
 
-        # --- Merge: BOTTOM master, TOP integra solo N°Casa/N°Fam se BOTTOM li ha vuoti ---
+        return self._merge_gemini_split_text(text_top, text_bot)
+
+    def _merge_gemini_split_text(self, text_top: str, text_bot: str) -> str:
+        """Unisce le trascrizioni TOP/BOTTOM evitando doppioni nell'area sovrapposta."""
         def _get_prog(row: str):
             parts = [p.strip() for p in row.split("|")]
             if len(parts) >= 3:
@@ -394,6 +397,19 @@ class AdvancedOCRWorker:
 
         def _has_header(line: str) -> bool:
             return any(k in line for k in ("N°", "Religione", "Cognome", "Nome", "Età", "Casa", "Famiglia"))
+
+        def _norm_row(line: str) -> str:
+            import re
+            cells = [c.strip().lower() for c in line.split("|")]
+            text = " ".join(cells)
+            return re.sub(r"\s+", " ", text).strip()
+
+        def _similar(a: str, b: str) -> float:
+            from difflib import SequenceMatcher
+            return SequenceMatcher(None, _norm_row(a), _norm_row(b)).ratio()
+
+        def _is_probable_duplicate(row: str, candidates: list[str]) -> bool:
+            return any(_similar(row, other) >= 0.88 for other in candidates)
 
         lines_top = [l for l in text_top.strip().splitlines() if l.strip()]
         lines_bot = [l for l in text_bot.strip().splitlines() if l.strip()]
@@ -420,10 +436,15 @@ class AdvancedOCRWorker:
         max_top_prog    = max(top_map.keys())  if top_map        else None
 
         def _merge_cols(top_row: str, bot_row: str) -> str:
-            """BOTTOM master: integra N°Casa(col 0) e N°Fam(col 1) dal TOP solo se BOTTOM li ha vuoti."""
+            """BOTTOM master: integra dal TOP le colonne che il BOTTOM lascia vuote."""
             tc = [c.strip() for c in top_row.split("|")]
             bc = [c.strip() for c in bot_row.split("|")]
-            for idx in (0, 1):
+            max_len = max(len(tc), len(bc))
+            if len(tc) < max_len:
+                tc.extend([""] * (max_len - len(tc)))
+            if len(bc) < max_len:
+                bc.extend([""] * (max_len - len(bc)))
+            for idx in range(max_len):
                 if idx < len(tc) and idx < len(bc) and not bc[idx] and tc[idx]:
                     bc[idx] = tc[idx]
             return " | ".join(bc)
@@ -435,11 +456,19 @@ class AdvancedOCRWorker:
                 p = _get_prog(row)
                 if p is not None and p <= max_top_prog:
                     overlap_rows.append(_merge_cols(top_map[p], row) if p in top_map else row)
-            rows_bot_only   = [r for r in lines_bot  if (_get_prog(r) or 0) > max_top_prog]
+            rows_bot_only = []
+            for row in lines_bot:
+                p = _get_prog(row)
+                if p is not None:
+                    if p > max_top_prog:
+                        rows_bot_only.append(row)
+                elif not _is_probable_duplicate(row, data_top):
+                    rows_bot_only.append(row)
             merged_data = rows_top_only + overlap_rows + rows_bot_only
         else:
             top_only = [r for r in data_top if (_get_prog(r) or 0) < (first_bot_prog or float("inf"))]
-            merged_data = top_only + lines_bot
+            bot_only = [r for r in lines_bot if not _is_probable_duplicate(r, data_top)]
+            merged_data = top_only + bot_only
 
         return "\n".join(header_lines + merged_data)
 

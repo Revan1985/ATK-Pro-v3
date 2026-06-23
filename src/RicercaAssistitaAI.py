@@ -66,7 +66,6 @@ class RicercaAssistitaAIWorker(QThread):
                         handler = get_handler(prov, self.current_key)
                         model = self.custom_model if self.custom_model else None
                         result_rows = handler.extract_genealogy(self.query, model=model)
-                        import json
                         result = json.dumps(result_rows, ensure_ascii=False, indent=2)
                         if self.show_all:
                             if isinstance(result_rows, list) and result_rows:
