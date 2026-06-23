@@ -1,0 +1,83 @@
+import json
+
+
+def test_ai_worker_show_all_keeps_json_available_after_provider_error(monkeypatch):
+    import src.RicercaAssistitaAI as rai
+
+    class FakeKeyManager:
+        current_indices = {"Gemini": 0}
+
+        def get_all_keys(self, provider):
+            return ["fake-key"] if provider == "Gemini" else []
+
+        def get_next_key(self, provider, current_key):
+            return None
+
+    class FailingHandler:
+        def extract_genealogy(self, *args, **kwargs):
+            raise RuntimeError("provider failure")
+
+    monkeypatch.setattr(rai, "KeyManager", lambda: FakeKeyManager())
+    monkeypatch.setattr(rai, "get_handler", lambda provider, key: FailingHandler())
+
+    worker = rai.RicercaAssistitaAIWorker("davini", "Gemini", show_all=True)
+    captured = {}
+    worker.finished.connect(lambda value: captured.setdefault("value", value))
+    worker.error.connect(lambda value: captured.setdefault("error", value))
+
+    worker.run()
+
+    assert "error" not in captured
+    payload = json.loads(captured["value"])
+    assert payload[0]["provider"] == "Gemini"
+    assert "provider failure" in payload[0]["raw"]
+
+
+def test_gemini_split_merge_deduplicates_overlap_and_fills_blank_columns():
+    from src.ocr_processor import AdvancedOCRWorker
+
+    worker = object.__new__(AdvancedOCRWorker)
+    top = "\n".join(
+        [
+            "N°Casa | N°Famiglia | N° | Cognome | Nome | Stato | Nota finale",
+            "1 | 1 | 1 | Rossi | Anna | nubile | letto",
+            "1 | 1 | 2 | Rossi | Bruno | celibe | letto",
+            "2 | 1 | 3 | Bianchi | Carla | maritata | nota-top",
+        ]
+    )
+    bottom = "\n".join(
+        [
+            "2 | 1 | 3 | Bianchi | Carla | maritata | ",
+            "2 | 1 | 4 | Bianchi | Dario | celibe | nota-bottom",
+        ]
+    )
+
+    merged = worker._merge_gemini_split_text(top, bottom)
+
+    assert merged.count("Bianchi | Carla") == 1
+    assert "2 | 1 | 3 | Bianchi | Carla | maritata | nota-top" in merged
+    assert "2 | 1 | 4 | Bianchi | Dario | celibe | nota-bottom" in merged
+
+
+def test_gemini_split_merge_deduplicates_fuzzy_rows_without_progressive():
+    from src.ocr_processor import AdvancedOCRWorker
+
+    worker = object.__new__(AdvancedOCRWorker)
+    top = "\n".join(
+        [
+            "N°Casa | N°Famiglia | N° | Cognome | Nome",
+            "1 | 1 |  | Rossi | Anna",
+            "1 | 1 |  | Rossi | Bruno",
+        ]
+    )
+    bottom = "\n".join(
+        [
+            "1 | 1 |  | Rossi | Bruno",
+            "1 | 1 |  | Verdi | Carla",
+        ]
+    )
+
+    merged = worker._merge_gemini_split_text(top, bottom)
+
+    assert merged.count("Rossi | Bruno") == 1
+    assert "Verdi | Carla" in merged
