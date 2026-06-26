@@ -1505,20 +1505,22 @@ class MainWindow(QMainWindow):
 
             reg_records = [r for r in records if str(r.get('modalita', '')).strip().upper() == 'R']
             if reg_records:
-                try:
-                    from portal_registry import get_effective_portal_policy, get_portal_policy_override_path
-                except ImportError:
-                    from src.portal_registry import get_effective_portal_policy, get_portal_policy_override_path
-
                 portale_attivo = state.get("portale_attivo", "antenati")
-                policy = get_effective_portal_policy(portale_attivo)
-                policy_code = policy.record_mode_policy if policy else "r_limited"
-                if policy and policy.recheck_due and policy_code == "r_ok":
-                    policy_code = "r_limited"
-
-                if policy and policy.recheck_due:
+                policy_contexts = [
+                    _get_effective_record_policy_context(portale_attivo, r)
+                    for r in reg_records
+                ]
+                stale_contexts = [
+                    ctx for ctx in policy_contexts
+                    if ctx.get("policy") and ctx["policy"].recheck_due
+                ]
+                if stale_contexts:
+                    try:
+                        from portal_registry import get_portal_policy_override_path
+                    except ImportError:
+                        from src.portal_registry import get_portal_policy_override_path
                     stale_template = _gm_policy(
-                        "La policy del portale attivo deve essere riverificata. ATK-Pro applicherà un limite prudente per la modalità R finché non aggiorni il file locale: {path}"
+                        "La policy di uno o più portali dei record R deve essere riverificata. ATK-Pro applicherà un limite prudente per la modalità R finché non aggiorni il file locale: {path}"
                     )
                     show_msgbox_localized(
                         self,
@@ -1531,9 +1533,13 @@ class MainWindow(QMainWindow):
                         default="Conferma",
                     )
 
-                if policy_code == "d_only":
+                d_only_contexts = [
+                    ctx for ctx in policy_contexts
+                    if ctx.get("policy_code") == "d_only"
+                ]
+                if d_only_contexts:
                     block_template = _gm_policy(
-                        "La policy del portale attivo consente solo record D. Converti i record R in documenti singoli o scegli un portale compatibile con la modalità R."
+                        "La policy di uno o più portali dei record R consente solo record D. Converti quei record in documenti singoli o scegli un portale compatibile con la modalità R."
                     )
                     show_msgbox_localized(
                         self,
@@ -1547,18 +1553,30 @@ class MainWindow(QMainWindow):
                     )
                     return
 
-                if policy_code == "variable":
+                variable_contexts = [
+                    ctx for ctx in policy_contexts
+                    if ctx.get("policy_code") == "variable"
+                ]
+                if variable_contexts:
                     variable_template = _gm_policy(
                         "Il manifest diretto dipende dalla fonte scelta dall'utente. Confermi che il portale di origine consente l'elaborazione R richiesta?"
                     )
                     if not _confirm_policy_message(variable_template):
                         return
 
-                if policy_code == "r_limited":
+                limited_records = [
+                    ctx["record"] for ctx in policy_contexts
+                    if ctx.get("policy_code") == "r_limited"
+                ]
+                if limited_records:
                     missing_range_records = [
-                        r for r in reg_records
+                        r for r in limited_records
                         if not _has_explicit_range(r)
-                        and not _is_bdt_direct_pdf_full_record_allowed(portale_attivo, formats, r)
+                        and not _is_bdt_direct_pdf_full_record_allowed(
+                            _get_effective_record_portal(portale_attivo, r),
+                            formats,
+                            r,
+                        )
                     ]
                     if missing_range_records and len(reg_records) == 1:
                         canvas_da_glob, canvas_a_glob = _ask_canvas_range(self, glossario, lingua, required=True)
@@ -1568,7 +1586,7 @@ class MainWindow(QMainWindow):
                         reg_records[0]['canvas_a'] = canvas_a_glob
                     elif missing_range_records:
                         batch_template = _gm_policy(
-                            "La policy del portale attivo richiede un range canvas esplicito per ogni record R. Riduci il batch a un solo registro oppure prepara record R con range già indicato."
+                            "La policy di uno o più portali dei record R richiede un range canvas esplicito per ogni record interessato. Riduci il batch a un solo registro oppure prepara record R con range già indicato."
                         )
                         show_msgbox_localized(
                             self,
@@ -2205,6 +2223,44 @@ def _is_bdt_direct_pdf_full_record_allowed(portale_attivo, formats, record):
 
     url = str(record.get("url") or "")
     return "bdt.bibcom.trento.it" in url.lower() and "/testi-a-stampa/" in url.lower()
+
+
+def _get_effective_record_portal(portale_attivo, record):
+    """Restituisce il portale effettivo del record usando host URL univoci."""
+    try:
+        from portal_registry import detect_portal_from_url, normalize_portal_key
+    except ImportError:
+        from src.portal_registry import detect_portal_from_url, normalize_portal_key
+
+    url = ""
+    try:
+        url = str((record or {}).get("url") or "")
+    except Exception:
+        url = ""
+    detected_portal = detect_portal_from_url(url)
+    if detected_portal:
+        return detected_portal
+    return normalize_portal_key(portale_attivo or "antenati")
+
+
+def _get_effective_record_policy_context(portale_attivo, record):
+    """Calcola policy D/R sul portale effettivo del singolo record."""
+    try:
+        from portal_registry import get_effective_portal_policy
+    except ImportError:
+        from src.portal_registry import get_effective_portal_policy
+
+    portal_key = _get_effective_record_portal(portale_attivo, record)
+    policy = get_effective_portal_policy(portal_key)
+    policy_code = policy.record_mode_policy if policy else "r_limited"
+    if policy and policy.recheck_due and policy_code == "r_ok":
+        policy_code = "r_limited"
+    return {
+        "record": record,
+        "portal_key": portal_key,
+        "policy": policy,
+        "policy_code": policy_code,
+    }
 
 
 def action_show_example_input(glossario_data, lingua, parent=None):
