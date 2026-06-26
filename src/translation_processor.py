@@ -1,4 +1,5 @@
 from PySide6.QtCore import QThread, Signal
+import logging
 try:
     import google.generativeai as genai
 except ImportError:
