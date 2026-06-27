@@ -671,7 +671,7 @@ class AdvancedOCRDialog(QDialog):
                 if keys:
                     self.txt_api.setText(keys[0])
                     import logging
-                    logging.info(f"[OCR] Chiave pre-caricata da Cassaforte ({prov_str}): {keys[0][:6]}...")
+                    logging.info("[OCR] Chiave pre-caricata da Cassaforte (%s).", prov_str)
                 elif os.path.exists(_config_file_path()):
                     # Fallback: leggi dal config.json
                     with open(_config_file_path(), 'r', encoding='utf-8') as f:

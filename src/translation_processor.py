@@ -45,7 +45,7 @@ class TranslationWorker(QThread):
             translated_text = ""
             last_error = None
 
-            for key in self.api_keys:
+            for slot, key in enumerate(self.api_keys, start=1):
                 try:
                     if self.provider == "Gemini":
                         if self.custom_model:
@@ -55,7 +55,12 @@ class TranslationWorker(QThread):
                             model_name = get_best_gemini_model(key, preferred="flash")
                         genai.configure(api_key=key)
                         gemini_model = genai.GenerativeModel(model_name)
-                        logging.info(f"[TRANS] Uso modello {model_name} con chiave {key[:6]}...")
+                        logging.info(
+                            "[TRANS] Uso modello %s con chiave slot %s/%s.",
+                            model_name,
+                            slot,
+                            len(self.api_keys),
+                        )
                         translated_text = self._call_gemini_model(gemini_model, prompt)
                     elif self.provider == "OpenAI":
                         self.openai_client = openai.OpenAI(api_key=key)
@@ -86,7 +91,11 @@ class TranslationWorker(QThread):
                     is_quota = any(k in err_str for k in ["429", "quota", "resource_exhausted", "rate"])
                     last_error = e
                     if is_quota:
-                        logging.warning(f"[TRANS] Quota esaurita ({key[:6]}...). Provo prossima chiave...")
+                        logging.warning(
+                            "[TRANS] Quota esaurita sullo slot chiave %s/%s. Provo prossima chiave...",
+                            slot,
+                            len(self.api_keys),
+                        )
                         continue
                     else:
                         raise e
