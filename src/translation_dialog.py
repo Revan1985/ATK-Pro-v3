@@ -1,3 +1,4 @@
+import logging
 import os
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
@@ -72,8 +73,7 @@ class TranslationDialog(QDialog):
         try:
             self.load_settings()
         except Exception as e:
-            import traceback
-            print(f"[TranslationDialog] Errore in load_settings: {e}\n" + traceback.format_exc())
+            logging.exception("[TranslationDialog] Errore in load_settings: %s", e)
 
     def gm(self, chiave):
         return get_msg(self.glossario, chiave, self.lingua)
@@ -407,7 +407,7 @@ class TranslationDialog(QDialog):
                 self.combo_lingua.setCurrentIndex(idx)
                     
         except Exception as e:
-            print(f"Error loading settings: {e}")
+            logging.exception("[TranslationDialog] Errore caricamento impostazioni: %s", e)
 
     def save_settings(self):
         try:
