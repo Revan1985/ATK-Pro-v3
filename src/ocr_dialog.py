@@ -17,6 +17,11 @@ from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QIcon, QFont, QPixmap
 
 from asset_cache import get_pixmap_cached
+try:
+    from key_manager import normalize_provider_name
+except ImportError:
+    from src.key_manager import normalize_provider_name
+
 from ocr_processor import AdvancedOCRWorker
 
 def get_msg(glossario, chiave, lingua):
@@ -236,6 +241,9 @@ class AdvancedOCRDialog(QDialog):
     def gm(self, text):
         res = get_msg(self.glossario_data, text, self.lingua)
         return res if (res and res != text) else text
+
+    def _current_provider_key(self):
+        return normalize_provider_name(self.combo_prov.currentText())
 
     def setup_ui(self):
         logger.debug("[AdvancedOCRDialog] setup_ui INIZIO")
@@ -647,17 +655,7 @@ class AdvancedOCRDialog(QDialog):
                 self._rebuild_combo_istruzioni()
 
             # Pre-carica la prima chiave disponibile dalla Cassaforte (KeyManager)
-            prov_str = "Gemini"
-            txt = self.combo_prov.currentText()
-            if "OpenAI" in txt: prov_str = "OpenAI"
-            elif "Anthropic" in txt: prov_str = "Claude"
-            elif "Mistral" in txt: prov_str = "Mistral"
-            elif "Groq" in txt: prov_str = "Groq"
-            elif "DeepSeek" in txt: prov_str = "DeepSeek"
-            elif "xAI" in txt: prov_str = "xAI"
-            elif "Ollama" in txt: prov_str = "Ollama"
-            elif "Hugging Face" in txt: prov_str = "HuggingFace"
-            elif "Transkribus" in txt: prov_str = "Transkribus"
+            prov_str = self._current_provider_key()
             try:
                 from key_manager import KeyManager
                 km = KeyManager()
@@ -702,17 +700,7 @@ class AdvancedOCRDialog(QDialog):
             return
         # La chiave può venire dalla Cassaforte (rotazione automatica nel worker)
         # ma se non c'è nemmeno quella nel campo, avvertiamo
-        prov_str_check = "Gemini"
-        txt = self.combo_prov.currentText()
-        if "OpenAI" in txt: prov_str_check = "OpenAI"
-        elif "Anthropic" in txt: prov_str_check = "Claude"
-        elif "Mistral" in txt: prov_str_check = "Mistral"
-        elif "Groq" in txt: prov_str_check = "Groq"
-        elif "DeepSeek" in txt: prov_str_check = "DeepSeek"
-        elif "xAI" in txt: prov_str_check = "xAI"
-        elif "Ollama" in txt: prov_str_check = "Ollama"
-        elif "Hugging Face" in txt: prov_str_check = "HuggingFace"
-        elif "Transkribus" in txt: prov_str_check = "Transkribus"
+        prov_str_check = self._current_provider_key()
         from key_manager import KeyManager
         from config_utils import _config_file_path
         # Ollama non richiede API key (usa host locale)
@@ -738,17 +726,7 @@ class AdvancedOCRDialog(QDialog):
         out_dir = QFileDialog.getExistingDirectory(self, self.gm("Seleziona cartella di destinazione"))
         if not out_dir: return
 
-        prov_str = "Gemini"
-        txt = self.combo_prov.currentText()
-        if "OpenAI" in txt: prov_str = "OpenAI"
-        elif "Anthropic" in txt: prov_str = "Claude"
-        elif "Mistral" in txt: prov_str = "Mistral"
-        elif "Groq" in txt: prov_str = "Groq"
-        elif "DeepSeek" in txt: prov_str = "DeepSeek"
-        elif "xAI" in txt: prov_str = "xAI"
-        elif "Ollama" in txt: prov_str = "Ollama"
-        elif "Hugging Face" in txt: prov_str = "HuggingFace"
-        elif "Transkribus" in txt: prov_str = "Transkribus"
+        prov_str = self._current_provider_key()
 
         # Costruisce il prompt dalla tipologia documentale selezionata
         ex_text = self.txt_esempio.toPlainText().strip()

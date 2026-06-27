@@ -8,6 +8,11 @@ from PySide6.QtGui import QFont
 
 from translation_processor import TranslationWorker
 
+try:
+    from key_manager import normalize_provider_name
+except ImportError:
+    from src.key_manager import normalize_provider_name
+
 TARGET_LANGUAGES = [
     "Italiano", "English", "Español", "Français", "Deutsch", "Português",
     "Русский", "العربية", "Nederlands", "עברית", "日本語", "中文",
@@ -439,11 +444,7 @@ class TranslationDialog(QDialog):
 
         self.save_settings()
 
-        txt = self.combo_prov.currentText()
-        prov_str = txt.split()[0]  # "Google" → "Gemini", "Ollama" → "Ollama", ecc.
-        if prov_str == "Google": prov_str = "Gemini"
-        elif prov_str == "Anthropic": prov_str = "Claude"
-        elif prov_str == "Hugging": prov_str = "HuggingFace"
+        prov_str = normalize_provider_name(self.combo_prov.currentText())
 
         # Costruisce il prompt dalla tipologia documentale selezionata
         doc_type = self.combo_type.currentText()

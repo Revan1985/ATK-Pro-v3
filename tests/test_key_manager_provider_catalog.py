@@ -55,13 +55,20 @@ def test_provider_aliases_are_normalized_for_key_lookup_and_rotation(tmp_path):
 def test_ui_provider_labels_are_known_by_key_manager():
     labels = [
         "Anthropic / Claude (Miglior Testo)",
+        "Anthropic / Claude (Miglior Vision)",
         "OpenAI (GPT-4o)",
+        "OpenAI (GPT-4o Vision)",
         "Google Gemini",
+        "Google Gemini (Vision)",
         "DeepSeek (Economico/Testo)",
+        "DeepSeek (Solo Testo)",
         "Mistral",
+        "Mistral (Pixtral Vision)",
         "xAI / Grok",
         "Groq (Veloce)",
+        "Groq (Llama Vision)",
         "Hugging Face (Inference API)",
+        "Hugging Face (Modelli Specializzati OCR)",
         "Ollama (Locale/Privato)",
         "Transkribus (Italian Handwriting HTR)",
     ]
