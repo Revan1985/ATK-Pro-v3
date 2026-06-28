@@ -671,7 +671,7 @@ class AdvancedOCRDialog(QDialog):
                 if keys:
                     self.txt_api.setText(keys[0])
                     import logging
-                    logging.info("[OCR] Chiave pre-caricata da Cassaforte (%s).", prov_str)
+                    logging.debug("[OCR] Chiave pre-caricata da Cassaforte (%s).", prov_str)
                 elif os.path.exists(_config_file_path()):
                     # Fallback: leggi dal config.json
                     with open(_config_file_path(), 'r', encoding='utf-8') as f:
@@ -696,7 +696,7 @@ class AdvancedOCRDialog(QDialog):
             _write_config_prefs('ocr_custom_model', self.inp_custom_model.text().strip())
             
             import logging
-            logging.info(f"API Key saved. Length: {len(api_testo)}")
+            logging.debug("[OCR] Impostazioni salvate.")
         except Exception as e:
             import logging
             logging.error(f"Errore salvataggio OCR settings: {e}")
