@@ -34,6 +34,17 @@ def test_ai_worker_show_all_keeps_json_available_after_provider_error(monkeypatc
     assert "provider failure" in payload[0]["raw"]
 
 
+def test_ai_search_result_log_summary_avoids_payload_dump():
+    from src.RicercaAssistitaAI import _summarize_ai_result_payload
+
+    payload = json.dumps([
+        {"provider": "Gemini", "results": [{"nome": "A"}, {"nome": "B"}]},
+        {"provider": "OpenAI", "results": []},
+    ])
+
+    assert _summarize_ai_result_payload(payload) == "2 righe da 2 provider (Gemini, OpenAI)"
+
+
 def test_gemini_split_merge_deduplicates_overlap_and_fills_blank_columns():
     from src.ocr_processor import AdvancedOCRWorker
 
@@ -89,3 +100,11 @@ def test_ocr_logs_do_not_include_key_prefixes():
 
     assert "key[:6]" not in source
     assert "_current_key()[:6]" not in source
+
+
+def test_ai_search_logs_do_not_dump_query_or_result_payload():
+    source = Path("src/RicercaAssistitaAI.py").read_text(encoding="utf-8")
+
+    assert "query={self.query}" not in source
+    assert "Ricerca completata: {r}" not in source
+    assert "query='" not in source
