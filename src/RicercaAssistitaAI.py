@@ -21,6 +21,21 @@ from key_manager import KeyManager, SUPPORTED_AI_PROVIDERS
 from ai_utils import get_best_gemini_model
 from multi_provider_handlers import get_handler
 
+
+def _summarize_ai_result_payload(payload):
+    try:
+        data = json.loads(payload)
+    except Exception:
+        return "non-json"
+    if isinstance(data, list):
+        if data and isinstance(data[0], dict) and "results" in data[0]:
+            total = sum(len(item.get("results") or []) for item in data if isinstance(item, dict))
+            providers = [str(item.get("provider", "?")) for item in data if isinstance(item, dict)]
+            return f"{total} righe da {len(providers)} provider ({', '.join(providers)})"
+        return f"{len(data)} righe"
+    return type(data).__name__
+
+
 class RicercaAssistitaAIWorker(QThread):
     progress = Signal(int, str)
     finished = Signal(str)
@@ -40,7 +55,11 @@ class RicercaAssistitaAIWorker(QThread):
 
     def run(self):
         try:
-            logger.debug(f"[AIWorker] Avvio ricerca: provider={self.provider}, query={self.query}")
+            logger.debug(
+                "[AIWorker] Avvio ricerca: provider=%s, prompt_len=%s",
+                self.provider,
+                len(self.query or ""),
+            )
             providers = [self.provider]
             # Fallback automatico: aggiungi altri provider con chiavi configurate
             all_providers = list(SUPPORTED_AI_PROVIDERS)
@@ -838,9 +857,13 @@ h1, h2, h3, h4 {{
 
     def start_ai_search(self):
         from ai_search_prompts import get_prompt_base
-        logger.info(f"[RicercaAssistitaAIDialog] Avvio ricerca AI: query='{self.inp_query.toPlainText().strip()}', provider='{self.combo_provider.currentText()}'")
         query = self.inp_query.toPlainText().strip()
         provider = self.combo_provider.currentText()
+        logger.info(
+            "[RicercaAssistitaAIDialog] Avvio ricerca AI: provider=%s, query_len=%s",
+            provider,
+            len(query),
+        )
         custom_model = self.inp_custom_model.text().strip() or None
         idx_prompt = self.combo_prompt.currentIndex()
         note_text = self.inp_note.toPlainText().strip() if self.combo_note.currentIndex() > 0 else ""
@@ -874,7 +897,10 @@ h1, h2, h3, h4 {{
         self.worker.provider_changed.connect(self._update_key_status)
         self.worker.finished.connect(self.show_result)
         self.worker.error.connect(self.show_error)
-        self.worker.finished.connect(lambda r: logger.info(f"[RicercaAssistitaAIDialog] Ricerca completata: {r}"))
+        self.worker.finished.connect(lambda r: logger.info(
+            "[RicercaAssistitaAIDialog] Ricerca completata: %s",
+            _summarize_ai_result_payload(r),
+        ))
         self.worker.error.connect(lambda e: logger.error(f"[RicercaAssistitaAIDialog] Errore: {e}"))
         self._update_key_status(0, provider, 1)
         self.worker.finished.connect(lambda _: self._update_key_status(self.worker.key_slot, self.worker.provider, self.worker.key_count, error=False))
