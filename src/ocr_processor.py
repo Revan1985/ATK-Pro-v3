@@ -61,7 +61,7 @@ class AdvancedOCRWorker:
                 if review_callback:
                     final_text = review_callback(f_path, raw_text)
                     if final_text is None:
-                        logging.info(f"[OCR] Salvataggio saltato dall'utente.")
+                        logging.info("[OCR] Salvataggio saltato dall'utente.")
                         return
 
                 self._save_results(f_path, final_text)
@@ -72,7 +72,11 @@ class AdvancedOCRWorker:
                 last_error = e
                 is_quota = any(k in err_str for k in ["429", "quota", "resource_exhausted", "rate"])
                 if is_quota:
-                    logging.warning(f"[OCR] Quota esaurita ({self._current_key()[:6]}...). Tentativo rotazione chiave...")
+                    logging.warning(
+                        "[OCR] Quota esaurita sullo slot chiave %s/%s. Tentativo rotazione chiave...",
+                        self.current_key_idx + 1,
+                        len(self.api_keys),
+                    )
                     if not self._rotate_key():
                         break  # Tutte le chiavi sature
                 else:
@@ -104,7 +108,7 @@ class AdvancedOCRWorker:
                 pix = page.get_pixmap(matrix=mat, colorspace=fitz.csRGB)
                 img_path = os.path.join(tmp_dir, f"page_{page_num + 1:04d}.jpg")
                 pix.save(img_path)
-                logging.info(f"[OCR] PDF pagina {page_num + 1}/{n_pages} → {img_path}")
+                logging.debug("[OCR] PDF pagina %s/%s convertita in immagine temporanea.", page_num + 1, n_pages)
 
                 # Trascrivi con retry chiavi
                 last_error = None

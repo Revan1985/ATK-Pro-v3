@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 
 def test_ai_worker_show_all_keeps_json_available_after_provider_error(monkeypatch):
@@ -81,3 +82,10 @@ def test_gemini_split_merge_deduplicates_fuzzy_rows_without_progressive():
 
     assert merged.count("Rossi | Bruno") == 1
     assert "Verdi | Carla" in merged
+
+
+def test_ocr_logs_do_not_include_key_prefixes():
+    source = Path("src/ocr_processor.py").read_text(encoding="utf-8")
+
+    assert "key[:6]" not in source
+    assert "_current_key()[:6]" not in source
