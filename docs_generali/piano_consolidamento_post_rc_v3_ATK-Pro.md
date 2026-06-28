@@ -81,6 +81,8 @@ Interventi finali prima della v3.0.0 definitiva.
 Procedere con PR piccoli e ordinati. Ogni PR deve includere:
 
 - modifica limitata al punto in corso;
+- segnalazione del modello Codex consigliato secondo
+  `docs_generali/policy_modelli_codex_ATK-Pro.md`;
 - test o verifica manuale mirata;
 - aggiornamento documentale solo se cambia il comportamento utente;
 - nessuna estensione funzionale non necessaria al punto trattato.
