@@ -46,7 +46,7 @@ Stato operativo 2026-06-30:
 - punto 6: chiuso come nota di log;
 - punto 7: avanzato ma non chiuso del tutto;
 - punto 8: chiuso;
-- punto 9: parziale; diagnostica split OCR gia' spostata in sottocartella dedicata;
+- punto 9: quasi chiuso; diagnostica split OCR resa opzionale e gia' spostata in sottocartella dedicata;
 - punto 10: parziale.
 
 | Ordine | Intervento | Esito atteso |
@@ -60,8 +60,8 @@ Stato operativo 2026-06-30:
 Ordine di lavoro consigliato da qui:
 
 1. completare gli ultimi allineamenti residui del punto 7, senza allargare ancora il perimetro funzionale;
-2. affrontare il punto 9 come prossimo passo operativo della fase 2;
-3. completare poi il punto 10, prima di entrare nella fase 3;
+2. completare il punto 10 come prossimo passo operativo della fase 2;
+3. tenere il punto 9 solo come verifica finale residuale, salvo nuovi artefatti OCR emersi dai tester;
 4. mantenere in parallelo solo eventuali riscontri esterni tardivi sui casi
    Gemini gia' registrati, senza riaprire la fase 1 salvo nuove regressioni.
 
